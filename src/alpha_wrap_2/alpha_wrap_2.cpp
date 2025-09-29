@@ -84,22 +84,32 @@ namespace aw2 {
                 c_in = c_2;
                 c_out = c_1;
             } 
-            CGAL::Object o1 = dt_.dual(candidate_gate_.edge);
-            auto dual_edge = CGAL::object_cast<Segment_2>(&o1);
 
+            Point_2 c_in_cc = dt_.circumcenter(c_in);
+            Point_2 c_out_cc;
 
-            if (dual_edge == nullptr) {
-                std::cout << "Dual edge is not a segment." << std::endl;
-                continue;
+            if (dt_.is_infinite(c_out)) {
+                const int inf_index = c_out->index(dt_.infinite_vertex());
+                dt_.circumcenter(c_out);
+
+                // construct a circumcenter for the infinite triangle
+                Point_2 p1 = c_out->vertex((inf_index + 1) % 3)->point();
+                Point_2 p2 = c_out->vertex((inf_index + 2) % 3)->point();
+                Point_2 mid = CGAL::midpoint(p1, p2);
+                auto dir = mid - c_in_cc;
+                Point_2 far_point = mid + dir * 1000.0;
+                c_out_cc = CGAL::circumcenter(p1, p2, far_point);
             }
-
+            else {
+                c_out_cc = dt_.circumcenter(c_in);
+            }
 
             std::cout << "Checking R1" << std::endl;
 
             Point_2 steiner_point;
             bool insert = oracle_.first_intersection(
-                dual_edge->source(),
-                dual_edge->target(),
+                c_out_cc,
+                c_in_cc,
                 steiner_point,
                 offset
             );
@@ -132,22 +142,27 @@ namespace aw2 {
                 }
                 queue_ = temp_queue;
 
+                std::cout << "Queue size after removing destroyed gates: " << queue_.size() << std::endl;
+
                 // insert Steiner point
                 auto vh = dt_.insert(steiner_point);
 
                 // Update face labels
-                for (auto fit = dt_.incident_faces(vh); ; ++fit) {
+                for (auto fit = dt_.incident_faces(vh); ;) {
                     if (dt_.is_infinite(fit)) {
                         fit->info() = OUTSIDE;
                     } else {
                         fit->info() = INSIDE;
                     }
 
+
                     if (++fit == dt_.incident_faces(vh)) break;
                 }
 
+                std::cout << "Updated face labels." << std::endl;
+
                 // Add new gates to the queue
-                for (auto eit = dt_.incident_edges(vh); ; ++eit) {
+                for (auto eit = dt_.incident_edges(vh); ; ) {
                     if (is_gate(*eit)) {
                         Gate g;
                         g.edge = *eit;
