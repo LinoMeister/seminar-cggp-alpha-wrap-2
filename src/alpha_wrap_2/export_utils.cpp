@@ -1,0 +1,140 @@
+#include "export_utils.h"
+
+namespace aw2 {
+
+    void export_svg(const Delaunay& dt, const Oracle& oracle, const std::string& filename,
+                    double margin, double stroke_width,
+                    double vertex_radius)
+    {
+        // First, compute bounding box of finite vertices
+        double xmin = oracle.bbox_.x_min;
+        double ymin = oracle.bbox_.y_min;
+        double xmax = oracle.bbox_.x_max;
+        double ymax = oracle.bbox_.y_max;
+
+
+        if (xmin > xmax || ymin > ymax) {
+            // No finite vertices
+            return;
+        }
+
+        double width = xmax - xmin;
+        double height = ymax - ymin;
+
+        // Make an SVG canvas somewhat larger (margin)
+        double svg_w = width + 2*margin;
+        double svg_h = height + 2*margin;
+
+        std::ofstream os(filename);
+        os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
+        os << R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" )";
+        os << "width=\"" << svg_w << "\" height=\"" << svg_h << "\">\n";
+
+        // A helper to map a point to SVG coordinates
+        auto to_svg = [&](const Point_2& p) {
+            double x = (p.x() - xmin) + margin;
+            // Flip Y so that larger y goes downward in SVG coordinate
+            double y = (ymax - p.y()) + margin;
+            return std::pair<double, double>(x, y);
+        };
+
+        // Draw edges of all finite faces
+        os << R"(  <g stroke="black" stroke-width=")" << stroke_width
+        << "\" fill=\"none\">\n";
+        for (auto fit = dt.finite_faces_begin(); fit != dt.finite_faces_end(); ++fit) {
+            Point_2 pa = fit->vertex(0)->point();
+            Point_2 pb = fit->vertex(1)->point();
+            Point_2 pc = fit->vertex(2)->point();
+            auto sa = to_svg(pa);
+            auto sb = to_svg(pb);
+            auto sc = to_svg(pc);
+
+            auto inside = (fit->info() == INSIDE);
+
+            if (inside) {
+                os << "    <polygon points=\""
+                << std::fixed << std::setprecision(3)
+                << sa.first << "," << sa.second << " "
+                << sb.first << "," << sb.second << " "
+                << sc.first << "," << sc.second
+                << "\" fill=\"lightblue\" stroke=\"gray\" stroke-width=\"" << stroke_width/2 << "\" />\n";
+            }
+            else {
+                os << "    <polygon points=\""
+                << std::fixed << std::setprecision(3)
+                << sa.first << "," << sa.second << " "
+                << sb.first << "," << sb.second << " "
+                << sc.first << "," << sc.second
+                << "\" fill=\"none\" stroke=\"gray\" stroke-width=\"" << stroke_width/2 << "\" />\n";
+            }
+
+        }
+        os << "  </g>\n";
+
+        // Draw vertices as small circles
+        os << "  <g stroke=\"red\" stroke-width=\""<< stroke_width <<"\" fill=\"red\">\n";
+        for (auto vit = dt.finite_vertices_begin(); vit != dt.finite_vertices_end(); ++vit) {
+            const Point_2& p = vit->point();
+            auto sp = to_svg(p);
+            os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
+            << sp.first << "\" cy=\"" << sp.second
+            << "\" r=\"" << vertex_radius << "\" />\n";
+        }
+        os << "  </g>\n";
+
+        os << "  <g stroke=\"green\" stroke-width=\""<< stroke_width <<"\" fill=\"green\">\n";
+        for (auto vit = oracle.tree_.begin(); vit != oracle.tree_.end(); ++vit) {
+            const Point_2& p = *vit;
+            auto sp = to_svg(p);
+            os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
+            << sp.first << "\" cy=\"" << sp.second
+            << "\" r=\"" << vertex_radius << "\" />\n";
+        }
+        os << "  </g>\n";
+
+
+        // Draw Voronoi diagram (dual of Delaunay triangulation)
+        os << "  <g stroke=\"orange\" stroke-width=\"" << stroke_width/2 << "\" fill=\"none\">\n";
+        for (auto eit = dt.finite_edges_begin(); eit != dt.finite_edges_end(); ++eit) {
+            auto face = eit->first;
+            int i = eit->second;
+            auto neighbor = face->neighbor(i);
+            // Only draw each Voronoi edge once
+            if (dt.is_infinite(face) || dt.is_infinite(neighbor) || face > neighbor) continue;
+
+            CGAL::Object o1 = dt.dual(eit);
+            if (const Segment_2* s = CGAL::object_cast<Segment_2>(&o1)) {
+
+                Point_2 p(s->source().x(), s->source().y());
+                Point_2 q(s->target().x(), s->target().y());
+                Point_2 o;
+                auto intersects = oracle.first_intersection(p, q, o, 5, 0);
+
+                auto sa = to_svg(s->source());
+                auto sb = to_svg(s->target());
+
+                if (intersects) {
+                    os << "    <line stroke=\"red\" x1=\"" << sa.first << "\" y1=\"" << sa.second
+                    << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+                    auto so = to_svg(o);
+                    os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
+                    << so.first << "\" cy=\"" << so.second
+                    << "\" r=\"" << vertex_radius*2 << "\" fill=\"purple\" />\n";
+                }
+                else {
+                    os << "    <line stroke=\"orange\" x1=\"" << sa.first << "\" y1=\"" << sa.second
+                    << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+                }
+
+
+
+            }
+        }
+        os << "  </g>\n";
+
+
+        os << "</svg>\n";
+        os.close();
+    }
+
+}
