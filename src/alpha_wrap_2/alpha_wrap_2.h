@@ -28,7 +28,7 @@ namespace aw2 {
     public:
         alpha_wrap_2(const Oracle& oracle);
 
-        void compute_wrap();
+        void compute_wrap(FT alpha = 0.1, FT offset = 0.1);
 
     private:
 
