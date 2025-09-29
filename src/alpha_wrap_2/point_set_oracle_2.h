@@ -6,6 +6,7 @@
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Fuzzy_iso_box.h>
 #include <CGAL/Polygon_2_algorithms.h>
+#include <CGAL/Exact_circular_kernel_2.h>
 #include "types.h"
 
 
@@ -110,7 +111,7 @@ public:
         if (best_sqdist == std::numeric_limits<FT>::max())
             return false;
 
-        if (std::sqrt(best_sqdist) < offset_size - intersection_precision)
+        if (std::sqrt(best_sqdist) > offset_size - intersection_precision)
             return false;
 
         o = best;
