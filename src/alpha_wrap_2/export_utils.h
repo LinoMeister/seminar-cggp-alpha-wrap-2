@@ -5,12 +5,17 @@
 #ifndef EXPORT_UTILS_H
 #define EXPORT_UTILS_H
 
+#include "point_set_oracle_2.h"
+
 #include "types.h"
 #include <fstream>
 #include <limits>
 #include <iomanip>
 
 namespace aw2 {
+
+    using Oracle = point_set_oracle_2;
+
     void export_svg(const Delaunay& dt, const Oracle& oracle, const std::string& filename,
                     double margin = 50.0, double stroke_width = 2,
                     double vertex_radius = 0.5)
@@ -113,11 +118,31 @@ namespace aw2 {
             if (dt.is_infinite(face) || dt.is_infinite(neighbor) || face > neighbor) continue;
 
             CGAL::Object o1 = dt.dual(eit);
-            if (const K::Segment_2* s = CGAL::object_cast<K::Segment_2>(&o1)) {
+            if (const Segment_2* s = CGAL::object_cast<Segment_2>(&o1)) {
+
+                Point_2 p(s->source().x(), s->source().y());
+                Point_2 q(s->target().x(), s->target().y());
+                Point_2 o;
+                auto intersects = oracle.first_intersection(p, q, o, 5, 0);
+
                 auto sa = to_svg(s->source());
                 auto sb = to_svg(s->target());
-                os << "    <line x1=\"" << sa.first << "\" y1=\"" << sa.second
-                   << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+
+                if (intersects) {
+                    os << "    <line stroke=\"red\" x1=\"" << sa.first << "\" y1=\"" << sa.second
+                    << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+                    auto so = to_svg(o);
+                    os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
+                    << so.first << "\" cy=\"" << so.second
+                    << "\" r=\"" << vertex_radius*2 << "\" fill=\"purple\" />\n";
+                }
+                else {
+                    os << "    <line stroke=\"orange\" x1=\"" << sa.first << "\" y1=\"" << sa.second
+                    << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+                }
+
+
+
             }
         }
         os << "  </g>\n";
