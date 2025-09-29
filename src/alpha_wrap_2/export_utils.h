@@ -102,6 +102,27 @@ namespace aw2 {
         }
         os << "  </g>\n";
 
+
+        // Draw Voronoi diagram (dual of Delaunay triangulation)
+        os << "  <g stroke=\"orange\" stroke-width=\"" << stroke_width/2 << "\" fill=\"none\">\n";
+        for (auto eit = dt.finite_edges_begin(); eit != dt.finite_edges_end(); ++eit) {
+            auto face = eit->first;
+            int i = eit->second;
+            auto neighbor = face->neighbor(i);
+            // Only draw each Voronoi edge once
+            if (dt.is_infinite(face) || dt.is_infinite(neighbor) || face > neighbor) continue;
+
+            CGAL::Object o1 = dt.dual(eit);
+            if (const K::Segment_2* s = CGAL::object_cast<K::Segment_2>(&o1)) {
+                auto sa = to_svg(s->source());
+                auto sb = to_svg(s->target());
+                os << "    <line x1=\"" << sa.first << "\" y1=\"" << sa.second
+                   << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+            }
+        }
+        os << "  </g>\n";
+
+
         os << "</svg>\n";
         os.close();
     }
