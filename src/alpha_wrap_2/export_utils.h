@@ -58,19 +58,25 @@ namespace aw2 {
             auto sb = to_svg(pb);
             auto sc = to_svg(pc);
 
-            // three edges: AB, BC, CA
-            os << "    <line x1=\"" << std::fixed << std::setprecision(3) << sa.first
-            << "\" y1=\"" << sa.second
-            << "\" x2=\"" << sb.first
-            << "\" y2=\"" << sb.second << "\" />\n";
-            os << "    <line x1=\"" << sb.first
-            << "\" y1=\"" << sb.second
-            << "\" x2=\"" << sc.first
-            << "\" y2=\"" << sc.second << "\" />\n";
-            os << "    <line x1=\"" << sc.first
-            << "\" y1=\"" << sc.second
-            << "\" x2=\"" << sa.first
-            << "\" y2=\"" << sa.second << "\" />\n";
+            auto inside = (fit->info() == INSIDE);
+
+            if (inside) {
+                os << "    <polygon points=\""
+                << std::fixed << std::setprecision(3)
+                << sa.first << "," << sa.second << " "
+                << sb.first << "," << sb.second << " "
+                << sc.first << "," << sc.second
+                << "\" fill=\"lightblue\" stroke=\"gray\" stroke-width=\"" << stroke_width/2 << "\" />\n";
+            }
+            else {
+                os << "    <polygon points=\""
+                << std::fixed << std::setprecision(3)
+                << sa.first << "," << sa.second << " "
+                << sb.first << "," << sb.second << " "
+                << sc.first << "," << sc.second
+                << "\" fill=\"none\" stroke=\"gray\" stroke-width=\"" << stroke_width/2 << "\" />\n";
+            }
+
         }
         os << "  </g>\n";
 
