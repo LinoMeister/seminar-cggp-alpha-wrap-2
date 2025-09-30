@@ -5,11 +5,10 @@ namespace aw2 {
 
     alpha_wrap_2_exporter::alpha_wrap_2_exporter(
         const alpha_wrap_2& wrapper, 
-        double margin, double stroke_width,
-        double vertex_radius)
+        const StyleConfig& style)
         : wrapper_(wrapper), oracle_(wrapper.oracle_), dt_(wrapper.dt_), 
-          candidate_gate_(wrapper.candidate_gate_), margin_(margin), 
-          stroke_width_(stroke_width), vertex_radius_(vertex_radius)
+          candidate_gate_(wrapper.candidate_gate_), margin_(style.margin), 
+          stroke_width_(style.stroke_width), vertex_radius_(style.vertex_radius), style_(style)
     {
         // First, compute bounding box of finite vertices
         xmin_ = oracle_.bbox_.x_min;
@@ -18,15 +17,10 @@ namespace aw2 {
         ymax_ = oracle_.bbox_.y_max;
     }
 
-    void alpha_wrap_2_exporter::export_svg(const std::string& filename, const StyleConfig& style)
+    void alpha_wrap_2_exporter::export_svg(const std::string& filename)
     {
         bool draw_voronoi = true;
 
-        // define colors - now configurable
-        std::string voronoi_color = "orange";
-        std::string edge_color = "black";
-        std::string vertex_color = "gray";
-        std::string inside_face_color = "lightblue";
 
         if (xmin_ > xmax_ || ymin_ > ymax_) {
             // No finite vertices
@@ -46,7 +40,7 @@ namespace aw2 {
         os << "width=\"" << svg_w << "\" height=\"" << svg_h << "\">\n";
 
         // Write SVG definitions (gradients, patterns, etc.)
-        write_svg_defs(os, style);
+        write_svg_defs(os, style_);
 
 
         // Draw edges of all finite faces with enhanced styling
@@ -62,8 +56,8 @@ namespace aw2 {
 
             auto inside = (fit->info() == INSIDE);
 
-            std::string fill_color = get_triangle_color(fit, style);
-            double opacity = style.use_opacity ? style.opacity : 1.0;
+            std::string fill_color = get_triangle_color(fit, style_);
+            double opacity = style_.use_opacity ? style_.opacity : 1.0;
 
             if (inside) {
                 os << "    <polygon points=\""
@@ -71,8 +65,8 @@ namespace aw2 {
                 << sa.first << "," << sa.second << " "
                 << sb.first << "," << sb.second << " "
                 << sc.first << "," << sc.second
-                << "\" fill=\"" << fill_color << "\" fill-opacity=\"" << opacity 
-                << "\" stroke=\"gray\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
+                << "\" fill=\"" << fill_color << "\" fill-opacity=\"" << opacity
+                << "\" stroke=\"" << style_.delaunay_edges.color << "\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
             }
             else {
                 os << "    <polygon points=\""
@@ -80,7 +74,7 @@ namespace aw2 {
                 << sa.first << "," << sa.second << " "
                 << sb.first << "," << sb.second << " "
                 << sc.first << "," << sc.second
-                << "\" fill=\"none\" stroke=\"gray\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
+                << "\" fill=\"none\" stroke=\"" << style_.delaunay_edges.color << "\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
             }
 
         }
@@ -101,18 +95,9 @@ namespace aw2 {
             draw_voronoi_diagram(os);
         }
 
-        os << "  <g stroke=\"green\" stroke-width=\""<< stroke_width_ <<"\" fill=\"green\">\n";
-        for (auto vit = oracle_.tree_.begin(); vit != oracle_.tree_.end(); ++vit) {
-            const Point_2& p = *vit;
-            auto sp = to_svg(p);
-            os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
-            << sp.first << "\" cy=\"" << sp.second
-            << "\" r=\"" << vertex_radius_ << "\" />\n";
-        }
-        os << "  </g>\n";
+        // Draw input points
+        draw_input_points(os);
 
-
-        
 
         // draw candidate edge
         os << "  <g stroke=\"green\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
@@ -129,10 +114,25 @@ namespace aw2 {
         os.close();
     }
 
-    void alpha_wrap_2_exporter::draw_voronoi_diagram(std::ofstream& os, std::string color) {
-        // Draw Voronoi diagram (dual of Delaunay triangulation)
+    void alpha_wrap_2_exporter::draw_input_points(std::ofstream& os) {
+        os << "  <g" << " fill=\"" << style_.input_points.color << "\" opacity=\"" << style_.input_points.opacity << "\">\n";
+        for (auto vit = oracle_.tree_.begin(); vit != oracle_.tree_.end(); ++vit) {
+            const Point_2& p = *vit;
+            auto sp = to_svg(p);
+            os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
+            << sp.first << "\" cy=\"" << sp.second
+            << "\" r=\"" << style_.input_point_radius << "\" />\n";
+        }
+        os << "  </g>\n";
+    }
 
-        os << "  <g stroke=\"" << color << "\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
+    void alpha_wrap_2_exporter::draw_voronoi_diagram(std::ofstream& os) {
+        // Draw Voronoi diagram (dual of Delaunay triangulation)
+    
+
+        os << "  <g stroke=\"" << style_.voronoi_diagram.color << "\""
+        << " opacity=\"" << style_.voronoi_diagram.opacity << "\""
+        << " stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
         for (auto eit = dt_.finite_edges_begin(); eit != dt_.finite_edges_end(); ++eit) {
             auto face = eit->first;
             int i = eit->second;
@@ -149,7 +149,7 @@ namespace aw2 {
                 auto sa = to_svg(s->source());
                 auto sb = to_svg(s->target());
 
-                os << "    <line stroke=\"orange\" x1=\"" << sa.first << "\" y1=\"" << sa.second
+                os << "    <line x1=\"" << sa.first << "\" y1=\"" << sa.second
                 << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
             }
         }

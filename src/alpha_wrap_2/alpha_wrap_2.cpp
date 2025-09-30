@@ -53,7 +53,13 @@ namespace aw2 {
         offset_ = offset;
         init();
 
-        alpha_wrap_2_exporter exporter(*this);
+        auto style = StyleConfig{};
+        style.voronoi_diagram = {"pink", 0.6};
+        style.use_gradients = true;
+        style.use_opacity = true;
+        style.opacity = 1.0;
+        style.scheme = ColorScheme::GRADIENT;
+        alpha_wrap_2_exporter exporter(*this, style);
 
         std::cout << "Queue contains " << queue_.size() << " gates." << std::endl;
 

@@ -24,28 +24,42 @@ namespace aw2 {
         HEAT_MAP
     };
 
+    struct SimpleStyle {
+        std::string color = "white";
+        double opacity = 1.0;
+    };
+
     // Style configuration
     struct StyleConfig {
         ColorScheme scheme = ColorScheme::SIMPLE;
         bool use_gradients = false;
         bool use_opacity = false;
         double opacity = 0.7;
-        std::string gradient_start = "#ff6b6b";
+        std::string gradient_start = "#1a73bdff";
         std::string gradient_end = "#4ecdc4";
         bool map_to_data = false;
         std::string data_property = "area"; // "area", "circumradius", "quality"
+
+        double stroke_width = 2.0;
+        double vertex_radius = 3.0;
+        double input_point_radius = 1.5;
+        double margin = 50;
+
+        // element styles
+        SimpleStyle input_points = {"black", 0.5};
+        SimpleStyle voronoi_diagram = {"orange", 0.5};
+        SimpleStyle delaunay_edges = {"gray", 1.0};
     };
 
     class alpha_wrap_2_exporter {
     public:
-        alpha_wrap_2_exporter(const alpha_wrap_2& wrapper, 
-                              double margin = 50.0, double stroke_width = 2,
-                              double vertex_radius = 0.5);
+        alpha_wrap_2_exporter(const alpha_wrap_2& wrapper, const StyleConfig& style = StyleConfig{});
 
-        void export_svg(const std::string& filename, const StyleConfig& style = StyleConfig{});
+        void export_svg(const std::string& filename);
     
     private:
-        void draw_voronoi_diagram(std::ofstream& stream, std::string color = "orange");
+        void draw_input_points(std::ofstream& os);
+        void draw_voronoi_diagram(std::ofstream& os);
         std::pair<double, double> to_svg(const Point_2& p);
         
         // Enhanced styling methods
@@ -69,6 +83,8 @@ namespace aw2 {
         double ymin_;
         double xmax_;
         double ymax_;
+
+        StyleConfig style_;
     };
 }
 
