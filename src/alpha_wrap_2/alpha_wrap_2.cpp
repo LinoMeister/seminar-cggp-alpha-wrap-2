@@ -1,4 +1,5 @@
 #include <alpha_wrap_2/alpha_wrap_2.h>
+#include <alpha_wrap_2/timer.h>
 
 
 namespace aw2 {
@@ -16,9 +17,24 @@ namespace aw2 {
 
         // setup
         std::cout << "Computing alpha-wrap-2 with " << "alpha: " << alpha << " offset: " << offset << std::endl;
+        
+        // Create hierarchical timer structure
+        auto& registry = TimerRegistry::instance();
+        Timer* total_timer = registry.create_root_timer("Alpha Wrap Algorithm");
+        Timer* init_timer = total_timer->create_child("Initialization");
+        Timer* main_loop_timer = total_timer->create_child("Main Loop");
+        Timer* rule1_timer = main_loop_timer->create_child("Rule 1 Processing");
+        Timer* rule2_timer = main_loop_timer->create_child("Rule 2 Processing");
+        Timer* gate_processing_timer = main_loop_timer->create_child("Gate Processing");
+        
+        total_timer->start();
+        
         alpha_ = alpha;
         offset_ = offset;
+        
+        init_timer->start();
         init();
+        init_timer->pause();
 
         // export config
         auto style = StyleConfig{};
@@ -35,8 +51,11 @@ namespace aw2 {
 
         int max_iterations = 5000;
         int iteration = 0;
+        
+        main_loop_timer->start();
 
         while (!queue_.empty()) {
+            gate_processing_timer->start();
             std::cout << "\nIteration: " << iteration << " Queue size: " << queue_.size() << std::endl;
 
             if (iteration++ > max_iterations) {
@@ -113,26 +132,40 @@ namespace aw2 {
                 c_out_cc = dt_.circumcenter(c_out);
             }
 
+            gate_processing_timer->pause();
+
             std::cout << "Dual edge: " << c_out_cc << " -> " << c_in_cc << std::endl;
 
+            rule1_timer->start();
             if (process_rule_1(c_in_cc, c_out_cc)) {
+                rule1_timer->pause();
                 std::cout << "Steiner point inserted by R1." << std::endl;
                 continue;
             }
+            rule1_timer->pause();
 
+            rule2_timer->start();
             if (process_rule_2(c_in, c_in_cc)) {
+                rule2_timer->pause();
                 std::cout << "Steiner point inserted by R2." << std::endl;
                 continue;
             }
+            rule2_timer->pause();
 
             std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
             c_in->info() = OUTSIDE;
-            update_queue(c_in);    
+            update_queue(c_in);
         }
 
-
+        main_loop_timer->pause();
         
         exporter.export_svg("/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/triangulation.svg");
+        
+        total_timer->pause();
+        
+        // Print hierarchical timing report
+        registry.print_all_hierarchies();
+        std::cout << "Total iterations: " << iteration << std::endl;
     }
 
 
