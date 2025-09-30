@@ -13,14 +13,19 @@ struct bounding_box {
 
 int main(int argc, char *argv[])
 {
+  // get file path from command line arguments
+  // if no argument is given, use a default file path
 
   aw2::Oracle oracle;
-  std::string filename = "/mnt/storage/repos/HS25/seminar-cg-gp/visual-tools/points_dense.pts";
+  std::string filename = argc > 1 ? argv[1] : "/mnt/storage/repos/HS25/seminar-cg-gp/visual-tools/points_dense.pts";
 
   oracle.load_points(filename);
 
+  aw2::FT alpha = argc > 2 ? std::stod(argv[2]) : 10.0;
+  aw2::FT offset = argc > 3 ? std::stod(argv[3]) : 2.0;
+
   aw2::alpha_wrap_2 aw(oracle);
-  aw.compute_wrap(10, 2);
+  aw.compute_wrap(alpha, offset);
 
   return 0;
 }

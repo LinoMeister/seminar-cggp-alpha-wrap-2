@@ -1,5 +1,10 @@
 # Alpha Wrapping with an Offset in 2D
 
+## Commands
+
+```
+./alpha_wrap2_app "/mnt/storage/repos/HS25/seminar-cg-gp/visual-tools/points_dense.pts" 10 2
+```
 
 ## TODO
 
