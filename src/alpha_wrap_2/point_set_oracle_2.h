@@ -7,6 +7,7 @@
 #include <CGAL/Fuzzy_iso_box.h>
 #include <CGAL/Polygon_2_algorithms.h>
 #include <CGAL/Exact_circular_kernel_2.h>
+#include <CGAL/Circular_kernel_intersections.h>  
 #include "types.h"
 
 

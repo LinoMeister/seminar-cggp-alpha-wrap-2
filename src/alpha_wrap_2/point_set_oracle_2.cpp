@@ -64,6 +64,8 @@ namespace aw2 {
     {
         if (tree_.empty()) return false;
 
+        
+
         Segment_2 seg(p, q);
 
         Point_2 best;
@@ -85,7 +87,42 @@ namespace aw2 {
         if (std::sqrt(best_sqdist) > offset_size - intersection_precision)
             return false;
 
-        o = best;
+
+        // Compute the first intersection of the offset circle around best with the line segment p->q
+        // There is probably a much nicer way to do this using CGAL's circular kernel... but for now:
+
+        // Assumption: p is outside and q is potentially inside
+
+        auto dx = q.x() - p.x();
+        auto dy = q.y() - p.y();
+
+        FT a = dx*dx + dy*dy;
+        if (a == 0) return false; // degenerate segment
+
+        // vector from circle center (best) to p
+        FT ox = p.x() - best.x();
+        FT oy = p.y() - best.y();
+
+        FT b = 2 * (dx*ox + dy*oy);
+        FT c = ox*ox + oy*oy - offset_size*offset_size;
+
+        FT disc = b*b - 4*a*c;
+        if (disc < 0) return false; // no real intersection
+
+        FT sqrt_disc = std::sqrt(disc);
+        FT t1 = (-b - sqrt_disc) / (2*a);
+        FT t2 = (-b + sqrt_disc) / (2*a);
+
+        FT t_candidate = std::numeric_limits<FT>::max();
+        if (t1 > 0.0 && t1 <= 1.0) t_candidate = std::min(t_candidate, t1);
+        if (t2 > 0.0 && t2 <= 1.0) t_candidate = std::min(t_candidate, t2);
+
+        if (t_candidate == std::numeric_limits<FT>::max())
+            return false;
+
+        // compute intersection point
+        o = Point_2(p.x() + t_candidate*dx, p.y() + t_candidate*dy);
+
         return true;
     }
 
@@ -93,7 +130,7 @@ namespace aw2 {
                             Point_2 &o,
                             const FT offset_size) const
     {
-        return first_intersection(p, q, o, offset_size, 0.0001);
+        return first_intersection(p, q, o, offset_size, 0.1);
     }
 
     void point_set_oracle_2::add_point_set(const Points& points) {

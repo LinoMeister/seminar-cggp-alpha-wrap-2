@@ -401,7 +401,7 @@ namespace aw2 {
                 Point_2 p(s->source().x(), s->source().y());
                 Point_2 q(s->target().x(), s->target().y());
                 Point_2 o;
-                auto intersects = oracle_.first_intersection(p, q, o, 5, 0);
+                auto intersects = oracle_.first_intersection(p, q, o, 5, 1.0);
 
                 auto sa = to_svg(s->source());
                 auto sb = to_svg(s->target());

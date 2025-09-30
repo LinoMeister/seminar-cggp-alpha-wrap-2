@@ -19,6 +19,6 @@ int main(int argc, char *argv[])
   oracle.load_points(filename);
 
   aw2::alpha_wrap_2 aw(oracle);
-  aw.compute_wrap(1, 0.01);
+  aw.compute_wrap(5, 1);
 
 }
