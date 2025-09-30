@@ -1,4 +1,5 @@
 #include <alpha_wrap_2/alpha_wrap_2.h>
+#include <alpha_wrap_2/export_utils.h>
 #include <alpha_wrap_2/types.h>
 
 #include <CGAL/optimal_bounding_box.h>
@@ -21,4 +22,5 @@ int main(int argc, char *argv[])
   aw2::alpha_wrap_2 aw(oracle);
   aw.compute_wrap(50, 2);
 
+  return 0;
 }

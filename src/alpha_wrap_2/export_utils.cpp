@@ -18,8 +18,15 @@ namespace aw2 {
         ymax_ = oracle_.bbox_.y_max;
     }
 
-    void alpha_wrap_2_exporter::export_svg(const std::string& filename)
+    void alpha_wrap_2_exporter::export_svg(const std::string& filename, const StyleConfig& style)
     {
+        bool draw_voronoi = true;
+
+        // define colors - now configurable
+        std::string voronoi_color = "orange";
+        std::string edge_color = "black";
+        std::string vertex_color = "gray";
+        std::string inside_face_color = "lightblue";
 
         if (xmin_ > xmax_ || ymin_ > ymax_) {
             // No finite vertices
@@ -38,10 +45,11 @@ namespace aw2 {
         os << R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" )";
         os << "width=\"" << svg_w << "\" height=\"" << svg_h << "\">\n";
 
-        // A helper to map a point to SVG coordinates
+        // Write SVG definitions (gradients, patterns, etc.)
+        write_svg_defs(os, style);
 
 
-        // Draw edges of all finite faces
+        // Draw edges of all finite faces with enhanced styling
         os << R"(  <g stroke="black" stroke-width=")" << stroke_width_
         << "\" fill=\"none\">\n";
         for (auto fit = dt_.finite_faces_begin(); fit != dt_.finite_faces_end(); ++fit) {
@@ -54,13 +62,17 @@ namespace aw2 {
 
             auto inside = (fit->info() == INSIDE);
 
+            std::string fill_color = get_triangle_color(fit, style);
+            double opacity = style.use_opacity ? style.opacity : 1.0;
+
             if (inside) {
                 os << "    <polygon points=\""
                 << std::fixed << std::setprecision(3)
                 << sa.first << "," << sa.second << " "
                 << sb.first << "," << sb.second << " "
                 << sc.first << "," << sc.second
-                << "\" fill=\"lightblue\" stroke=\"gray\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
+                << "\" fill=\"" << fill_color << "\" fill-opacity=\"" << opacity 
+                << "\" stroke=\"gray\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
             }
             else {
                 os << "    <polygon points=\""
@@ -84,6 +96,10 @@ namespace aw2 {
             << "\" r=\"" << vertex_radius_ << "\" />\n";
         }
         os << "  </g>\n";
+
+        if (draw_voronoi) {
+            draw_voronoi_diagram(os);
+        }
 
         os << "  <g stroke=\"green\" stroke-width=\""<< stroke_width_ <<"\" fill=\"green\">\n";
         for (auto vit = oracle_.tree_.begin(); vit != oracle_.tree_.end(); ++vit) {
@@ -113,10 +129,10 @@ namespace aw2 {
         os.close();
     }
 
-    void alpha_wrap_2_exporter::draw_voronoi_diagram(std::ofstream& os) {
+    void alpha_wrap_2_exporter::draw_voronoi_diagram(std::ofstream& os, std::string color) {
         // Draw Voronoi diagram (dual of Delaunay triangulation)
 
-        os << "  <g stroke=\"orange\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
+        os << "  <g stroke=\"" << color << "\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
         for (auto eit = dt_.finite_edges_begin(); eit != dt_.finite_edges_end(); ++eit) {
             auto face = eit->first;
             int i = eit->second;
@@ -129,27 +145,12 @@ namespace aw2 {
 
                 Point_2 p(s->source().x(), s->source().y());
                 Point_2 q(s->target().x(), s->target().y());
-                Point_2 o;
-                auto intersects = oracle_.first_intersection(p, q, o, 5, 1.0);
 
                 auto sa = to_svg(s->source());
                 auto sb = to_svg(s->target());
 
-                if (intersects) {
-                    os << "    <line stroke=\"red\" x1=\"" << sa.first << "\" y1=\"" << sa.second
-                    << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
-                    auto so = to_svg(o);
-                    os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
-                    << so.first << "\" cy=\"" << so.second
-                    << "\" r=\"" << vertex_radius_*2 << "\" fill=\"purple\" />\n";
-                }
-                else {
-                    os << "    <line stroke=\"orange\" x1=\"" << sa.first << "\" y1=\"" << sa.second
-                    << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
-                }
-
-
-
+                os << "    <line stroke=\"orange\" x1=\"" << sa.first << "\" y1=\"" << sa.second
+                << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
             }
         }
         os << "  </g>\n";
@@ -161,5 +162,77 @@ namespace aw2 {
         double y = (ymax_ - p.y()) + margin_;
         return std::pair<double, double>(x, y);
     };
+
+    void alpha_wrap_2_exporter::write_svg_defs(std::ofstream& os, const StyleConfig& style) {
+        os << "  <defs>\n";
+        
+        if (style.use_gradients) {
+            // Linear gradient for triangles
+            os << "    <linearGradient id=\"triangleGradient\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\">\n";
+            os << "      <stop offset=\"0%\" style=\"stop-color:" << style.gradient_start << ";stop-opacity:1\" />\n";
+            os << "      <stop offset=\"100%\" style=\"stop-color:" << style.gradient_end << ";stop-opacity:1\" />\n";
+            os << "    </linearGradient>\n";
+            
+            // Radial gradient for vertices
+            os << "    <radialGradient id=\"vertexGradient\" cx=\"50%\" cy=\"50%\" r=\"50%\">\n";
+            os << "      <stop offset=\"0%\" style=\"stop-color:#ffffff;stop-opacity:1\" />\n";
+            os << "      <stop offset=\"100%\" style=\"stop-color:#ff4444;stop-opacity:1\" />\n";
+            os << "    </radialGradient>\n";
+        }
+        
+        // Pattern for special elements
+        os << "    <pattern id=\"stripes\" patternUnits=\"userSpaceOnUse\" width=\"4\" height=\"4\">\n";
+        os << "      <rect width=\"2\" height=\"4\" fill=\"#cccccc\"/>\n";
+        os << "      <rect x=\"2\" width=\"2\" height=\"4\" fill=\"#ffffff\"/>\n";
+        os << "    </pattern>\n";
+        
+        os << "  </defs>\n";
+    }
+
+    std::string alpha_wrap_2_exporter::get_triangle_color(const Delaunay::Face_handle& face, const StyleConfig& style) {
+        switch (style.scheme) {
+            case ColorScheme::GRADIENT:
+                return style.use_gradients ? "url(#triangleGradient)" : style.gradient_start;
+                
+            case ColorScheme::DATA_MAPPED:
+                if (style.map_to_data) {
+                    double area = compute_triangle_area(face);
+                    // You would need to compute min/max areas across all triangles
+                    return map_value_to_color(area, 0.0, 100.0); // placeholder values
+                }
+                return "lightblue";
+                
+            case ColorScheme::HEAT_MAP:
+                // Map based on some property like distance from center
+                return hsl_to_string(240, 70, 50); // Blue as default
+                
+            default: // SIMPLE
+                return "lightblue";
+        }
+    }
+
+    std::string alpha_wrap_2_exporter::map_value_to_color(double value, double min_val, double max_val) {
+        if (max_val <= min_val) return "lightblue";
+        
+        double normalized = std::max(0.0, std::min(1.0, (value - min_val) / (max_val - min_val)));
+        
+        // Map to hue: blue (240) to red (0)
+        int hue = static_cast<int>(240 * (1 - normalized));
+        return hsl_to_string(hue, 70, 50);
+    }
+
+    double alpha_wrap_2_exporter::compute_triangle_area(const Delaunay::Face_handle& face) {
+        Point_2 p1 = face->vertex(0)->point();
+        Point_2 p2 = face->vertex(1)->point();
+        Point_2 p3 = face->vertex(2)->point();
+        
+        // Using cross product for area calculation
+        double area = std::abs((p2.x() - p1.x()) * (p3.y() - p1.y()) - (p3.x() - p1.x()) * (p2.y() - p1.y())) / 2.0;
+        return area;
+    }
+
+    std::string alpha_wrap_2_exporter::hsl_to_string(int h, int s, int l) {
+        return "hsl(" + std::to_string(h) + "," + std::to_string(s) + "%," + std::to_string(l) + "%)";
+    }
 
 }
