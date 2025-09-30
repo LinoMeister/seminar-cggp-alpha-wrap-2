@@ -137,77 +137,19 @@ namespace aw2 {
 
             std::cout << "Dual edge: " << c_out_cc << " -> " << c_in_cc << std::endl;
 
-            Point_2 steiner_point;
-            bool insert = oracle_.first_intersection(
-                c_out_cc,
-                c_in_cc,
-                steiner_point,
-                offset
-            );
-
-            if (insert) {
-                std::cout << "R1 applies" << std::endl;
+            if (process_rule_1(c_in_cc, c_out_cc)) {
+                std::cout << "Steiner point inserted by R1." << std::endl;
+                continue;
             }
 
-
-            if (!insert) {
-                std::cout << "Checking R2" << std::endl;
-                insert = oracle_.do_intersect(c_in);
-                if (insert) {
-                    auto p_input = oracle_.closest_point(c_in_cc);
-                    if (!oracle_.first_intersection(
-                        c_in_cc,
-                        p_input,
-                        steiner_point,
-                        offset
-                    )) {
-                        std::cout << "Error: R2 failed to compute intersection point." << std::endl;
-                    }
-                }
+            if (process_rule_2(c_in, c_in_cc)) {
+                std::cout << "Steiner point inserted by R2." << std::endl;
+                continue;
             }
 
-            if (insert) {
-                std::cout << "Inserting Steiner point at " << steiner_point << std::endl;
-                // clear the queue
-                Queue empty;
-                std::swap(queue_, empty);
-                
-
-
-                // insert Steiner point
-                auto vh = dt_.insert(steiner_point);
-
-                // Update face labels
-                for (auto fit = dt_.incident_faces(vh); ;) {
-                    if (dt_.is_infinite(fit)) {
-                        fit->info() = OUTSIDE;
-                    } else {
-                        fit->info() = INSIDE;
-                    }
-
-                    if (++fit == dt_.incident_faces(vh)) break;
-                }
-
-
-                // Add new gates to the queue
-                for (auto eit = dt_.all_edges_begin(); eit != dt_.all_edges_end(); ++eit) {
-                    if (is_gate(*eit)) {
-                        Gate g;
-                        g.edge = *eit;
-                        g.priority = 0.0; // TODO: Compute priority
-                        queue_.push(g);
-                    }
-
-                }
-
-            }
-
-            else {
-                std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
-                c_in->info() = OUTSIDE;
-                update_queue(c_in);
-            }
-            
+            std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
+            c_in->info() = OUTSIDE;
+            update_queue(c_in);    
         }
 
 
@@ -315,8 +257,75 @@ namespace aw2 {
         return CGAL::circumcenter(p1, p2, far_point);
     }
 
+    bool alpha_wrap_2::process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc) {
+        Point_2 steiner_point;
+        bool insert = oracle_.first_intersection(
+            c_out_cc,
+            c_in_cc,
+            steiner_point,
+            offset_
+        );
+        if (insert) {
+            insert_steiner_point(steiner_point);
+            return true;
+        }
+        return false;
+    }
 
+    bool alpha_wrap_2::process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc) {
+        Point_2 steiner_point;
 
+        if (oracle_.do_intersect(c_in)) {
+            // project circumcenter onto point set
+            auto p_input = oracle_.closest_point(c_in_cc);
+
+            // insert intersection with offset surface as steiner point
+            if (oracle_.first_intersection(
+                c_in_cc,
+                p_input,
+                steiner_point,
+                offset_
+            )) {
+                insert_steiner_point(steiner_point);
+            }
+            else {
+                throw std::runtime_error("Error: R2 failed to compute intersection point.");
+            }
+            return true;
+        }
+        return false;
+    }
+
+    void alpha_wrap_2::insert_steiner_point(const Point_2& steiner_point) {
+        std::cout << "Inserting Steiner point at " << steiner_point << std::endl;
+        // clear the queue
+        Queue empty;
+        std::swap(queue_, empty);
+        
+        // insert Steiner point
+        auto vh = dt_.insert(steiner_point);
+
+        // Update face labels
+        for (auto fit = dt_.incident_faces(vh); ;) {
+            if (dt_.is_infinite(fit)) {
+                fit->info() = OUTSIDE;
+            } else {
+                fit->info() = INSIDE;
+            }
+
+            if (++fit == dt_.incident_faces(vh)) break;
+        }
+
+        // Add new gates to the queue
+        for (auto eit = dt_.all_edges_begin(); eit != dt_.all_edges_end(); ++eit) {
+            if (is_gate(*eit)) {
+                Gate g;
+                g.edge = *eit;
+                g.priority = 0.0; // TODO: Compute priority
+                queue_.push(g);
+            }
+        }
+    }
 }
 
 
