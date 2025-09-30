@@ -9,50 +9,18 @@ namespace aw2 {
         return std::make_pair(v1, v2);
     }
 
-    void aw2_test(const Oracle& oracle) {
-        std::vector<Point_2> pts_test = {
-            {0,0}, {700,0}, {0,500}, {250,800}, {670, 200}, {400, 700}
-        };
 
-        auto bbox = oracle.bbox_;
-        std::vector<Point_2> pts_bbox = {
-            {bbox.x_min,bbox.y_min}, {bbox.x_min,bbox.y_max}, {bbox.x_max,bbox.y_min}, {bbox.x_max,bbox.y_max}
-        };
-
-        Delaunay dt;
-        dt.insert(pts_bbox.begin(), pts_bbox.end());
-
-        Points pts = {
-            {100,100}, {200,200}, {300,300}, {400,400}, {500,500},
-            {600,100}, {100,600}, {300,500}, {500,300},
-            {150,400}, {400,150}, {250,250}, {350,350}
-        };
-        dt.insert(pts.begin(), pts.end());
-
-        for (auto fit = dt.finite_faces_begin(); fit != dt.finite_faces_end(); ++fit) {
-            auto intersects = oracle.do_intersect(fit);
-            if (intersects) {
-                fit->info() = INSIDE;
-            } else {
-                fit->info() = OUTSIDE;  
-            }
-        }
-
-        std::cout << "exporting svg image" << std::endl;
-        //export_svg(dt, oracle, "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/triangulation.svg");
-    }
-
-    alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) : oracle_(oracle) {
-        
-
-    }
+    alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) : oracle_(oracle) {}
 
     void alpha_wrap_2::compute_wrap(FT alpha, FT offset) {
+
+        // setup
         std::cout << "Computing alpha-wrap-2 with " << "alpha: " << alpha << " offset: " << offset << std::endl;
         alpha_ = alpha;
         offset_ = offset;
         init();
 
+        // export config
         auto style = StyleConfig{};
         style.voronoi_diagram = {"pink", 0.6};
         style.use_gradients = true;
@@ -61,9 +29,11 @@ namespace aw2 {
         style.scheme = ColorScheme::GRADIENT;
         alpha_wrap_2_exporter exporter(*this, style);
 
+        // main loop
+
         std::cout << "Queue contains " << queue_.size() << " gates." << std::endl;
 
-        int max_iterations = 2000;
+        int max_iterations = 5000;
         int iteration = 0;
 
         while (!queue_.empty()) {
@@ -80,11 +50,11 @@ namespace aw2 {
             std::cout << "Candidate gate: " << candidate_gate_.get_vertices().first << " -- " << candidate_gate_.get_vertices().second << std::endl;
 
             if (!is_gate(candidate_gate_.edge)) {
-                continue; // Not a gate anymore
+                continue; 
             }
 
             if (!is_alpha_traversable(candidate_gate_.edge, alpha)) {
-                continue; // Not traversable
+                continue; 
             }
 
 
@@ -183,24 +153,23 @@ namespace aw2 {
         for (auto eit = dt_.finite_edges_begin(); eit != dt_.finite_edges_end(); ++eit) {
             auto c_1 = eit->first;
             auto c_2 = c_1->neighbor(eit->second);
+            bool add_to_queue = false;
+            
             if (dt_.is_infinite(c_1) && !dt_.is_infinite(c_2)) {
                 c_1->info() = OUTSIDE;
                 c_2->info() = INSIDE;
-
-                Gate g;
-                g.edge = *eit;
-                g.priority = 0.0; // TODO: Compute priority
-                queue_.push(g);
-                continue;
+                add_to_queue = true;
             }
-
-            if (dt_.is_infinite(c_2) && !dt_.is_infinite(c_1)) {
+            else if (dt_.is_infinite(c_2) && !dt_.is_infinite(c_1)) {
                 c_2->info() = OUTSIDE;
                 c_1->info() = INSIDE;
+                add_to_queue = true;
+            }
 
+            if (add_to_queue) {
                 Gate g;
                 g.edge = *eit;
-                g.priority = 0.0; // TODO: Compute priority
+                g.priority = sq_minimal_delaunay_ball_radius(g.edge);
                 queue_.push(g);
             }
         }
@@ -217,18 +186,20 @@ namespace aw2 {
         return (c_in->info() != c_out->info());
     }
 
-    bool alpha_wrap_2::is_alpha_traversable(const Delaunay::Edge& e, const FT alpha) const {
-        // c_in and c_out are the faces
+    FT alpha_wrap_2::sq_minimal_delaunay_ball_radius(const Delaunay::Edge& e) const {
         auto c_in = e.first;
         int i = e.second;            
-        auto c_out = c_in->neighbor(i);
-
+        auto c2 = c_in->neighbor(i);
         
         // TODO: Correct implementation
         // For now use the edge length
         auto v1 = c_in->vertex(c_in->cw(i))->point();
         auto v2 = c_in->vertex(c_in->ccw(i))->point();
-        return CGAL::squared_distance(v1, v2) >= alpha * alpha;
+        return CGAL::squared_distance(v1, v2) / 4;
+    }
+
+    bool alpha_wrap_2::is_alpha_traversable(const Delaunay::Edge& e, const FT alpha) const {
+        return sq_minimal_delaunay_ball_radius(e) >= alpha * alpha;
     }
 
     void alpha_wrap_2::update_queue(const Delaunay::Face_handle& fh){
@@ -237,7 +208,7 @@ namespace aw2 {
             if (is_gate(e)) {
                 Gate g;
                 g.edge = e;
-                g.priority = 0.0; // TODO: Compute priority
+                g.priority = sq_minimal_delaunay_ball_radius(g.edge);
                 queue_.push(g);
             }
         }
