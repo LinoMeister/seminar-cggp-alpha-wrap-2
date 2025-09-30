@@ -55,7 +55,7 @@ namespace aw2 {
 
         std::cout << "Queue contains " << queue_.size() << " gates." << std::endl;
 
-        int max_iterations = 5;
+        int max_iterations = 2000;
         int iteration = 0;
 
         while (!queue_.empty()) {
@@ -174,10 +174,15 @@ namespace aw2 {
                 std::cout << "Checking R2" << std::endl;
                 insert = oracle_.do_intersect(c_in);
                 if (insert) {
-                    auto circum_center = dt_.circumcenter(c_in);
-
-                    // TODO: for now just use closest point
-                    steiner_point = oracle_.closest_point(circum_center);
+                    auto p_input = oracle_.closest_point(c_in_cc);
+                    if (!oracle_.first_intersection(
+                        c_in_cc,
+                        p_input,
+                        steiner_point,
+                        offset
+                    )) {
+                        std::cout << "Error: R2 failed to compute intersection point." << std::endl;
+                    }
                 }
             }
 
