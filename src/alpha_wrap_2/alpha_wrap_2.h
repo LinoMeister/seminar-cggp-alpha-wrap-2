@@ -1,6 +1,5 @@
 #include "types.h"
-#include "export_utils.h"
-
+#include "point_set_oracle_2.h"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Delaunay_triangulation_2.h>
@@ -18,6 +17,8 @@ namespace aw2 {
     struct Gate {
         Delaunay::Edge edge;
         FT priority;
+
+        std::pair<Point_2, Point_2> get_vertices() const;
     };
     
     
@@ -34,8 +35,11 @@ namespace aw2 {
 
         void init();
         bool is_gate(const Delaunay::Edge& e) const;
-
         bool is_alpha_traversable(const Delaunay::Edge& e, const FT alpha) const;
+        void update_queue(const Delaunay::Face_handle& fh);
+        void export_svg(const std::string& filename,
+                    double margin = 50.0, double stroke_width = 2,
+                    double vertex_radius = 0.5);
 
     public:
 

@@ -3,6 +3,12 @@
 
 namespace aw2 {
 
+    std::pair<Point_2, Point_2> Gate::get_vertices() const {
+        auto v1 = edge.first->vertex(edge.first->cw(edge.second))->point();
+        auto v2 = edge.first->vertex(edge.first->ccw(edge.second))->point();
+        return std::make_pair(v1, v2);
+    }
+
     void aw2_test(const Oracle& oracle) {
         std::vector<Point_2> pts_test = {
             {0,0}, {700,0}, {0,500}, {250,800}, {670, 200}, {400, 700}
@@ -33,7 +39,7 @@ namespace aw2 {
         }
 
         std::cout << "exporting svg image" << std::endl;
-        export_svg(dt, oracle, "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/triangulation.svg");
+        //export_svg(dt, oracle, "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/triangulation.svg");
     }
 
     alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) : oracle_(oracle) {
@@ -47,11 +53,11 @@ namespace aw2 {
 
         std::cout << "Queue contains " << queue_.size() << " gates." << std::endl;
 
-        int max_iterations = 1000;
+        int max_iterations = 50;
         int iteration = 0;
 
         while (!queue_.empty()) {
-            std::cout << "Iteration: " << iteration << " Queue size: " << queue_.size() << std::endl;
+            std::cout << "\nIteration: " << iteration << " Queue size: " << queue_.size() << std::endl;
 
             if (iteration++ > max_iterations) {
                 std::cout << "Reached maximum number of iterations (" << max_iterations << "). Stopping." << std::endl;
@@ -61,6 +67,8 @@ namespace aw2 {
             candidate_gate_ = queue_.top();
             queue_.pop();
 
+            std::cout << "Candidate gate: " << candidate_gate_.get_vertices().first << " -- " << candidate_gate_.get_vertices().second << std::endl;
+
             if (!is_gate(candidate_gate_.edge)) {
                 continue; // Not a gate anymore
             }
@@ -69,42 +77,73 @@ namespace aw2 {
                 continue; // Not traversable
             }
 
-            std::cout << "Passed checks." << std::endl;
 
             // Traverse the gate
             auto c_1 = candidate_gate_.edge.first;
             int i = candidate_gate_.edge.second;            
             auto c_2 = c_1->neighbor(i);
+
+
             
             // Find c_in and c_out
-            Delaunay::Face_handle c_in = c_1;
-            Delaunay::Face_handle c_out = c_2;
 
-            if (c_in->info() == OUTSIDE && c_in->info() == INSIDE) {
+
+            Delaunay::Face_handle c_in; 
+            Delaunay::Face_handle c_out;
+
+            if (c_1->info() == INSIDE && c_2->info() == OUTSIDE) {
+                c_in = c_1;
+                c_out = c_2;
+            }
+            else if (c_1->info() == OUTSIDE && c_2->info() == INSIDE) {
                 c_in = c_2;
                 c_out = c_1;
-            } 
+            }
+            else {
+                // This should not happen
+                std::cout << "Error: Both faces have the same label." << std::endl;
+                continue;
+            }
 
+            if (dt_.is_infinite(c_in)) {
+                std::cout << "Error: c_in is infinite." << std::endl;
+            }
+
+            // print vertices of c_in and c_out
+            std::cout << "c_in vertices: ";
+            for (int vi = 0; vi < 3; ++vi) {
+                std::cout << "(" << c_in->vertex(vi)->point() << ") ";
+            }
+            std::cout << std::endl;
+            std::cout << "c_out vertices: ";
+            for (int vi = 0; vi < 3; ++vi) {
+                std::cout << "(" << c_out->vertex(vi)->point() << ") ";
+            }
+            std::cout << std::endl;
+
+
+            // compute circumcenters of c_in and c_out
             Point_2 c_in_cc = dt_.circumcenter(c_in);
             Point_2 c_out_cc;
 
             if (dt_.is_infinite(c_out)) {
+                std::cout << "c_out is infinite." << std::endl;
                 const int inf_index = c_out->index(dt_.infinite_vertex());
-                dt_.circumcenter(c_out);
 
                 // construct a circumcenter for the infinite triangle
                 Point_2 p1 = c_out->vertex((inf_index + 1) % 3)->point();
                 Point_2 p2 = c_out->vertex((inf_index + 2) % 3)->point();
                 Point_2 mid = CGAL::midpoint(p1, p2);
+                
                 auto dir = mid - c_in_cc;
-                Point_2 far_point = mid + dir * 1000.0;
+                Point_2 far_point = mid - dir * 1000.0;
                 c_out_cc = CGAL::circumcenter(p1, p2, far_point);
             }
             else {
-                c_out_cc = dt_.circumcenter(c_in);
+                c_out_cc = dt_.circumcenter(c_out);
             }
 
-            std::cout << "Checking R1" << std::endl;
+            std::cout << "Dual edge: " << c_out_cc << " -> " << c_in_cc << std::endl;
 
             Point_2 steiner_point;
             bool insert = oracle_.first_intersection(
@@ -113,6 +152,10 @@ namespace aw2 {
                 steiner_point,
                 offset
             );
+
+            if (insert) {
+                std::cout << "R1 applies" << std::endl;
+            }
 
 
             if (!insert) {
@@ -128,21 +171,11 @@ namespace aw2 {
 
             if (insert) {
                 std::cout << "Inserting Steiner point at " << steiner_point << std::endl;
-                // find gates in queue that will be destroyed after insertion
-                std::stack<Gate> temp_queue;
-                while (!queue_.empty()) {
-                    auto g = queue_.top();
-                    queue_.pop();   
-                    if (g.edge.first == c_in || g.edge.first == c_out ||
-                        g.edge.first->neighbor(g.edge.second) == c_in ||
-                        g.edge.first->neighbor(g.edge.second) == c_out) {
-                        continue; // gate will be destroyed
-                    }
-                    temp_queue.push(g);
-                }
-                queue_ = temp_queue;
+                // clear the queue
+                Queue empty;
+                std::swap(queue_, empty);
+                
 
-                std::cout << "Queue size after removing destroyed gates: " << queue_.size() << std::endl;
 
                 // insert Steiner point
                 auto vh = dt_.insert(steiner_point);
@@ -155,14 +188,12 @@ namespace aw2 {
                         fit->info() = INSIDE;
                     }
 
-
                     if (++fit == dt_.incident_faces(vh)) break;
                 }
 
-                std::cout << "Updated face labels." << std::endl;
 
                 // Add new gates to the queue
-                for (auto eit = dt_.incident_edges(vh); ; ) {
+                for (auto eit = dt_.all_edges_begin(); eit != dt_.all_edges_end(); ++eit) {
                     if (is_gate(*eit)) {
                         Gate g;
                         g.edge = *eit;
@@ -170,16 +201,20 @@ namespace aw2 {
                         queue_.push(g);
                     }
 
-                    if (++eit == dt_.incident_edges(vh)) break;
                 }
+
             }
 
+            else {
+                c_in->info() = OUTSIDE;
+                update_queue(c_in);
+            }
             
         }
 
 
         
-        export_svg(dt_, oracle_, "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/triangulation.svg");
+        export_svg("/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/triangulation.svg");
 
 
     }
@@ -244,6 +279,165 @@ namespace aw2 {
         auto v1 = c_in->vertex(c_in->cw(i))->point();
         auto v2 = c_in->vertex(c_in->ccw(i))->point();
         return CGAL::squared_distance(v1, v2) >= alpha * alpha;
+    }
+
+    void alpha_wrap_2::update_queue(const Delaunay::Face_handle& fh){
+        for(int i = 0; i < 3; ++i) {
+            Delaunay::Edge e(fh, i);
+            if (is_gate(e)) {
+                Gate g;
+                g.edge = e;
+                g.priority = 0.0; // TODO: Compute priority
+                queue_.push(g);
+            }
+        }
+    }
+
+    void alpha_wrap_2::export_svg(const std::string& filename,
+                    double margin, double stroke_width,
+                    double vertex_radius)
+    {
+
+
+        // First, compute bounding box of finite vertices
+        double xmin = oracle_.bbox_.x_min;
+        double ymin = oracle_.bbox_.y_min;
+        double xmax = oracle_.bbox_.x_max;
+        double ymax = oracle_.bbox_.y_max;
+
+
+        if (xmin > xmax || ymin > ymax) {
+            // No finite vertices
+            return;
+        }
+
+        double width = xmax - xmin;
+        double height = ymax - ymin;
+
+        // Make an SVG canvas somewhat larger (margin)
+        double svg_w = width + 2*margin;
+        double svg_h = height + 2*margin;
+
+        std::ofstream os(filename);
+        os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
+        os << R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" )";
+        os << "width=\"" << svg_w << "\" height=\"" << svg_h << "\">\n";
+
+        // A helper to map a point to SVG coordinates
+        auto to_svg = [&](const Point_2& p) {
+            double x = (p.x() - xmin) + margin;
+            // Flip Y so that larger y goes downward in SVG coordinate
+            double y = (ymax - p.y()) + margin;
+            return std::pair<double, double>(x, y);
+        };
+
+        // Draw edges of all finite faces
+        os << R"(  <g stroke="black" stroke-width=")" << stroke_width
+        << "\" fill=\"none\">\n";
+        for (auto fit = dt_.finite_faces_begin(); fit != dt_.finite_faces_end(); ++fit) {
+            Point_2 pa = fit->vertex(0)->point();
+            Point_2 pb = fit->vertex(1)->point();
+            Point_2 pc = fit->vertex(2)->point();
+            auto sa = to_svg(pa);
+            auto sb = to_svg(pb);
+            auto sc = to_svg(pc);
+
+            auto inside = (fit->info() == INSIDE);
+
+            if (inside) {
+                os << "    <polygon points=\""
+                << std::fixed << std::setprecision(3)
+                << sa.first << "," << sa.second << " "
+                << sb.first << "," << sb.second << " "
+                << sc.first << "," << sc.second
+                << "\" fill=\"lightblue\" stroke=\"gray\" stroke-width=\"" << stroke_width/2 << "\" />\n";
+            }
+            else {
+                os << "    <polygon points=\""
+                << std::fixed << std::setprecision(3)
+                << sa.first << "," << sa.second << " "
+                << sb.first << "," << sb.second << " "
+                << sc.first << "," << sc.second
+                << "\" fill=\"none\" stroke=\"gray\" stroke-width=\"" << stroke_width/2 << "\" />\n";
+            }
+
+        }
+        os << "  </g>\n";
+
+        // Draw vertices as small circles
+        os << "  <g stroke=\"red\" stroke-width=\""<< stroke_width <<"\" fill=\"red\">\n";
+        for (auto vit = dt_.finite_vertices_begin(); vit != dt_.finite_vertices_end(); ++vit) {
+            const Point_2& p = vit->point();
+            auto sp = to_svg(p);
+            os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
+            << sp.first << "\" cy=\"" << sp.second
+            << "\" r=\"" << vertex_radius << "\" />\n";
+        }
+        os << "  </g>\n";
+
+        os << "  <g stroke=\"green\" stroke-width=\""<< stroke_width <<"\" fill=\"green\">\n";
+        for (auto vit = oracle_.tree_.begin(); vit != oracle_.tree_.end(); ++vit) {
+            const Point_2& p = *vit;
+            auto sp = to_svg(p);
+            os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
+            << sp.first << "\" cy=\"" << sp.second
+            << "\" r=\"" << vertex_radius << "\" />\n";
+        }
+        os << "  </g>\n";
+
+
+        // Draw Voronoi diagram (dual of Delaunay triangulation)
+        os << "  <g stroke=\"orange\" stroke-width=\"" << stroke_width/2 << "\" fill=\"none\">\n";
+        for (auto eit = dt_.finite_edges_begin(); eit != dt_.finite_edges_end(); ++eit) {
+            auto face = eit->first;
+            int i = eit->second;
+            auto neighbor = face->neighbor(i);
+            // Only draw each Voronoi edge once
+            if (dt_.is_infinite(face) || dt_.is_infinite(neighbor) || face > neighbor) continue;
+
+            CGAL::Object o1 = dt_.dual(eit);
+            if (const Segment_2* s = CGAL::object_cast<Segment_2>(&o1)) {
+
+                Point_2 p(s->source().x(), s->source().y());
+                Point_2 q(s->target().x(), s->target().y());
+                Point_2 o;
+                auto intersects = oracle_.first_intersection(p, q, o, 5, 0);
+
+                auto sa = to_svg(s->source());
+                auto sb = to_svg(s->target());
+
+                if (intersects) {
+                    os << "    <line stroke=\"red\" x1=\"" << sa.first << "\" y1=\"" << sa.second
+                    << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+                    auto so = to_svg(o);
+                    os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
+                    << so.first << "\" cy=\"" << so.second
+                    << "\" r=\"" << vertex_radius*2 << "\" fill=\"purple\" />\n";
+                }
+                else {
+                    os << "    <line stroke=\"orange\" x1=\"" << sa.first << "\" y1=\"" << sa.second
+                    << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+                }
+
+
+
+            }
+        }
+        os << "  </g>\n";
+
+        // draw candidate edge
+        os << "  <g stroke=\"green\" stroke-width=\"" << stroke_width/2 << "\" fill=\"none\">\n";
+        auto v1 = candidate_gate_.edge.first->vertex(candidate_gate_.edge.first->cw(candidate_gate_.edge.second))->point();
+        auto v2 = candidate_gate_.edge.first->vertex(candidate_gate_.edge.first->ccw(candidate_gate_.edge.second))->point();
+        auto sv1 = to_svg(v1);
+        auto sv2 = to_svg(v2);
+        os << "    <line stroke=\"green\" x1=\"" << sv1.first << "\" y1=\"" << sv1.second
+        << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
+        os << "  </g>\n";
+
+
+        os << "</svg>\n";
+        os.close();
     }
 
 }

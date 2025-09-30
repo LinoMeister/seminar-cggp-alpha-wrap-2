@@ -2,10 +2,12 @@
 
 namespace aw2 {
 
-    void export_svg(const Delaunay& dt, const Oracle& oracle, const std::string& filename,
+    void export_svg(const Oracle& oracle, const Delaunay& dt, const std::string& filename,
                     double margin, double stroke_width,
                     double vertex_radius)
     {
+
+
         // First, compute bounding box of finite vertices
         double xmin = oracle.bbox_.x_min;
         double ymin = oracle.bbox_.y_min;
