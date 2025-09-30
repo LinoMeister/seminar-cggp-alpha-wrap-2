@@ -16,3 +16,5 @@ cmake --build build -j
     - Updated with a new procedure, still needs to be checked if this is reliable
 - Priority queue is currently just a stack
     - Look at the one in CGAL, can probably work similarly
+- Correct implementation of alpha traversability check
+    - I don't think the current one is correct
