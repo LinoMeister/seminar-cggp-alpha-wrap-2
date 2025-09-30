@@ -1,4 +1,4 @@
-#include "point_set_oracle_2.h"
+#include <alpha_wrap_2/point_set_oracle_2.h>
 
 namespace aw2 {
 

@@ -1,11 +1,14 @@
-#include "types.h"
-#include "point_set_oracle_2.h"
+// Public header for alpha_wrap_2
+#ifndef AW2_ALPHA_WRAP_2_H
+#define AW2_ALPHA_WRAP_2_H
+
+#include "alpha_wrap_2/types.h"
+#include "alpha_wrap_2/point_set_oracle_2.h"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
 #include <iostream>
-
 
 namespace aw2 {
     using Oracle = point_set_oracle_2;
@@ -53,3 +56,5 @@ namespace aw2 {
         FT offset_;
     };
 }
+
+#endif // AW2_ALPHA_WRAP_2_H

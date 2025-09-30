@@ -1,5 +1,5 @@
-#include "alpha_wrap_2.h"
-#include "types.h"
+#include <alpha_wrap_2/alpha_wrap_2.h>
+#include <alpha_wrap_2/types.h>
 
 #include <CGAL/optimal_bounding_box.h>
 

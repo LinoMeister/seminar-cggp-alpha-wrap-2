@@ -1,9 +1,9 @@
 //
-// Created by lino on 28.09.25.
+// Copied public header for types
 //
 
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef AW2_TYPES_H
+#define AW2_TYPES_H
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_2.h>
@@ -31,4 +31,4 @@ namespace aw2
     typedef Delaunay::Face_handle Face_handle;
 }
 
-#endif // TYPES_H
+#endif // AW2_TYPES_H

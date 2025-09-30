@@ -1,3 +1,9 @@
+// Public header for point_set_oracle_2
+#ifndef AW2_POINT_SET_ORACLE_2_H
+#define AW2_POINT_SET_ORACLE_2_H
+
+#include "alpha_wrap_2/types.h"
+
 #include <CGAL/Default.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Kd_tree.h>
@@ -7,9 +13,7 @@
 #include <CGAL/Fuzzy_iso_box.h>
 #include <CGAL/Polygon_2_algorithms.h>
 #include <CGAL/Exact_circular_kernel_2.h>
-#include <CGAL/Circular_kernel_intersections.h>  
-#include "types.h"
-
+#include <CGAL/Circular_kernel_intersections.h>
 
 namespace aw2 {
 
@@ -62,3 +66,4 @@ public:
 };
 }
 
+#endif // AW2_POINT_SET_ORACLE_2_H

@@ -1,4 +1,4 @@
-#include "alpha_wrap_2.h"
+#include <alpha_wrap_2/alpha_wrap_2.h>
 
 
 namespace aw2 {

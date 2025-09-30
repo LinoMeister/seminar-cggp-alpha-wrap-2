@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
-project(alpha_wrap_2)
+project(alpha_wrap_2 LANGUAGES CXX)
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(CGAL REQUIRED)
+# Default to C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(ENABLE_PEDANTIC "Enable extra warnings" ON)
+if(ENABLE_PEDANTIC)
+	add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-file(GLOB SRC_FILES src/alpha_wrap_2/*.cpp)
-add_executable(${PROJECT_NAME} ${SRC_FILES})
-
-target_link_libraries(alpha_wrap_2 PRIVATE Eigen3::Eigen)
-target_link_libraries(alpha_wrap_2 PRIVATE CGAL::CGAL)
+add_subdirectory(src)

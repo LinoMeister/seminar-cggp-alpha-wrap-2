@@ -1,12 +1,9 @@
-//
-// Created by lino on 29.09.25.
-//
+// Public export utilities header
+#ifndef AW2_EXPORT_UTILS_H
+#define AW2_EXPORT_UTILS_H
 
-#ifndef EXPORT_UTILS_H
-#define EXPORT_UTILS_H
-
-#include "point_set_oracle_2.h"
-#include "types.h"
+#include "alpha_wrap_2/types.h"
+#include "alpha_wrap_2/point_set_oracle_2.h"
 #include <fstream>
 #include <limits>
 #include <iomanip>
@@ -22,5 +19,4 @@ namespace aw2 {
 }
 
 
-
-#endif //EXPORT_UTILS_H
+#endif // AW2_EXPORT_UTILS_H
