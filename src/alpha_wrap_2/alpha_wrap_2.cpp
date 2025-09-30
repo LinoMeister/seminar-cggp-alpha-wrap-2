@@ -53,6 +53,8 @@ namespace aw2 {
         offset_ = offset;
         init();
 
+        alpha_wrap_2_exporter exporter(*this);
+
         std::cout << "Queue contains " << queue_.size() << " gates." << std::endl;
 
         int max_iterations = 2000;
@@ -154,7 +156,7 @@ namespace aw2 {
 
 
         
-        aw2::export_svg(*this, "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/triangulation.svg");
+        exporter.export_svg("/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/triangulation.svg");
     }
 
 

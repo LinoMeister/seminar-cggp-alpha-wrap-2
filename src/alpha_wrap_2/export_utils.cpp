@@ -3,32 +3,35 @@
 
 namespace aw2 {
 
-    void export_svg(const alpha_wrap_2& wrapper, const std::string& filename,
-                    double margin, double stroke_width,
-                    double vertex_radius)
+    alpha_wrap_2_exporter::alpha_wrap_2_exporter(
+        const alpha_wrap_2& wrapper, 
+        double margin, double stroke_width,
+        double vertex_radius)
+        : wrapper_(wrapper), oracle_(wrapper.oracle_), dt_(wrapper.dt_), 
+          candidate_gate_(wrapper.candidate_gate_), margin_(margin), 
+          stroke_width_(stroke_width), vertex_radius_(vertex_radius)
     {
-        const auto& oracle_ = wrapper.oracle_;
-        const auto& dt_ = wrapper.dt_;
-        const auto& candidate_gate_ = wrapper.candidate_gate_;
-
         // First, compute bounding box of finite vertices
-        double xmin = oracle_.bbox_.x_min;
-        double ymin = oracle_.bbox_.y_min;
-        double xmax = oracle_.bbox_.x_max;
-        double ymax = oracle_.bbox_.y_max;
+        xmin_ = oracle_.bbox_.x_min;
+        ymin_ = oracle_.bbox_.y_min;
+        xmax_ = oracle_.bbox_.x_max;
+        ymax_ = oracle_.bbox_.y_max;
+    }
 
+    void alpha_wrap_2_exporter::export_svg(const std::string& filename)
+    {
 
-        if (xmin > xmax || ymin > ymax) {
+        if (xmin_ > xmax_ || ymin_ > ymax_) {
             // No finite vertices
             return;
         }
 
-        double width = xmax - xmin;
-        double height = ymax - ymin;
+        double width = xmax_ - xmin_;
+        double height = ymax_ - ymin_;
 
         // Make an SVG canvas somewhat larger (margin)
-        double svg_w = width + 2*margin;
-        double svg_h = height + 2*margin;
+        double svg_w = width + 2*margin_;
+        double svg_h = height + 2*margin_;
 
         std::ofstream os(filename);
         os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
@@ -36,15 +39,10 @@ namespace aw2 {
         os << "width=\"" << svg_w << "\" height=\"" << svg_h << "\">\n";
 
         // A helper to map a point to SVG coordinates
-        auto to_svg = [&](const Point_2& p) {
-            double x = (p.x() - xmin) + margin;
-            // Flip Y so that larger y goes downward in SVG coordinate
-            double y = (ymax - p.y()) + margin;
-            return std::pair<double, double>(x, y);
-        };
+
 
         // Draw edges of all finite faces
-        os << R"(  <g stroke="black" stroke-width=")" << stroke_width
+        os << R"(  <g stroke="black" stroke-width=")" << stroke_width_
         << "\" fill=\"none\">\n";
         for (auto fit = dt_.finite_faces_begin(); fit != dt_.finite_faces_end(); ++fit) {
             Point_2 pa = fit->vertex(0)->point();
@@ -62,7 +60,7 @@ namespace aw2 {
                 << sa.first << "," << sa.second << " "
                 << sb.first << "," << sb.second << " "
                 << sc.first << "," << sc.second
-                << "\" fill=\"lightblue\" stroke=\"gray\" stroke-width=\"" << stroke_width/2 << "\" />\n";
+                << "\" fill=\"lightblue\" stroke=\"gray\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
             }
             else {
                 os << "    <polygon points=\""
@@ -70,36 +68,55 @@ namespace aw2 {
                 << sa.first << "," << sa.second << " "
                 << sb.first << "," << sb.second << " "
                 << sc.first << "," << sc.second
-                << "\" fill=\"none\" stroke=\"gray\" stroke-width=\"" << stroke_width/2 << "\" />\n";
+                << "\" fill=\"none\" stroke=\"gray\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
             }
 
         }
         os << "  </g>\n";
 
         // Draw vertices as small circles
-        os << "  <g stroke=\"red\" stroke-width=\""<< stroke_width <<"\" fill=\"red\">\n";
+        os << "  <g stroke=\"red\" stroke-width=\""<< stroke_width_ <<"\" fill=\"red\">\n";
         for (auto vit = dt_.finite_vertices_begin(); vit != dt_.finite_vertices_end(); ++vit) {
             const Point_2& p = vit->point();
             auto sp = to_svg(p);
             os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
             << sp.first << "\" cy=\"" << sp.second
-            << "\" r=\"" << vertex_radius << "\" />\n";
+            << "\" r=\"" << vertex_radius_ << "\" />\n";
         }
         os << "  </g>\n";
 
-        os << "  <g stroke=\"green\" stroke-width=\""<< stroke_width <<"\" fill=\"green\">\n";
+        os << "  <g stroke=\"green\" stroke-width=\""<< stroke_width_ <<"\" fill=\"green\">\n";
         for (auto vit = oracle_.tree_.begin(); vit != oracle_.tree_.end(); ++vit) {
             const Point_2& p = *vit;
             auto sp = to_svg(p);
             os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
             << sp.first << "\" cy=\"" << sp.second
-            << "\" r=\"" << vertex_radius << "\" />\n";
+            << "\" r=\"" << vertex_radius_ << "\" />\n";
         }
         os << "  </g>\n";
 
 
+        
+
+        // draw candidate edge
+        os << "  <g stroke=\"green\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
+        auto v1 = candidate_gate_.edge.first->vertex(candidate_gate_.edge.first->cw(candidate_gate_.edge.second))->point();
+        auto v2 = candidate_gate_.edge.first->vertex(candidate_gate_.edge.first->ccw(candidate_gate_.edge.second))->point();
+        auto sv1 = to_svg(v1);
+        auto sv2 = to_svg(v2);
+        os << "    <line stroke=\"green\" x1=\"" << sv1.first << "\" y1=\"" << sv1.second
+        << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
+        os << "  </g>\n";
+
+
+        os << "</svg>\n";
+        os.close();
+    }
+
+    void alpha_wrap_2_exporter::draw_voronoi_diagram(std::ofstream& os) {
         // Draw Voronoi diagram (dual of Delaunay triangulation)
-        os << "  <g stroke=\"orange\" stroke-width=\"" << stroke_width/2 << "\" fill=\"none\">\n";
+
+        os << "  <g stroke=\"orange\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
         for (auto eit = dt_.finite_edges_begin(); eit != dt_.finite_edges_end(); ++eit) {
             auto face = eit->first;
             int i = eit->second;
@@ -124,7 +141,7 @@ namespace aw2 {
                     auto so = to_svg(o);
                     os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
                     << so.first << "\" cy=\"" << so.second
-                    << "\" r=\"" << vertex_radius*2 << "\" fill=\"purple\" />\n";
+                    << "\" r=\"" << vertex_radius_*2 << "\" fill=\"purple\" />\n";
                 }
                 else {
                     os << "    <line stroke=\"orange\" x1=\"" << sa.first << "\" y1=\"" << sa.second
@@ -136,20 +153,13 @@ namespace aw2 {
             }
         }
         os << "  </g>\n";
-
-        // draw candidate edge
-        os << "  <g stroke=\"green\" stroke-width=\"" << stroke_width/2 << "\" fill=\"none\">\n";
-        auto v1 = candidate_gate_.edge.first->vertex(candidate_gate_.edge.first->cw(candidate_gate_.edge.second))->point();
-        auto v2 = candidate_gate_.edge.first->vertex(candidate_gate_.edge.first->ccw(candidate_gate_.edge.second))->point();
-        auto sv1 = to_svg(v1);
-        auto sv2 = to_svg(v2);
-        os << "    <line stroke=\"green\" x1=\"" << sv1.first << "\" y1=\"" << sv1.second
-        << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
-        os << "  </g>\n";
-
-
-        os << "</svg>\n";
-        os.close();
     }
+
+    std::pair<double, double> alpha_wrap_2_exporter::to_svg(const Point_2& p) {
+        double x = (p.x() - xmin_) + margin_;
+        // Flip Y so that larger y goes downward in SVG coordinate
+        double y = (ymax_ - p.y()) + margin_;
+        return std::pair<double, double>(x, y);
+    };
 
 }
