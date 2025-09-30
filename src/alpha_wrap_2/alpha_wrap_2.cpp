@@ -137,8 +137,18 @@ namespace aw2 {
                 Point_2 p2 = c_out->vertex((inf_index + 2) % 3)->point();
                 Point_2 mid = CGAL::midpoint(p1, p2);
                 
-                auto dir = mid - c_in_cc;
-                Point_2 far_point = mid - dir * 1000.0;
+                K::Line_2 line(p1, p2);
+                
+                // check on which line the non-adjacent vertext of c_in lies
+                Point_2 c_in_nonadjc = c_in->vertex(c_in->cw((i+1)%3))->point();
+                std::cout << "Non-adjacent vertex of c_in: " << c_in_nonadjc << std::endl;
+                auto side = line.oriented_side(c_in_nonadjc);
+
+                int sign = (side == CGAL::ON_POSITIVE_SIDE) ? 1 : -1;
+
+                auto dir = line.perpendicular(mid).direction().to_vector();
+    
+                Point_2 far_point = mid - sign * 10000 * dir;
                 c_out_cc = CGAL::circumcenter(p1, p2, far_point);
             }
             else {
