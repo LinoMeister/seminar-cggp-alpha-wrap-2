@@ -11,8 +11,11 @@
 namespace aw2 {
 
     using Oracle = point_set_oracle_2;
+    
+    // Forward declaration
+    class alpha_wrap_2;
 
-    void export_svg(const Oracle& oracle, const Delaunay& dt, const std::string& filename,
+    void export_svg(const alpha_wrap_2& wrapper, const std::string& filename,
                     double margin = 50.0, double stroke_width = 2,
                     double vertex_radius = 0.5);
     
