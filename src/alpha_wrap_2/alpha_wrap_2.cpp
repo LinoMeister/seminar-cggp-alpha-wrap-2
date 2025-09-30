@@ -48,12 +48,14 @@ namespace aw2 {
     }
 
     void alpha_wrap_2::compute_wrap(FT alpha, FT offset) {
-        std::cout << "Computing alpha-wrap-2..." << std::endl;
+        std::cout << "Computing alpha-wrap-2 with " << "alpha: " << alpha << " offset: " << offset << std::endl;
+        alpha_ = alpha;
+        offset_ = offset;
         init();
 
         std::cout << "Queue contains " << queue_.size() << " gates." << std::endl;
 
-        int max_iterations = 50;
+        int max_iterations = 5;
         int iteration = 0;
 
         while (!queue_.empty()) {
@@ -206,6 +208,7 @@ namespace aw2 {
             }
 
             else {
+                std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
                 c_in->info() = OUTSIDE;
                 update_queue(c_in);
             }
@@ -223,9 +226,13 @@ namespace aw2 {
     void alpha_wrap_2::init() {
 
         // Insert bounding box points
+        FT margin = 0.1 + offset_;
         auto bbox = oracle_.bbox_;
         std::vector<Point_2> pts_bbox = {
-            {bbox.x_min,bbox.y_min}, {bbox.x_min,bbox.y_max}, {bbox.x_max,bbox.y_min}, {bbox.x_max,bbox.y_max}
+            {bbox.x_min - margin, bbox.y_min - margin}, 
+            {bbox.x_min - margin, bbox.y_max + margin}, 
+            {bbox.x_max + margin, bbox.y_min - margin}, 
+            {bbox.x_max + margin, bbox.y_max + margin}
         };
         dt_.insert(pts_bbox.begin(), pts_bbox.end());
 
