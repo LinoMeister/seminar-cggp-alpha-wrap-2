@@ -7,6 +7,9 @@
 #include <fstream>
 #include <limits>
 #include <iomanip>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace aw2 {
 
@@ -56,6 +59,7 @@ namespace aw2 {
         alpha_wrap_2_exporter(const alpha_wrap_2& wrapper, const StyleConfig& style = StyleConfig{});
 
         void export_svg(const std::string& filename);
+        void setup_export_dir(const std::string& base_path);
     
     private:
         void draw_input_points(std::ofstream& os);
@@ -85,6 +89,8 @@ namespace aw2 {
         double ymax_;
 
         StyleConfig style_;
+
+        fs::path export_dir_;
     };
 }
 

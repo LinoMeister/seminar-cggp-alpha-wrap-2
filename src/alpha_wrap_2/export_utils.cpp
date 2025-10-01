@@ -17,6 +17,23 @@ namespace aw2 {
         ymax_ = oracle_.bbox_.y_max;
     }
 
+    void alpha_wrap_2_exporter::setup_export_dir(const std::string& base_path) {
+
+        fs::path base_export_path(base_path);
+        if (!fs::exists(base_export_path)) {
+            throw std::runtime_error("Export path does not exist: " + base_export_path.string());
+        }
+
+        // use current timestamp for unique directory
+        export_dir_ = base_export_path / std::to_string(std::time(nullptr));
+        try {
+            fs::create_directories(export_dir_); // no-op if already exists
+        } catch (const fs::filesystem_error& e) {
+            throw std::runtime_error("Failed to create directory: " + std::string(e.what()));
+        }     
+    }
+
+
     void alpha_wrap_2_exporter::export_svg(const std::string& filename)
     {
         bool draw_voronoi = true;
@@ -34,7 +51,7 @@ namespace aw2 {
         double svg_w = width + 2*margin_;
         double svg_h = height + 2*margin_;
 
-        std::ofstream os(filename);
+        std::ofstream os(export_dir_ / filename);
         os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
         os << R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" )";
         os << "width=\"" << svg_w << "\" height=\"" << svg_h << "\">\n";

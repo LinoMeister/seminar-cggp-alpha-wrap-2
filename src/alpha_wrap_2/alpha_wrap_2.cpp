@@ -15,11 +15,11 @@ namespace aw2 {
 
     void alpha_wrap_2::compute_wrap(FT alpha, FT offset) {
 
+        namespace fs = std::filesystem;
+
         // setup
         std::cout << "Computing alpha-wrap-2 with " << "alpha: " << alpha << " offset: " << offset << std::endl;
 
-        std::string base_path = "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/";
-        
         // Create hierarchical timer structure
         auto& registry = TimerRegistry::instance();
         Timer* total_timer = registry.create_root_timer("Alpha Wrap Algorithm");
@@ -45,7 +45,10 @@ namespace aw2 {
         style.use_opacity = true;
         style.opacity = 1.0;
         style.scheme = ColorScheme::GRADIENT;
+
         alpha_wrap_2_exporter exporter(*this, style);
+        exporter.setup_export_dir("/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/");
+
 
         // main loop
 
@@ -63,8 +66,7 @@ namespace aw2 {
 
             if ((iteration % 50) == 0) {
                 // Export current state
-                std::string filename = base_path + "in_progress_iter_" + std::to_string(iteration) + ".svg";
-                exporter.export_svg(filename);
+                exporter.export_svg("in_progress_iter_" + std::to_string(iteration) + ".svg");
             }
 
             if (iteration++ > max_iterations) {
@@ -166,9 +168,9 @@ namespace aw2 {
         }
 
         main_loop_timer->pause();
-        
-        exporter.export_svg("/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/triangulation.svg");
-        
+
+        exporter.export_svg("final_result.svg");
+
         total_timer->pause();
         
         // Print hierarchical timing report

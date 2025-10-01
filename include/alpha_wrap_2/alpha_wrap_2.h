@@ -12,6 +12,7 @@
 #include <iostream>
 #include <queue>
 #include <stack>
+#include <filesystem>
 
 namespace aw2 {
     using Oracle = point_set_oracle_2;
