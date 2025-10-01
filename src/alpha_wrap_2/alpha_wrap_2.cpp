@@ -229,16 +229,65 @@ namespace aw2 {
         return (c_in->info() != c_out->info());
     }
 
+    // Return the squared radius of the minimal Delaunay ball through the edge
     FT alpha_wrap_2::sq_minimal_delaunay_ball_radius(const Delaunay::Edge& e) const {
-        auto c_in = e.first;
+        Delaunay::Face_handle c_1 = e.first;
         int i = e.second;            
-        auto c2 = c_in->neighbor(i);
+        Delaunay::Face_handle c_2 = c_1->neighbor(i);
+
+        // get edge vertices
+        auto v1 = c_1->vertex(c_1->cw(i));
+        auto v2 = c_1->vertex(c_1->ccw(i));
+        auto p1 = v1->point();
+        auto p2 = v2->point();
+
+        auto mid = CGAL::midpoint(p1, p2);
+        auto sq_rad = CGAL::squared_distance(p1, p2) / 4;
+
+        // get non-edge vertices
+        auto c_1_other = c_1->vertex(i)->point();
+        auto c_2_other = c_2->vertex(c_2->cw(c_2->index(v1)))->point();
+
+        // check if the other vertices are inside the circle
+
+        if (c_1_other == p1 || c_1_other == p2) {
+            std::ostringstream oss;
+            oss << "Error: c_1_other is identical to one of the edge vertices: ";
+
+            oss << "c_1 vertices: ";
+            for (int vi = 0; vi < 3; ++vi) {
+                oss << "(" << c_1->vertex(vi)->point() << ") ";
+            }
+            throw std::runtime_error(oss.str());
+        }
+
+        if (c_2_other == p1 || c_2_other == p2) {
+            std::ostringstream oss;
+            oss << "Error: c_2_other is identical to one of the edge vertices: ";
+
+            oss << "c_2 vertices: ";
+            for (int vi = 0; vi < 3; ++vi) {
+                oss << "(" << c_2->vertex(vi)->point() << ") ";
+            }
+
+            throw std::runtime_error(oss.str());
+        }
+
+        // if Delaunay, use the smallest ball through both points
+        if (CGAL::squared_distance(mid, c_1_other) > sq_rad &&
+            CGAL::squared_distance(mid, c_2_other) > sq_rad) {
+            return sq_rad;
+        }
+
+        // otherwise find the smaller Delaunay ball radius of the two triangles
+        auto c1_sq_circum_rad = dt_.is_infinite(c_1) ? std::numeric_limits<FT>::infinity() : CGAL::squared_distance(dt_.circumcenter(c_1), p1);
+        auto c2_sq_circum_rad = dt_.is_infinite(c_2) ? std::numeric_limits<FT>::infinity() : CGAL::squared_distance(dt_.circumcenter(c_2), p2);
+        auto min_sq_circum_rad = std::min(c1_sq_circum_rad, c2_sq_circum_rad);
         
-        // TODO: Correct implementation
-        // For now use the edge length
-        auto v1 = c_in->vertex(c_in->cw(i))->point();
-        auto v2 = c_in->vertex(c_in->ccw(i))->point();
-        return CGAL::squared_distance(v1, v2) / 4;
+        if (min_sq_circum_rad == std::numeric_limits<FT>::infinity()) {
+            throw std::runtime_error("Error: Both faces are infinite.");
+        }
+        return min_sq_circum_rad;
     }
 
     bool alpha_wrap_2::is_alpha_traversable(const Delaunay::Edge& e, const FT alpha) const {
@@ -257,7 +306,7 @@ namespace aw2 {
         }
     }
 
-    Point_2 alpha_wrap_2::infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) {
+    Point_2 alpha_wrap_2::infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) const {
         const int inf_index = c_out->index(dt_.infinite_vertex());
 
         // construct a circumcenter for the infinite triangle
