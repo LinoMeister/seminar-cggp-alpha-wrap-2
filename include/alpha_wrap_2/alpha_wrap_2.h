@@ -10,6 +10,8 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 
 #include <iostream>
+#include <queue>
+#include <stack>
 
 namespace aw2 {
     using Oracle = point_set_oracle_2;
@@ -23,12 +25,24 @@ namespace aw2 {
         FT priority;
 
         std::pair<Point_2, Point_2> get_vertices() const;
+
+        bool operator<(const Gate& other) const {
+            return priority < other.priority;
+        }
+        
+        bool operator>(const Gate& other) const {
+            return priority > other.priority;
+        }
     };
     
     
     class alpha_wrap_2 {
 
+#ifdef USE_STACK_QUEUE
         using Queue = std::stack<Gate>;
+#else
+        using Queue = std::priority_queue<Gate, std::vector<Gate>, std::greater<Gate>>;
+#endif
 
     public:
         alpha_wrap_2(const Oracle& oracle);
