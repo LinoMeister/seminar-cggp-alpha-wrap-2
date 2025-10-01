@@ -17,6 +17,8 @@ namespace aw2 {
 
         // setup
         std::cout << "Computing alpha-wrap-2 with " << "alpha: " << alpha << " offset: " << offset << std::endl;
+
+        std::string base_path = "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/";
         
         // Create hierarchical timer structure
         auto& registry = TimerRegistry::instance();
@@ -57,6 +59,13 @@ namespace aw2 {
         while (!queue_.empty()) {
             gate_processing_timer->start();
             std::cout << "\nIteration: " << iteration << " Queue size: " << queue_.size() << std::endl;
+
+
+            if ((iteration % 50) == 0) {
+                // Export current state
+                std::string filename = base_path + "in_progress_iter_" + std::to_string(iteration) + ".svg";
+                exporter.export_svg(filename);
+            }
 
             if (iteration++ > max_iterations) {
                 std::cout << "Reached maximum number of iterations (" << max_iterations << "). Stopping." << std::endl;

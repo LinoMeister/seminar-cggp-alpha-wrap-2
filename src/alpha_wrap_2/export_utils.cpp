@@ -99,15 +99,21 @@ namespace aw2 {
         draw_input_points(os);
 
 
-        // draw candidate edge
-        os << "  <g stroke=\"green\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
-        auto v1 = candidate_gate_.edge.first->vertex(candidate_gate_.edge.first->cw(candidate_gate_.edge.second))->point();
-        auto v2 = candidate_gate_.edge.first->vertex(candidate_gate_.edge.first->ccw(candidate_gate_.edge.second))->point();
-        auto sv1 = to_svg(v1);
-        auto sv2 = to_svg(v2);
-        os << "    <line stroke=\"green\" x1=\"" << sv1.first << "\" y1=\"" << sv1.second
-        << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
-        os << "  </g>\n";
+        // draw candidate edge (only if candidate gate has a valid face handle)
+        if (candidate_gate_.edge.first != Delaunay::Face_handle()) {
+            os << "  <g stroke=\"green\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
+            auto face = candidate_gate_.edge.first;
+            int idx = candidate_gate_.edge.second;
+            if (face != Delaunay::Face_handle() && idx >= 0 && idx < 3) {
+                auto v1 = face->vertex(face->cw(idx))->point();
+                auto v2 = face->vertex(face->ccw(idx))->point();
+                auto sv1 = to_svg(v1);
+                auto sv2 = to_svg(v2);
+                os << "    <line stroke=\"green\" x1=\"" << sv1.first << "\" y1=\"" << sv1.second
+                << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
+            }
+            os << "  </g>\n";
+        }
 
 
         os << "</svg>\n";
