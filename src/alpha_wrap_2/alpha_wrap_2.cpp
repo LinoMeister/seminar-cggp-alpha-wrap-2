@@ -100,12 +100,11 @@ namespace aw2 {
             }
             else {
                 // This should not happen
-                std::cout << "Error: Both faces have the same label." << std::endl;
-                continue;
+                throw std::runtime_error("Error: Encountered gate with identical labels.");
             }
 
             if (dt_.is_infinite(c_in)) {
-                std::cout << "Error: c_in is infinite." << std::endl;
+                throw std::runtime_error("Error: c_in is infinite face.");
             }
 
             // print vertices of c_in and c_out
