@@ -26,9 +26,15 @@
 
 - Priority queue is currently just a stack
     - Look at the one in CGAL, can probably work similarly
+    - Added option to use priority queue
+    - still need to compare them
+
+- Efficient queue insertion and removal
+    - Currently clear queue after each iteration and check every edge for insertion
 
 - Correct implementation of alpha traversability check
     - Currently we just use edge length for minimum Delaunay ball radius
+    - Should now yield the correct result
 
 
 
