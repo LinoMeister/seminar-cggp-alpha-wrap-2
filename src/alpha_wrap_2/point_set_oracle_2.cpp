@@ -63,15 +63,25 @@ namespace aw2 {
                             const FT intersection_precision) const
     {
         if (tree_.empty()) return false;
-
-        
-
         Segment_2 seg(p, q);
 
+        // get a bounding box with margins so we narrow down the search
+        CGAL::Bbox_2 bbox = seg.bbox();
+        Point_2 min(bbox.xmin() - offset_size, bbox.ymin() - offset_size);
+        Point_2 max(bbox.xmax() + offset_size, bbox.ymax() + offset_size);
+        CGAL::Fuzzy_iso_box<Traits> box(min, max);
+
+        std::vector<Point_2> candidates;
+        tree_.search(std::back_inserter(candidates), box);
+
+        if (candidates.empty()) {
+            return false;
+        }
+
+        // if we have candidates, find the closest one
         Point_2 best;
         FT best_sqdist = std::numeric_limits<FT>::max();
-
-        for (auto it = tree_.begin(); it != tree_.end(); ++it)
+        for (auto it = candidates.begin(); it != candidates.end(); ++it)
         {
             FT d2 = CGAL::squared_distance(*it, seg);
             if (d2 < best_sqdist)
