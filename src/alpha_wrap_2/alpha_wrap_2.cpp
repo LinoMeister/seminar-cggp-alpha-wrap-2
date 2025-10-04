@@ -196,25 +196,24 @@ namespace aw2 {
         for (auto eit = dt_.finite_edges_begin(); eit != dt_.finite_edges_end(); ++eit) {
             auto c_1 = eit->first;
             auto c_2 = c_1->neighbor(eit->second);
-            bool add_to_queue = false;
             
             if (dt_.is_infinite(c_1) && !dt_.is_infinite(c_2)) {
                 c_1->info() = OUTSIDE;
                 c_2->info() = INSIDE;
-                add_to_queue = true;
             }
             else if (dt_.is_infinite(c_2) && !dt_.is_infinite(c_1)) {
                 c_2->info() = OUTSIDE;
                 c_1->info() = INSIDE;
-                add_to_queue = true;
             }
-
-            if (add_to_queue) {
-                Gate g;
-                g.edge = *eit;
-                g.priority = sq_minimal_delaunay_ball_radius(g.edge);
-                queue_.push(g);
+            else {
+                continue;
             }
+            
+            // add gate to queue
+            Gate g;
+            g.edge = *eit;
+            g.priority = sq_minimal_delaunay_ball_radius(g.edge);
+            queue_.push(g);
         }
 
     }
