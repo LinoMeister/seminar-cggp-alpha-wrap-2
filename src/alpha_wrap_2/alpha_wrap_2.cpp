@@ -394,7 +394,7 @@ namespace aw2 {
             if (is_gate(*eit)) {
                 Gate g;
                 g.edge = *eit;
-                g.priority = 0.0; // TODO: Compute priority
+                g.priority = sq_minimal_delaunay_ball_radius(g.edge);
                 queue_.push(g);
             }
         }
