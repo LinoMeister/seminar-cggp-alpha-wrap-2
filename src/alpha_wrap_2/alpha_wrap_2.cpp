@@ -13,9 +13,12 @@ namespace aw2 {
 
     alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) : oracle_(oracle) {}
 
-    void alpha_wrap_2::compute_wrap(FT alpha, FT offset) {
+    void alpha_wrap_2::compute_wrap(AlgorithmConfig& config) {
 
         namespace fs = std::filesystem;
+        auto alpha = config.alpha;
+        auto offset = config.offset;
+        auto max_iterations = config.max_iterations;
 
         // setup
         std::cout << "Computing alpha-wrap-2 with " << "alpha: " << alpha << " offset: " << offset << std::endl;
@@ -54,28 +57,28 @@ namespace aw2 {
 
         std::cout << "Queue contains " << queue_.size() << " gates." << std::endl;
 
-        int max_iterations = 5000;
         int iteration = 0;
         
         main_loop_timer->start();
 
         while (!queue_.empty()) {
             gate_processing_timer->start();
-            std::cout << "\nIteration: " << iteration << " Queue size: " << queue_.size() << std::endl;
 
-
-            if ((iteration % 50) == 0) {
-                // Export current state
-                exporter.export_svg("in_progress_iter_" + std::to_string(iteration) + ".svg");
-            }
-
-            if (iteration++ > max_iterations) {
+            if (++iteration > max_iterations) {
                 std::cout << "Reached maximum number of iterations (" << max_iterations << "). Stopping." << std::endl;
                 break;
             }
 
+            std::cout << "\nIteration: " << iteration << " Queue size: " << queue_.size() << std::endl;
+
             candidate_gate_ = queue_.top();
             queue_.pop();
+
+            
+            if ((iteration % config.intermediate_steps) == 0 && (iteration < config.export_step_limit)) {
+                // Export current state
+                exporter.export_svg("in_progress_iter_" + std::to_string(iteration) + ".svg");
+            }
 
             std::cout << "Candidate gate: " << candidate_gate_.get_vertices().first << " -- " << candidate_gate_.get_vertices().second << std::endl;
 

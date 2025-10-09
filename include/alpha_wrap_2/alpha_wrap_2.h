@@ -18,8 +18,20 @@ namespace aw2 {
     using Oracle = point_set_oracle_2;
 
 
-    void aw2_test(const Oracle& oracle);
+    struct AlgorithmConfig {
+        // algorithm parameters
+        FT alpha = 10.0;
+        FT offset = 2.0;
 
+        int max_iterations = 5000;
+
+        // interval for exporting intermediate results
+        int intermediate_steps = 50;
+
+        // after this iteration we stop exporting intermediate results
+        // this is useful when we only want to export the first few steps
+        int export_step_limit = 1000; 
+    };
 
     struct Gate {
         Delaunay::Edge edge;
@@ -47,7 +59,7 @@ namespace aw2 {
 
         alpha_wrap_2(const Oracle& oracle);
 
-        void compute_wrap(FT alpha, FT offset);
+        void compute_wrap(AlgorithmConfig& config);
 
     private:
 

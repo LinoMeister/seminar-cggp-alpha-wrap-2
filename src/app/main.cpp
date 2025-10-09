@@ -25,7 +25,15 @@ int main(int argc, char *argv[])
   aw2::FT offset = argc > 3 ? std::stod(argv[3]) : 2.0;
 
   aw2::alpha_wrap_2 aw(oracle);
-  aw.compute_wrap(alpha, offset);
+
+  aw2::AlgorithmConfig config;
+  config.alpha = alpha;
+  config.offset = offset;
+  config.intermediate_steps = 1;
+  config.export_step_limit = 10;
+  config.max_iterations = 5000;
+
+  aw.compute_wrap(config);
 
   return 0;
 }
