@@ -113,38 +113,29 @@ namespace aw2 {
         // Draw input points
         draw_input_points(os);
 
-
         alpha_wrap_2::Queue temp_queue = wrapper_.queue_;
-        while (!temp_queue.empty()) {
+        while (!temp_queue.empty() && style_.draw_queue_edges) {
             auto gate = temp_queue.top();
             temp_queue.pop();
-            os << "  <g stroke=\"blue\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
-            auto v1 = gate.get_vertices().first;
-            auto v2 = gate.get_vertices().second;
-            auto sv1 = to_svg(v1);
-            auto sv2 = to_svg(v2);
+            os  << "  <g stroke=\"" << style_.queue_edges.color << "\" stroke-width=\"" 
+                << stroke_width_ * style_.queue_edges.relative_stroke_width << "\" fill=\"none\">\n";
+            auto sv1 = to_svg(gate.get_vertices().first);
+            auto sv2 = to_svg(gate.get_vertices().second);
+            os << "    <line x1=\"" << sv1.first << "\" y1=\"" << sv1.second
+               << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
+            os << "  </g>\n";
+        }   
+
+        // draw candidate edge (only if candidate gate has a valid face handle)
+        if (candidate_gate_.edge.first != Delaunay::Face_handle()) {
+            os  << "  <g stroke=\"" << style_.candidate_edge.color << "\" stroke-width=\"" 
+                << stroke_width_ * style_.candidate_edge.relative_stroke_width << "\" fill=\"none\">\n";
+            auto sv1 = to_svg(candidate_gate_.get_vertices().first);
+            auto sv2 = to_svg(candidate_gate_.get_vertices().second);
             os << "    <line x1=\"" << sv1.first << "\" y1=\"" << sv1.second
                << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
             os << "  </g>\n";
         }
-        
-
-        // draw candidate edge (only if candidate gate has a valid face handle)
-        if (candidate_gate_.edge.first != Delaunay::Face_handle()) {
-            os << "  <g stroke=\"green\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
-            auto face = candidate_gate_.edge.first;
-            int idx = candidate_gate_.edge.second;
-            if (face != Delaunay::Face_handle() && idx >= 0 && idx < 3) {
-                auto v1 = face->vertex(face->cw(idx))->point();
-                auto v2 = face->vertex(face->ccw(idx))->point();
-                auto sv1 = to_svg(v1);
-                auto sv2 = to_svg(v2);
-                os << "    <line stroke=\"green\" x1=\"" << sv1.first << "\" y1=\"" << sv1.second
-                << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
-            }
-            os << "  </g>\n";
-        }
-
 
         os << "</svg>\n";
         os.close();

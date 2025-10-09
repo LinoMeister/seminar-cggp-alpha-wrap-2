@@ -30,6 +30,7 @@ namespace aw2 {
     struct SimpleStyle {
         std::string color = "white";
         double opacity = 1.0;
+        double relative_stroke_width = 1.0; // relative to base stroke width
     };
 
     // Style configuration
@@ -52,9 +53,14 @@ namespace aw2 {
         SimpleStyle input_points = {"black", 0.5};
         SimpleStyle voronoi_diagram = {"orange", 0.5};
         SimpleStyle delaunay_edges = {"gray", 1.0};
+        SimpleStyle queue_edges = {"blue", 1.0};
+        SimpleStyle candidate_edge = {"green", 1.0};
 
         bool draw_voronoi_diagram = false;
+        bool draw_queue_edges = true;
+        bool draw_candidate_edge = true;
     };
+
 
     class alpha_wrap_2_exporter {
     public:
