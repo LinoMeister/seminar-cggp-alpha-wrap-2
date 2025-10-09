@@ -39,6 +39,8 @@
     - Improved with case distinction
         - Still need to verify this, why would it be sufficient for the circumradius of the outer cell to be $\geq \alpha$?
 
+- Labeling of faces after insertion
+    - Check if we can already mark some as `ourside`
 
 ### Surface Extraction
 - Extract the surface that separates inside from outside
