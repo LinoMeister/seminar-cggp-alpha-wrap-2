@@ -12,11 +12,13 @@
 
 - Correct implementation of intersection with offset surface
     - Updated with manual computation of intersection with circle around closest input point
+    - might still note be accurate in some cases!
 
 - More efficient computation of intersection with offset surface
     - Currently use brute-force appraoch
+    - Improved by reducing search to a bbox
 
-- Currently use kd-tree to organize points, maybe not the best choice.
+- Currently use kd-tree to organize points, maybe not the best choice?
 
 
 ### Core Algorithm
@@ -34,8 +36,8 @@
 
 - Correct implementation of alpha traversability check
     - Currently we just use edge length for minimum Delaunay ball radius
-    - Should now yield the correct result
-
+    - Improved with case distinction
+        - Still need to verify this, why would it be sufficient for the circumradius of the outer cell to be $\geq \alpha$?
 
 
 ### Surface Extraction
