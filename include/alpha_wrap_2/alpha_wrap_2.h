@@ -38,14 +38,13 @@ namespace aw2 {
     
     
     class alpha_wrap_2 {
-
+    public:
 #ifdef USE_STACK_QUEUE
         using Queue = std::stack<Gate>;
 #else
         using Queue = std::priority_queue<Gate, std::vector<Gate>, std::greater<Gate>>;
 #endif
 
-    public:
         alpha_wrap_2(const Oracle& oracle);
 
         void compute_wrap(FT alpha, FT offset);

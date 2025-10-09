@@ -1,5 +1,6 @@
 #include <alpha_wrap_2/export_utils.h>
 #include <alpha_wrap_2/alpha_wrap_2.h>
+#include <utility>
 
 namespace aw2 {
 
@@ -36,11 +37,8 @@ namespace aw2 {
 
     void alpha_wrap_2_exporter::export_svg(const std::string& filename)
     {
-        bool draw_voronoi = true;
-
 
         if (xmin_ > xmax_ || ymin_ > ymax_) {
-            // No finite vertices
             return;
         }
 
@@ -60,7 +58,7 @@ namespace aw2 {
         write_svg_defs(os, style_);
 
 
-        // Draw edges of all finite faces with enhanced styling
+        // Draw edges of all finite faces
         os << R"(  <g stroke="black" stroke-width=")" << stroke_width_
         << "\" fill=\"none\">\n";
         for (auto fit = dt_.finite_faces_begin(); fit != dt_.finite_faces_end(); ++fit) {
@@ -97,7 +95,7 @@ namespace aw2 {
         }
         os << "  </g>\n";
 
-        // Draw vertices as small circles
+        // Draw vertices 
         os << "  <g stroke=\"red\" stroke-width=\""<< stroke_width_ <<"\" fill=\"red\">\n";
         for (auto vit = dt_.finite_vertices_begin(); vit != dt_.finite_vertices_end(); ++vit) {
             const Point_2& p = vit->point();
@@ -108,13 +106,28 @@ namespace aw2 {
         }
         os << "  </g>\n";
 
-        if (draw_voronoi) {
+        if (style_.draw_voronoi_diagram) {
             draw_voronoi_diagram(os);
         }
 
         // Draw input points
         draw_input_points(os);
 
+
+        alpha_wrap_2::Queue temp_queue = wrapper_.queue_;
+        while (!temp_queue.empty()) {
+            auto gate = temp_queue.top();
+            temp_queue.pop();
+            os << "  <g stroke=\"blue\" stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
+            auto v1 = gate.get_vertices().first;
+            auto v2 = gate.get_vertices().second;
+            auto sv1 = to_svg(v1);
+            auto sv2 = to_svg(v2);
+            os << "    <line x1=\"" << sv1.first << "\" y1=\"" << sv1.second
+               << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
+            os << "  </g>\n";
+        }
+        
 
         // draw candidate edge (only if candidate gate has a valid face handle)
         if (candidate_gate_.edge.first != Delaunay::Face_handle()) {

@@ -52,6 +52,8 @@ namespace aw2 {
         SimpleStyle input_points = {"black", 0.5};
         SimpleStyle voronoi_diagram = {"orange", 0.5};
         SimpleStyle delaunay_edges = {"gray", 1.0};
+
+        bool draw_voronoi_diagram = false;
     };
 
     class alpha_wrap_2_exporter {
