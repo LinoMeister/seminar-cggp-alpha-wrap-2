@@ -54,7 +54,7 @@ namespace aw2 {
 #ifdef USE_STACK_QUEUE
         using Queue = std::stack<Gate>;
 #else
-        using Queue = std::priority_queue<Gate, std::vector<Gate>, std::greater<Gate>>;
+        using Queue = std::priority_queue<Gate, std::vector<Gate>, std::less<Gate>>;
 #endif
 
         alpha_wrap_2(const Oracle& oracle);
