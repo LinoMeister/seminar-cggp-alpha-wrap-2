@@ -11,6 +11,6 @@ if(ENABLE_PEDANTIC)
 endif()
 
 option(USE_STACK_QUEUE "Use stack as queue instead of priority queue" OFF)
-option(MODIFIED_ALPHA_TRAVERSABILITY "Enable modified alpha traversability algorithm" ON)
+option(MODIFIED_ALPHA_TRAVERSABILITY "Enable modified alpha traversability algorithm" OFF)
 
 add_subdirectory(src)

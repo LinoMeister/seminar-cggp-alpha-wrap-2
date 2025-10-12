@@ -1,0 +1,63 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default Configuration",
+      "description": "Standard build with priority queue and standard algorithm",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "USE_STACK_QUEUE": "OFF",
+        "MODIFIED_ALPHA_TRAVERSABILITY": "OFF"
+      }
+    },
+    {
+      "name": "modified-algo",
+      "displayName": "Modified Algorithm",
+      "description": "Build with modified alpha traversability algorithm",
+      "binaryDir": "${sourceDir}/build-modified",
+      "cacheVariables": {
+        "USE_STACK_QUEUE": "OFF",
+        "MODIFIED_ALPHA_TRAVERSABILITY": "ON"
+      }
+    },
+    {
+      "name": "stack-queue",
+      "displayName": "Stack Queue",
+      "description": "Build with stack as queue instead of priority queue",
+      "binaryDir": "${sourceDir}/build-stack",
+      "cacheVariables": {
+        "USE_STACK_QUEUE": "ON",
+        "MODIFIED_ALPHA_TRAVERSABILITY": "OFF"
+      }
+    },
+    {
+      "name": "all-modifications",
+      "displayName": "All Modifications",
+      "description": "Build with both stack queue and modified algorithm",
+      "binaryDir": "${sourceDir}/build-all-mods",
+      "cacheVariables": {
+        "USE_STACK_QUEUE": "ON",
+        "MODIFIED_ALPHA_TRAVERSABILITY": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default"
+    },
+    {
+      "name": "modified-algo",
+      "configurePreset": "modified-algo"
+    },
+    {
+      "name": "stack-queue",
+      "configurePreset": "stack-queue"
+    },
+    {
+      "name": "all-modifications",
+      "configurePreset": "all-modifications"
+    }
+  ]
+}
