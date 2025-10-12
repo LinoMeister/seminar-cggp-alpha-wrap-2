@@ -275,21 +275,44 @@ namespace aw2 {
         auto adj = gate_adjacency_info(e);
         auto p1 = adj.get_points().first;
         auto p2 = adj.get_points().second;
+        auto min_ball_center = CGAL::midpoint(p1, p2);
         auto sq_min_ball_radius = CGAL::squared_distance(p1, p2) / 4;
 
         auto sq_inside_ball_radius = CGAL::squared_distance(adj.cc_inside, p1);
+
+        // INFINITE outer cell
+
         if (adj.outside_infinite) {
-            return std::min(sq_min_ball_radius, sq_inside_ball_radius);
+            if (CGAL::squared_distance(adj.cc_inside, min_ball_center) < sq_min_ball_radius) {
+                return sq_inside_ball_radius;
+            }
+            return sq_min_ball_radius;
         }
+
+        // FINITE outer cell
+
+        // Case 1: minimum ball is Delaunay:
 
         if (CGAL::orientation(p1, p2, adj.cc_inside) != CGAL::orientation(p1, p2, adj.cc_outside)) {
             return sq_min_ball_radius;
         }
 
-#ifdef MODIFIED_ALPHA_TRAVERSABILITY
-        return std::min(sq_min_ball_radius, sq_inside_ball_radius);
-#else
+        
+        // Case 2: minimum ball is not Delaunay
+
         auto sq_outside_ball_radius = CGAL::squared_distance(adj.cc_outside, p1);
+
+#ifdef MODIFIED_ALPHA_TRAVERSABILITY
+        
+        // Case 2.1: r_in > r_out
+        if (sq_outside_ball_radius < sq_inside_ball_radius) {
+            std::cout << "!!! Modified alpha traversability case: " << sq_outside_ball_radius << " " << sq_inside_ball_radius << " " << sq_min_ball_radius << std::endl;
+            return sq_min_ball_radius;
+        }
+
+        // Case 2.2: r_in <= r_out
+        return sq_inside_ball_radius;
+#else
         return std::min(sq_inside_ball_radius, sq_outside_ball_radius);
 #endif
     }
