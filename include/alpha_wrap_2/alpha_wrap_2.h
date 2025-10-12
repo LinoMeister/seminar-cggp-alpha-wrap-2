@@ -47,6 +47,17 @@ namespace aw2 {
             return priority > other.priority;
         }
     };
+
+    struct EdgeAdjacencyInfo {
+        Delaunay::Edge edge;
+        Face_handle inside;
+        Face_handle outside;
+        Point_2 cc_inside;
+        Point_2 cc_outside;
+        bool outside_infinite;
+
+        std::pair<Point_2, Point_2> get_points() const;
+    };
     
     
     class alpha_wrap_2 {
@@ -73,6 +84,7 @@ namespace aw2 {
         bool process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc);
         bool process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc);
         void insert_steiner_point(const Point_2& steiner_point);
+        EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
 
 
     public:

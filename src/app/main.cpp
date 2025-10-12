@@ -29,9 +29,9 @@ int main(int argc, char *argv[])
   aw2::AlgorithmConfig config;
   config.alpha = alpha;
   config.offset = offset;
-  config.intermediate_steps = 50;
+  config.intermediate_steps = 200;
   config.export_step_limit = 5000;
-  config.max_iterations = 5000;
+  config.max_iterations = 50000;
 
   aw.compute_wrap(config);
 
