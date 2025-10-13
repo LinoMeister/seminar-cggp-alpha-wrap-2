@@ -191,7 +191,7 @@ namespace aw2 {
     void alpha_wrap_2::init() {
 
         // Insert bounding box points
-        FT margin = 0.1 + offset_;
+        FT margin = 5 + offset_;
         auto bbox = oracle_.bbox_;
         std::vector<Point_2> pts_bbox = {
             {bbox.x_min - margin, bbox.y_min - margin}, 
