@@ -92,7 +92,7 @@ namespace aw2 {
                 continue; 
             }
 
-            if (!is_alpha_traversable(candidate_gate_.edge, alpha)) {
+            if (!is_alpha_traversable(candidate_gate_)) {
                 continue; 
             }
 
@@ -319,8 +319,8 @@ namespace aw2 {
 #endif
     }
 
-    bool alpha_wrap_2::is_alpha_traversable(const Delaunay::Edge& e, const FT alpha) const {
-        return sq_minimal_delaunay_ball_radius(e) >= alpha * alpha;
+    bool alpha_wrap_2::is_alpha_traversable(const Gate& g) const {
+        return sq_minimal_delaunay_ball_radius(g.edge) >= std::pow(adaptive_alpha(g.edge), 2);
     }
 
     void alpha_wrap_2::update_queue(const Delaunay::Face_handle& fh){
@@ -436,6 +436,39 @@ namespace aw2 {
                 wrap_edges_.emplace_back(seg);
             }
         }
+    }
+
+    FT alpha_wrap_2::adaptive_alpha(const Delaunay::Edge& e) const {
+
+        auto seg = dt_.segment(e);
+        auto local_pts = oracle_.local_points(seg, offset_ + 15);
+        auto n = local_pts.size();
+
+        FT alpha_min = alpha_;
+        FT alpha_max = 200.0;
+        FT dev_threshold = std::pow(3 * offset_, 2);
+
+
+        // not enough points to compute a meaningful adaptive alpha
+        if (n < 5) {
+            return alpha_min;
+        }
+
+        // compute average squared deviation from the segment
+        auto avg_sq_deviation = 0.0;
+
+        for (const auto& pt : local_pts) {
+            avg_sq_deviation += CGAL::squared_distance(seg, pt);
+        }
+        avg_sq_deviation /= n;
+
+        
+        auto adaptive_alpha = 1 + dev_threshold - avg_sq_deviation * 0.5;
+        adaptive_alpha = std::clamp(adaptive_alpha, alpha_min, alpha_max);
+
+        std::cout << "Adaptive alpha: " << adaptive_alpha << " (based on " << n << " local points, avg sq deviation: " << avg_sq_deviation << ")" << std::endl;
+
+        return adaptive_alpha;
     }
 }
 

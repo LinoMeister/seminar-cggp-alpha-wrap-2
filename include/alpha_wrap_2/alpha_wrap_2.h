@@ -76,7 +76,7 @@ namespace aw2 {
 
         void init();
         bool is_gate(const Delaunay::Edge& e) const;
-        bool is_alpha_traversable(const Delaunay::Edge& e, const FT alpha) const;
+        bool is_alpha_traversable(const Gate& g) const;
         void update_queue(const Delaunay::Face_handle& fh);
         Point_2 infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) const;
 
@@ -86,6 +86,7 @@ namespace aw2 {
         void insert_steiner_point(const Point_2& steiner_point);
         EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
         void extract_wrap_surface();
+        FT adaptive_alpha(const Delaunay::Edge& e) const;
 
 
     public:

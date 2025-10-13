@@ -127,6 +127,20 @@ namespace aw2 {
         add_point_set(points);
     }
 
+    Points point_set_oracle_2::local_points(const Segment_2 &seg, const FT margin) const {
+        Points local_pts;
+        if (tree_.empty()) return local_pts;
+
+        auto bbox = seg.bbox();
+        Point_2 min(bbox.xmin() - margin, bbox.ymin() - margin);
+        Point_2 max(bbox.xmax() + margin, bbox.ymax() + margin);
+        CGAL::Fuzzy_iso_box<Traits> box(min, max);
+
+        // Search for points within the bounding box
+        tree_.search(std::back_inserter(local_pts), box);
+        return local_pts;
+    }
+
     bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o) {
         auto dx = q.x() - p.x();
         auto dy = q.y() - p.y();

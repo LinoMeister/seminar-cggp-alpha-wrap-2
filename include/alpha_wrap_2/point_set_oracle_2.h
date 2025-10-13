@@ -63,6 +63,8 @@ public:
 
     void load_points(const std::string& filename);
 
+    Points local_points(const Segment_2 &seg, const FT margin) const;
+
     Tree tree_;
     BBox bbox_;
 };
