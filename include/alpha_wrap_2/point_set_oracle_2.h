@@ -10,6 +10,7 @@
 #include <CGAL/Kd_tree_rectangle.h>
 #include <CGAL/Search_traits_2.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
+#include <CGAL/Orthogonal_incremental_neighbor_search.h>
 #include <CGAL/Fuzzy_iso_box.h>
 #include <CGAL/Polygon_2_algorithms.h>
 #include <CGAL/Exact_circular_kernel_2.h>
@@ -32,6 +33,7 @@ protected:
     using Tree = CGAL::Kd_tree<Traits>;
     using BBox = bbox_2;
     typedef CGAL::Orthogonal_k_neighbor_search<Traits> Neighbor_search;
+    typedef CGAL::Orthogonal_incremental_neighbor_search<Traits> Incremental_neighbor_search;
 
 
 public:

@@ -2,6 +2,9 @@
 
 namespace aw2 {
 
+    // Forward declaration of segment_circle_intersection
+    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o);
+
     bool point_set_oracle_2::empty() const { return tree_.empty(); }
     bool point_set_oracle_2::do_call() const { return (!empty()); }
     void point_set_oracle_2::clear() { tree_.clear(); }
@@ -78,62 +81,19 @@ namespace aw2 {
             return false;
         }
 
-        // if we have candidates, find the closest one
-        Point_2 best;
-        FT best_sqdist = std::numeric_limits<FT>::max();
-        for (auto it = candidates.begin(); it != candidates.end(); ++it)
+        // Create a temporary kd-tree from candidates for efficient proximity search
+        Tree candidates_tree(candidates.begin(), candidates.end());
+        Incremental_neighbor_search inc_search(candidates_tree, p);
+
+        
+        // Iterate through candidates by proximity to p
+        for (auto it = inc_search.begin(); it != inc_search.end(); ++it)
         {
-            FT d2 = CGAL::squared_distance(*it, seg);
-            if (d2 < best_sqdist)
-            {
-                best_sqdist = d2;
-                best = *it;
+            if (segment_circle_intersection(p, q, it->first, offset_size, o)) {
+                return true;
             }
         }
-
-        if (best_sqdist == std::numeric_limits<FT>::max())
-            return false;
-
-        if (std::sqrt(best_sqdist) > offset_size - intersection_precision)
-            return false;
-
-
-        // Compute the first intersection of the offset circle around best with the line segment p->q
-        // There is probably a much nicer way to do this using CGAL's circular kernel... but for now:
-
-        // Assumption: p is outside and q is potentially inside
-
-        auto dx = q.x() - p.x();
-        auto dy = q.y() - p.y();
-
-        FT a = dx*dx + dy*dy;
-        if (a == 0) return false; // degenerate segment
-
-        // vector from circle center (best) to p
-        FT ox = p.x() - best.x();
-        FT oy = p.y() - best.y();
-
-        FT b = 2 * (dx*ox + dy*oy);
-        FT c = ox*ox + oy*oy - offset_size*offset_size;
-
-        FT disc = b*b - 4*a*c;
-        if (disc < 0) return false; // no real intersection
-
-        FT sqrt_disc = std::sqrt(disc);
-        FT t1 = (-b - sqrt_disc) / (2*a);
-        FT t2 = (-b + sqrt_disc) / (2*a);
-
-        FT t_candidate = std::numeric_limits<FT>::max();
-        if (t1 > 0.0 && t1 <= 1.0) t_candidate = std::min(t_candidate, t1);
-        if (t2 > 0.0 && t2 <= 1.0) t_candidate = std::min(t_candidate, t2);
-
-        if (t_candidate == std::numeric_limits<FT>::max())
-            return false;
-
-        // compute intersection point
-        o = Point_2(p.x() + t_candidate*dx, p.y() + t_candidate*dy);
-
-        return true;
+        return false;
     }
 
     bool point_set_oracle_2::first_intersection(const Point_2 &p, const Point_2 &q,
@@ -165,6 +125,38 @@ namespace aw2 {
         }
 
         add_point_set(points);
+    }
+
+    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o) {
+        auto dx = q.x() - p.x();
+        auto dy = q.y() - p.y();
+
+        FT a = dx*dx + dy*dy;
+        if (a == 0) return false; // degenerate segment
+
+        FT ox = p.x() - center.x();
+        FT oy = p.y() - center.y();
+
+        FT b = 2 * (dx*ox + dy*oy);
+        FT c = ox*ox + oy*oy - radius*radius;
+
+        FT disc = b*b - 4*a*c;
+        if (disc < 0) return false; // no real intersection
+
+        FT sqrt_disc = std::sqrt(disc);
+        FT t1 = (-b - sqrt_disc) / (2*a);
+        FT t2 = (-b + sqrt_disc) / (2*a);
+
+        FT t_candidate = std::numeric_limits<FT>::max();
+        if (t1 > 0.0 && t1 <= 1.0) t_candidate = std::min(t_candidate, t1);
+        if (t2 > 0.0 && t2 <= 1.0) t_candidate = std::min(t_candidate, t2);
+
+        if (t_candidate == std::numeric_limits<FT>::max())
+            return false;
+
+        // compute intersection point
+        o = Point_2(p.x() + t_candidate*dx, p.y() + t_candidate*dy);
+        return true;
     }
 
 }
