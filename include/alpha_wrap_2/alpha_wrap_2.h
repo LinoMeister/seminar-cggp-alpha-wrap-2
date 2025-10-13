@@ -85,6 +85,7 @@ namespace aw2 {
         bool process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc);
         void insert_steiner_point(const Point_2& steiner_point);
         EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
+        void extract_wrap_surface();
 
 
     public:
@@ -97,6 +98,8 @@ namespace aw2 {
 
         FT alpha_;
         FT offset_;
+
+        std::vector<Segment_2> wrap_edges_;
     };
 }
 

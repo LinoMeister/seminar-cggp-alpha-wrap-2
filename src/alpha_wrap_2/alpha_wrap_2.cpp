@@ -176,6 +176,8 @@ namespace aw2 {
             update_queue(c_in);
         }
 
+        extract_wrap_surface();
+
         main_loop_timer->pause();
 
         exporter.export_svg("final_result.svg");
@@ -421,6 +423,17 @@ namespace aw2 {
                 g.edge = *eit;
                 g.priority = sq_minimal_delaunay_ball_radius(g.edge);
                 queue_.push(g);
+            }
+        }
+    }
+
+    void alpha_wrap_2::extract_wrap_surface() {
+        // Extract edges between INSIDE and OUTSIDE faces
+        wrap_edges_.clear();
+        for (auto eit = dt_.finite_edges_begin(); eit != dt_.finite_edges_end(); ++eit) {
+            if (is_gate(*eit)) {
+                auto seg = dt_.segment(*eit);
+                wrap_edges_.emplace_back(seg);
             }
         }
     }

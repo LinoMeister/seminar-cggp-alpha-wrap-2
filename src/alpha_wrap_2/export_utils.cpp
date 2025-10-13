@@ -137,6 +137,17 @@ namespace aw2 {
             os << "  </g>\n";
         }
 
+        // draw extracted wrap edges
+        os << "  <g stroke=\"purple\" stroke-width=\"" << stroke_width_ 
+           << "\" fill=\"none\">\n";
+        for (const auto& seg : wrapper_.wrap_edges_) {
+            auto sa = to_svg(seg.source());
+            auto sb = to_svg(seg.target());
+            os << "    <line x1=\"" << sa.first << "\" y1=\"" << sa.second
+               << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+        }
+        os << "  </g>\n";
+
         os << "</svg>\n";
         os.close();
     }
