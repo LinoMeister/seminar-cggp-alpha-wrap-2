@@ -374,8 +374,9 @@ namespace aw2 {
 
     bool alpha_wrap_2::process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc) {
         Point_2 steiner_point;
+        auto c_in_triangle = dt_.triangle(c_in);
 
-        if (oracle_.do_intersect(c_in)) {
+        if (oracle_.do_intersect(c_in_triangle)) {
             // project circumcenter onto point set
             auto p_input = oracle_.closest_point(c_in_cc);
 

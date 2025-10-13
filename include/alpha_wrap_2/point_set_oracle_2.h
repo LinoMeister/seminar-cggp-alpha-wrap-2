@@ -42,7 +42,7 @@ public:
     bool do_call() const;
     void clear();
 
-    bool do_intersect(const Face_handle &t) const;
+    bool do_intersect(const K::Triangle_2 &t) const;
 
     FT squared_distance(const Point_2 &p) const;
 
