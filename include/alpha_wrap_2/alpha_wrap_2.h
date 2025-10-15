@@ -6,6 +6,7 @@
 #include "alpha_wrap_2/point_set_oracle_2.h"
 #include "alpha_wrap_2/export_utils.h"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_circular_kernel_2.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
@@ -71,6 +72,8 @@ namespace aw2 {
         alpha_wrap_2(const Oracle& oracle);
 
         void compute_wrap(AlgorithmConfig& config);
+        FT adaptive_alpha(const Segment_2& seg) const;
+
 
     private:
 
@@ -86,7 +89,9 @@ namespace aw2 {
         void insert_steiner_point(const Point_2& steiner_point);
         EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
         void extract_wrap_surface();
-        FT adaptive_alpha(const Delaunay::Edge& e) const;
+
+        FT approximation_score(const Segment_2& seg) const;
+        FT approximation_score_2(const Segment_2& seg) const;
 
 
     public:
@@ -98,7 +103,11 @@ namespace aw2 {
         Gate candidate_gate_;
 
         FT alpha_;
+        FT alpha_min_;
+        FT alpha_max_;
         FT offset_;
+
+        FT bbox_diagonal_length_;
 
         std::vector<Segment_2> wrap_edges_;
     };

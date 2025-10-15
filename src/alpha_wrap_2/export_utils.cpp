@@ -113,11 +113,16 @@ namespace aw2 {
         // Draw input points
         draw_input_points(os);
 
+        ColorMap priority_colormap(RGBColor("#08fa00"), RGBColor("#ff1100"), 0, 500);
+
         alpha_wrap_2::Queue temp_queue = wrapper_.queue_;
         while (!temp_queue.empty() && style_.draw_queue_edges) {
             auto gate = temp_queue.top();
             temp_queue.pop();
-            os  << "  <g stroke=\"" << style_.queue_edges.color << "\" stroke-width=\"" 
+            auto edge_color = priority_colormap.get_color(gate.priority).to_string();
+            std::cout << "Gate priority: " << gate.priority << std::endl;
+
+            os  << "  <g stroke=\"" << edge_color << "\" stroke-width=\"" 
                 << stroke_width_ * style_.queue_edges.relative_stroke_width << "\" fill=\"none\">\n";
             auto sv1 = to_svg(gate.get_vertices().first);
             auto sv2 = to_svg(gate.get_vertices().second);
@@ -125,6 +130,7 @@ namespace aw2 {
                << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
             os << "  </g>\n";
         }   
+
 
         // draw candidate edge (only if candidate gate has a valid face handle)
         if (candidate_gate_.edge.first != Delaunay::Face_handle()) {
@@ -138,15 +144,25 @@ namespace aw2 {
         }
 
         // draw extracted wrap edges
-        os << "  <g stroke=\"purple\" stroke-width=\"" << stroke_width_ 
+        auto alpha_min = wrapper_.alpha_;
+        auto alpha_max = wrapper_.alpha_max_;
+
+        ColorMap alpha_colormap(RGBColor("#08fa00"), RGBColor("#ffa600"), alpha_min, alpha_min + 5);
+
+
+        os << "  <g stroke-width=\"" << stroke_width_ 
            << "\" fill=\"none\">\n";
         for (const auto& seg : wrapper_.wrap_edges_) {
+            auto alpha = wrapper_.adaptive_alpha(seg);
+            auto edge_color = alpha_colormap.get_color(alpha).to_string();
             auto sa = to_svg(seg.source());
             auto sb = to_svg(seg.target());
             os << "    <line x1=\"" << sa.first << "\" y1=\"" << sa.second
-               << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+               << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second 
+               << "\" stroke=\"" << edge_color << "\" />\n";
         }
         os << "  </g>\n";
+
 
         os << "</svg>\n";
         os.close();
@@ -250,13 +266,9 @@ namespace aw2 {
     }
 
     std::string alpha_wrap_2_exporter::map_value_to_color(double value, double min_val, double max_val) {
-        if (max_val <= min_val) return "lightblue";
-        
-        double normalized = std::max(0.0, std::min(1.0, (value - min_val) / (max_val - min_val)));
-        
-        // Map to hue: blue (240) to red (0)
-        int hue = static_cast<int>(240 * (1 - normalized));
-        return hsl_to_string(hue, 70, 50);
+        // Use the new ColorMap for consistency
+        ColorMap colormap(RGBColor(0, 0, 255), RGBColor(255, 0, 0), min_val, max_val);
+        return colormap.get_color_string(value);
     }
 
     double alpha_wrap_2_exporter::compute_triangle_area(const Delaunay::Face_handle& face) {
@@ -271,6 +283,76 @@ namespace aw2 {
 
     std::string alpha_wrap_2_exporter::hsl_to_string(int h, int s, int l) {
         return "hsl(" + std::to_string(h) + "," + std::to_string(s) + "%," + std::to_string(l) + "%)";
+    }
+
+    RGBColor::RGBColor(const std::string& hex) {
+        if (hex.length() != 7 || hex[0] != '#') {
+            throw std::invalid_argument("Invalid hex color format. Expected #RRGGBB");
+        }
+        
+        try {
+            r = std::stoi(hex.substr(1, 2), nullptr, 16);
+            g = std::stoi(hex.substr(3, 2), nullptr, 16);
+            b = std::stoi(hex.substr(5, 2), nullptr, 16);
+        } catch (const std::exception&) {
+            throw std::invalid_argument("Invalid hex color format");
+        }
+        
+        // Clamp values to valid range
+        r = std::max(0, std::min(255, r));
+        g = std::max(0, std::min(255, g));
+        b = std::max(0, std::min(255, b));
+    }
+
+    std::string RGBColor::to_string() const {
+        std::ostringstream oss;
+        oss << "rgb(" << r << "," << g << "," << b << ")";
+        return oss.str();
+    }
+
+    // ColorMap implementation
+    ColorMap::ColorMap(const RGBColor& min_color, const RGBColor& max_color, 
+                       double min_value, double max_value)
+        : min_color_(min_color), max_color_(max_color), 
+          min_value_(min_value), max_value_(max_value) {
+        if (max_value <= min_value) {
+            throw std::invalid_argument("max_value must be greater than min_value");
+        }
+    }
+
+    RGBColor ColorMap::get_color(double value) const {
+
+        // Clamp value to valid range
+        value = std::max(min_value_, std::min(max_value_, value));
+        
+        // Normalize value to [0, 1]
+        double t = (value - min_value_) / (max_value_ - min_value_);
+
+        std::cout << "Value: " << value << ", t: " << t << std::endl;
+        
+        // Linear interpolation between colors
+        int r = static_cast<int>(min_color_.r + t * (max_color_.r - min_color_.r));
+        int g = static_cast<int>(min_color_.g + t * (max_color_.g - min_color_.g));
+        int b = static_cast<int>(min_color_.b + t * (max_color_.b - min_color_.b));
+        
+        return RGBColor(r, g, b);
+    }
+
+    std::string ColorMap::get_color_string(double value) const {
+        return get_color(value).to_string();
+    }
+
+    void ColorMap::set_range(double min_value, double max_value) {
+        if (max_value <= min_value) {
+            throw std::invalid_argument("max_value must be greater than min_value");
+        }
+        min_value_ = min_value;
+        max_value_ = max_value;
+    }
+
+    void ColorMap::set_colors(const RGBColor& min_color, const RGBColor& max_color) {
+        min_color_ = min_color;
+        max_color_ = max_color;
     }
 
 }

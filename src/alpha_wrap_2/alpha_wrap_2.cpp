@@ -41,6 +41,8 @@ namespace aw2 {
         total_timer->start();
         
         alpha_ = alpha;
+        alpha_min_ = alpha;
+        alpha_max_ = 200.0;
         offset_ = offset;
         
         init_timer->start();
@@ -227,6 +229,11 @@ namespace aw2 {
             queue_.push(g);
         }
 
+        bbox_diagonal_length_ = std::sqrt(CGAL::squared_distance(
+            Point_2(bbox.x_min, bbox.y_min),
+            Point_2(bbox.x_max, bbox.y_max)
+        ));
+
     }
 
     bool alpha_wrap_2::is_gate(const Delaunay::Edge& e) const {
@@ -320,7 +327,7 @@ namespace aw2 {
     }
 
     bool alpha_wrap_2::is_alpha_traversable(const Gate& g) const {
-        return sq_minimal_delaunay_ball_radius(g.edge) >= std::pow(adaptive_alpha(g.edge), 2);
+        return sq_minimal_delaunay_ball_radius(g.edge) >= std::pow(adaptive_alpha(dt_.segment(g.edge)), 2);
     }
 
     void alpha_wrap_2::update_queue(const Delaunay::Face_handle& fh){
@@ -439,38 +446,69 @@ namespace aw2 {
         }
     }
 
-    FT alpha_wrap_2::adaptive_alpha(const Delaunay::Edge& e) const {
+    FT alpha_wrap_2::adaptive_alpha(const Segment_2& seg) const {
 
-        auto seg = dt_.segment(e);
-        auto local_pts = oracle_.local_points(seg, offset_ + 15);
-        auto n = local_pts.size();
 
-        FT alpha_min = alpha_;
-        FT alpha_max = 200.0;
+
         FT dev_threshold = std::pow(3 * offset_, 2);
+        auto dev = approximation_score_2(seg);
 
-
-        // not enough points to compute a meaningful adaptive alpha
-        if (n < 5) {
-            return alpha_min;
+        if (dev < dev_threshold) {
+            return alpha_max_;
         }
-
-        // compute average squared deviation from the segment
-        auto avg_sq_deviation = 0.0;
-
-        for (const auto& pt : local_pts) {
-            avg_sq_deviation += CGAL::squared_distance(seg, pt);
-        }
-        avg_sq_deviation /= n;
-
-        
-        auto adaptive_alpha = 1 + dev_threshold - avg_sq_deviation * 0.5;
-        adaptive_alpha = std::clamp(adaptive_alpha, alpha_min, alpha_max);
-
-        std::cout << "Adaptive alpha: " << adaptive_alpha << " (based on " << n << " local points, avg sq deviation: " << avg_sq_deviation << ")" << std::endl;
+        auto adaptive_alpha = 1 / (0.004 * (dev + 1 - dev_threshold)) + alpha_min_;
+        adaptive_alpha = std::clamp(adaptive_alpha, alpha_min_, alpha_max_);
 
         return adaptive_alpha;
     }
+
+    FT alpha_wrap_2::approximation_score(const Segment_2& seg) const {
+        auto local_pts = oracle_.local_points(seg, offset_ + 15);
+        int n = 0;
+        // compute average squared deviation from the segment
+        auto avg_sq_deviation = 0.0;
+
+        auto mid = CGAL::midpoint(seg);
+        auto sq_rad = CGAL::squared_distance(mid, seg.source());
+
+        for (const auto& pt : local_pts) {
+            if (CGAL::squared_distance(mid, pt) > sq_rad)
+                continue;
+
+            avg_sq_deviation += CGAL::squared_distance(seg, pt);
+            n++;
+        }
+
+        // not enough points to compute a meaningful adaptive alpha
+        if (n < 5) {
+            return 1000.0;
+        }
+
+        avg_sq_deviation /= n;
+        return avg_sq_deviation;
+    }
+
+    FT alpha_wrap_2::approximation_score_2(const Segment_2& seg) const {
+
+        auto segment_length = bbox_diagonal_length_ / 50.0;
+        int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
+        auto s = seg.source();
+        auto t = seg.target();
+
+        auto avg_dev = 0.0;
+        for (int i = 0; i < m; ++i) {
+            FT t0 = static_cast<FT>(i) / m;
+            FT t1 = static_cast<FT>(i + 1) / m;
+            auto p0 = s + t0 * (t - s);
+            auto p1 = s + t1 * (t - s);
+            Segment_2 sub_seg(p0, p1);
+            auto dev = approximation_score(sub_seg);
+            avg_dev += dev;
+        }
+        avg_dev /= m;
+        return avg_dev;
+    }
+
 }
 
 

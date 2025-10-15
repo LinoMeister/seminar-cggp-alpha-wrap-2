@@ -100,6 +100,41 @@ namespace aw2 {
 
         fs::path export_dir_;
     };
+
+        // Add this new class before the alpha_wrap_2_exporter class
+    struct RGBColor {
+        int r, g, b;
+        RGBColor(int red = 0, int green = 0, int blue = 0) : r(red), g(green), b(blue) {}
+        
+        // Constructor from hex string (e.g., "#FF0000")
+        RGBColor(const std::string& hex);
+        
+        std::string to_string() const;
+    };
+
+    class ColorMap {
+    private:
+        RGBColor min_color_;
+        RGBColor max_color_;
+        double min_value_;
+        double max_value_;
+        
+    public:
+        ColorMap(const RGBColor& min_color, const RGBColor& max_color, 
+                 double min_value, double max_value);
+        
+        // Get interpolated color for a value between min_value and max_value
+        RGBColor get_color(double value) const;
+        
+        // Get interpolated color as string
+        std::string get_color_string(double value) const;
+        
+        // Update the value range
+        void set_range(double min_value, double max_value);
+        
+        // Update the colors
+        void set_colors(const RGBColor& min_color, const RGBColor& max_color);
+    };
 }
 
 
