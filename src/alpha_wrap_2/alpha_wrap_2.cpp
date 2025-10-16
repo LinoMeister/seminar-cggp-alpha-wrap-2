@@ -448,47 +448,35 @@ namespace aw2 {
 
     FT alpha_wrap_2::adaptive_alpha(const Segment_2& seg) const {
 
-
-
-        FT dev_threshold = std::pow(3 * offset_, 2);
-        auto dev = approximation_score_2(seg);
-
-        if (dev < dev_threshold) {
-            return alpha_max_;
-        }
-        auto adaptive_alpha = 1 / (0.004 * (dev + 1 - dev_threshold)) + alpha_min_;
-        adaptive_alpha = std::clamp(adaptive_alpha, alpha_min_, alpha_max_);
-
+        auto dev = segment_deviation(seg);
+        auto adaptive_alpha = alpha_max_ * (1 - dev) + alpha_min_ * dev;
         return adaptive_alpha;
     }
 
-    FT alpha_wrap_2::approximation_score(const Segment_2& seg) const {
-        auto local_pts = oracle_.local_points(seg, offset_ + 15);
-        int n = 0;
-        // compute average squared deviation from the segment
-        auto avg_sq_deviation = 0.0;
-
-        auto mid = CGAL::midpoint(seg);
-        auto sq_rad = CGAL::squared_distance(mid, seg.source());
-
-        for (const auto& pt : local_pts) {
-            if (CGAL::squared_distance(mid, pt) > sq_rad)
-                continue;
-
-            avg_sq_deviation += CGAL::squared_distance(seg, pt);
-            n++;
-        }
+    FT alpha_wrap_2::subsegment_deviation(const Segment_2& seg) const {
+        auto local_pts = oracle_.local_points(seg, offset_ + 4);
+        int n = local_pts.size();
 
         // not enough points to compute a meaningful adaptive alpha
         if (n < 5) {
-            return 1000.0;
+            return 1.0;
+        }
+
+        // compute average squared deviation from the segment
+        auto avg_sq_deviation = 0.0;
+        for (const auto& pt : local_pts) {
+            avg_sq_deviation += CGAL::squared_distance(seg, pt);
         }
 
         avg_sq_deviation /= n;
-        return avg_sq_deviation;
+        auto dev = 0.1 * (avg_sq_deviation - std::pow(offset_, 2));
+        dev = std::clamp(dev, 0.0, 1.0);
+
+        std::cout << "dev: " << dev << " from " << avg_sq_deviation << std::endl;
+        return dev;
     }
 
-    FT alpha_wrap_2::approximation_score_2(const Segment_2& seg) const {
+    FT alpha_wrap_2::segment_deviation(const Segment_2& seg) const {
 
         auto segment_length = bbox_diagonal_length_ / 50.0;
         int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
@@ -502,11 +490,12 @@ namespace aw2 {
             auto p0 = s + t0 * (t - s);
             auto p1 = s + t1 * (t - s);
             Segment_2 sub_seg(p0, p1);
-            auto dev = approximation_score(sub_seg);
+            auto dev = subsegment_deviation(sub_seg);
             avg_dev += dev;
         }
         avg_dev /= m;
-        return avg_dev;
+
+        return std::clamp(avg_dev, 0.0, 1.0);
     }
 
 }

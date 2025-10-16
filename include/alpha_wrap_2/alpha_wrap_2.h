@@ -90,8 +90,8 @@ namespace aw2 {
         EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
         void extract_wrap_surface();
 
-        FT approximation_score(const Segment_2& seg) const;
-        FT approximation_score_2(const Segment_2& seg) const;
+        FT subsegment_deviation(const Segment_2& seg) const;
+        FT segment_deviation(const Segment_2& seg) const;
 
 
     public:
