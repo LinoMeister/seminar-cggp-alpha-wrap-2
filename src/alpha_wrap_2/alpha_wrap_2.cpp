@@ -22,12 +22,6 @@ namespace aw2 {
     void alpha_wrap_2::compute_wrap(AlgorithmConfig& config) {
 
         namespace fs = std::filesystem;
-        auto alpha = config.alpha;
-        auto offset = config.offset;
-        auto max_iterations = config.max_iterations;
-
-        // setup
-        std::cout << "Computing alpha-wrap-2 with " << "alpha: " << alpha << " offset: " << offset << std::endl;
 
         // Create hierarchical timer structure
         auto& registry = TimerRegistry::instance();
@@ -40,13 +34,10 @@ namespace aw2 {
         
         total_timer->start();
         
-        alpha_ = alpha;
-        alpha_min_ = alpha;
-        alpha_max_ = 200.0;
-        offset_ = offset;
+
         
         init_timer->start();
-        init();
+        init(config);
         init_timer->pause();
 
         // export config
@@ -72,8 +63,8 @@ namespace aw2 {
         while (!queue_.empty()) {
             gate_processing_timer->start();
 
-            if (++iteration > max_iterations) {
-                std::cout << "Reached maximum number of iterations (" << max_iterations << "). Stopping." << std::endl;
+            if (++iteration > max_iterations_) {
+                std::cout << "Reached maximum number of iterations (" << max_iterations_ << "). Stopping." << std::endl;
                 break;
             }
 
@@ -192,7 +183,14 @@ namespace aw2 {
     }
 
 
-    void alpha_wrap_2::init() {
+    void alpha_wrap_2::init(AlgorithmConfig& config) {
+
+        alpha_ = config.alpha;
+        offset_ = config.offset;
+        max_iterations_ = config.max_iterations;
+
+        alpha_min_ = alpha_;
+        alpha_max_ = 200.0;
 
         // Insert bounding box points
         FT margin = 5 + offset_;
@@ -233,6 +231,8 @@ namespace aw2 {
             Point_2(bbox.x_min, bbox.y_min),
             Point_2(bbox.x_max, bbox.y_max)
         ));
+
+
 
     }
 

@@ -68,7 +68,7 @@ namespace aw2 {
 #else
         using Queue = std::priority_queue<Gate, std::vector<Gate>, std::less<Gate>>;
 #endif
-
+        void init(AlgorithmConfig& config);
         alpha_wrap_2(const Oracle& oracle);
 
         void compute_wrap(AlgorithmConfig& config);
@@ -77,7 +77,6 @@ namespace aw2 {
 
     private:
 
-        void init();
         bool is_gate(const Delaunay::Edge& e) const;
         bool is_alpha_traversable(const Gate& g) const;
         void update_queue(const Delaunay::Face_handle& fh);
@@ -106,6 +105,8 @@ namespace aw2 {
         FT alpha_min_;
         FT alpha_max_;
         FT offset_;
+
+        int max_iterations_;
 
         FT bbox_diagonal_length_;
 
