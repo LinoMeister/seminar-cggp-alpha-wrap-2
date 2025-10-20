@@ -147,7 +147,7 @@ namespace aw2 {
         auto alpha_min = wrapper_.alpha_;
         auto alpha_max = wrapper_.alpha_max_;
 
-        ColorMap alpha_colormap(RGBColor("#08fa00"), RGBColor("#ffa600"), alpha_min, alpha_min + 5);
+        ColorMap alpha_colormap(RGBColor("#08fa00"), RGBColor("#ff1100"), alpha_min, alpha_max);
 
 
         os << "  <g stroke-width=\"" << stroke_width_ 

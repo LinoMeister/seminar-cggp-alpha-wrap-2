@@ -469,7 +469,7 @@ namespace aw2 {
         }
 
         avg_sq_deviation /= n;
-        auto dev = 0.1 * (avg_sq_deviation - std::pow(offset_, 2));
+        auto dev = 0.05 * (avg_sq_deviation - std::pow(offset_, 2));
         dev = std::clamp(dev, 0.0, 1.0);
 
         std::cout << "dev: " << dev << " from " << avg_sq_deviation << std::endl;
@@ -478,12 +478,14 @@ namespace aw2 {
 
     FT alpha_wrap_2::segment_deviation(const Segment_2& seg) const {
 
-        auto segment_length = bbox_diagonal_length_ / 50.0;
+        //auto segment_length = bbox_diagonal_length_ / 100.0;
+        auto segment_length = alpha_min_;
         int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
         auto s = seg.source();
         auto t = seg.target();
 
         auto avg_dev = 0.0;
+        auto max_dev = 0.0;
         for (int i = 0; i < m; ++i) {
             FT t0 = static_cast<FT>(i) / m;
             FT t1 = static_cast<FT>(i + 1) / m;
@@ -492,10 +494,14 @@ namespace aw2 {
             Segment_2 sub_seg(p0, p1);
             auto dev = subsegment_deviation(sub_seg);
             avg_dev += dev;
+            if (dev > max_dev) {
+                max_dev = dev;
+            }
         }
         avg_dev /= m;
 
-        return std::clamp(avg_dev, 0.0, 1.0);
+        // return std::clamp(avg_dev, 0.0, 1.0);
+        return std::clamp(max_dev, 0.0, 1.0);
     }
 
 }
