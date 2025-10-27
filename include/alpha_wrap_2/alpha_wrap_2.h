@@ -16,7 +16,15 @@
 #include <filesystem>
 
 namespace aw2 {
+
+    // type definitions
     using Oracle = point_set_oracle_2;
+
+    #ifdef USE_STACK_QUEUE
+        using Queue = std::stack<Gate>;
+    #else
+        using Queue = std::priority_queue<Gate, std::vector<Gate>, std::less<Gate>>;
+    #endif
 
 
     struct AlgorithmConfig {
@@ -61,50 +69,15 @@ namespace aw2 {
     
     class alpha_wrap_2 {
     public:
-#ifdef USE_STACK_QUEUE
-        using Queue = std::stack<Gate>;
-#else
-        using Queue = std::priority_queue<Gate, std::vector<Gate>, std::less<Gate>>;
-#endif
-        void init(AlgorithmConfig& config);
-        alpha_wrap_2(const Oracle& oracle);
 
-        void compute_wrap(AlgorithmConfig& config);
-        FT adaptive_alpha(const Segment_2& seg) const;
-
-
-    private:
-
-        bool is_gate(const Delaunay::Edge& e) const;
-        bool is_alpha_traversable(const Gate& g) const;
-        void update_queue(const Delaunay::Face_handle& fh);
-        Point_2 infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) const;
-
-        FT sq_minimal_delaunay_ball_radius(const Delaunay::Edge& e) const;
-        bool process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc);
-        bool process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc);
-        bool process_rule_adaptive(const Gate& f, const Point_2& c_in_cc, const Delaunay::Face_handle& c_in);
-        void insert_steiner_point(const Point_2& steiner_point);
-        EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
-        void extract_wrap_surface();
-
-        FT subsegment_deviation(const Segment_2& seg) const;
-        FT segment_deviation(const Segment_2& seg) const;
-
-        bool is_alpha_traversable_mod(const Gate& g) const;
-
-        void add_gate_to_queue(const Delaunay::Edge& edge);
-
-
-
-    public:
-
+        // algorithm state
         const Oracle& oracle_;
         Delaunay dt_;
 
         Queue queue_;
         Gate candidate_gate_;
 
+        // algorithm configuration
         FT alpha_;
         FT alpha_min_;
         FT alpha_max_;
@@ -115,6 +88,39 @@ namespace aw2 {
         FT bbox_diagonal_length_;
 
         std::vector<Segment_2> wrap_edges_;
+
+        // initialization and running
+        alpha_wrap_2(const Oracle& oracle);
+        void init(AlgorithmConfig& config);
+        void compute_wrap(AlgorithmConfig& config);
+        FT adaptive_alpha(const Segment_2& seg) const;
+
+
+    private:
+
+        // gate and traversability processing methods
+        bool is_gate(const Delaunay::Edge& e) const;
+        FT sq_minimal_delaunay_ball_radius(const Delaunay::Edge& e) const;
+        bool is_alpha_traversable(const Gate& g) const;
+        bool is_alpha_traversable_mod(const Gate& g) const;
+
+        FT subsegment_deviation(const Segment_2& seg) const;
+        FT segment_deviation(const Segment_2& seg) const;
+
+        // rule processing
+        bool process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc);
+        bool process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc);
+        bool process_rule_adaptive(const Gate& f, const Point_2& c_in_cc, const Delaunay::Face_handle& c_in);
+
+        // update
+        void insert_steiner_point(const Point_2& steiner_point);
+        void add_gate_to_queue(const Delaunay::Edge& edge);
+        void update_queue(const Delaunay::Face_handle& fh);
+
+        // utils
+        Point_2 infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) const;
+        EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
+        void extract_wrap_surface();
     };
 }
 

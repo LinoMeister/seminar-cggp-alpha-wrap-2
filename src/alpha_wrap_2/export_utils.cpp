@@ -115,7 +115,7 @@ namespace aw2 {
 
         ColorMap priority_colormap(RGBColor("#08fa00"), RGBColor("#ff1100"), 0, 500);
 
-        alpha_wrap_2::Queue temp_queue = wrapper_.queue_;
+        Queue temp_queue = wrapper_.queue_;
         while (!temp_queue.empty() && style_.draw_queue_edges) {
             auto gate = temp_queue.top();
             temp_queue.pop();
