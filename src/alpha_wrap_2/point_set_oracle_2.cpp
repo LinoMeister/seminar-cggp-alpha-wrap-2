@@ -3,7 +3,7 @@
 namespace aw2 {
 
     // Forward declaration of segment_circle_intersection
-    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o);
+    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o, FT &lambda);
 
     bool point_set_oracle_2::empty() const { return tree_.empty(); }
     bool point_set_oracle_2::do_call() const { return (!empty()); }
@@ -50,7 +50,7 @@ namespace aw2 {
     bool point_set_oracle_2::first_intersection(const Point_2 &p, const Point_2 &q,
                             Point_2 &o,
                             const FT offset_size,
-                            const FT intersection_precision) const
+                            FT &lambda) const
     {
         if (tree_.empty()) return false;
         Segment_2 seg(p, q);
@@ -76,7 +76,9 @@ namespace aw2 {
         // Iterate through candidates by proximity to p
         for (auto it = inc_search.begin(); it != inc_search.end(); ++it)
         {
-            if (segment_circle_intersection(p, q, it->first, offset_size, o)) {
+            FT t;
+            if (segment_circle_intersection(p, q, it->first, offset_size, o, t)) {
+                lambda = t;
                 return true;
             }
         }
@@ -87,7 +89,8 @@ namespace aw2 {
                             Point_2 &o,
                             const FT offset_size) const
     {
-        return first_intersection(p, q, o, offset_size, 0.1);
+        FT dump;
+        return first_intersection(p, q, o, offset_size, dump);
     }
 
     void point_set_oracle_2::add_point_set(const Points& points) {
@@ -128,7 +131,7 @@ namespace aw2 {
         return local_pts;
     }
 
-    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o) {
+    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o, FT &lambda) {
         auto dx = q.x() - p.x();
         auto dy = q.y() - p.y();
 
@@ -157,6 +160,7 @@ namespace aw2 {
 
         // compute intersection point
         o = Point_2(p.x() + t_candidate*dx, p.y() + t_candidate*dy);
+        lambda = t_candidate;
         return true;
     }
 

@@ -85,12 +85,16 @@ namespace aw2 {
         FT sq_minimal_delaunay_ball_radius(const Delaunay::Edge& e) const;
         bool process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc);
         bool process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc);
+        bool process_rule_adaptive(const Gate& f, const Point_2& c_in_cc, const Delaunay::Face_handle& c_in);
         void insert_steiner_point(const Point_2& steiner_point);
         EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
         void extract_wrap_surface();
 
         FT subsegment_deviation(const Segment_2& seg) const;
         FT segment_deviation(const Segment_2& seg) const;
+
+        bool is_alpha_traversable_mod(const Gate& g) const;
+
 
 
     public:

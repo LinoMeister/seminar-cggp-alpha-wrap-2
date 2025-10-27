@@ -52,7 +52,7 @@ public:
                             const Point_2 &q,
                             Point_2 &o,
                             const FT offset_size,
-                            const FT intersection_precision) const;
+                            FT &lambda) const;
     
 
     bool first_intersection(const Point_2 &p, const Point_2 &q,
