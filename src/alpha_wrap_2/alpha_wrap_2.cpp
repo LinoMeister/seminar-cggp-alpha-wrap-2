@@ -89,66 +89,15 @@ namespace aw2 {
                 continue; 
             }
 
-
-            // Traverse the gate
-            auto c_1 = candidate_gate_.edge.first;
-            int i = candidate_gate_.edge.second;            
-            auto c_2 = c_1->neighbor(i);
-
-
-            
-            // Find c_in and c_out
-
-
-            Delaunay::Face_handle c_in; 
-            Delaunay::Face_handle c_out;
-
-            if (c_1->info() == INSIDE && c_2->info() == OUTSIDE) {
-                c_in = c_1;
-                c_out = c_2;
-            }
-            else if (c_1->info() == OUTSIDE && c_2->info() == INSIDE) {
-                c_in = c_2;
-                c_out = c_1;
-            }
-            else {
-                // This should not happen
-                throw std::runtime_error("Error: Encountered gate with identical labels.");
-            }
-
-            if (dt_.is_infinite(c_in)) {
-                throw std::runtime_error("Error: c_in is infinite face.");
-            }
-
-            // print vertices of c_in and c_out
-            std::cout << "c_in vertices: ";
-            for (int vi = 0; vi < 3; ++vi) {
-                std::cout << "(" << c_in->vertex(vi)->point() << ") ";
-            }
-            std::cout << std::endl;
-            std::cout << "c_out vertices: ";
-            for (int vi = 0; vi < 3; ++vi) {
-                std::cout << "(" << c_out->vertex(vi)->point() << ") ";
-            }
-            std::cout << std::endl;
-
-
-            // compute circumcenters of c_in and c_out
-            Point_2 c_in_cc = dt_.circumcenter(c_in);
-            Point_2 c_out_cc;
-
-            if (dt_.is_infinite(c_out)) {
-                c_out_cc = infinite_face_cc(c_in, c_out, i);
-            }
-            else {
-                c_out_cc = dt_.circumcenter(c_out);
-            }
+            auto info = gate_adjacency_info(candidate_gate_.edge);
+            auto c_in = candidate_gate_.edge.first;
+            auto c_in_cc = info.cc_inside;
+            auto c_out_cc = info.cc_outside;
 
             gate_processing_timer->pause();
 
             std::cout << "Dual edge: " << c_out_cc << " -> " << c_in_cc << std::endl;
 
-#if 1
             rule1_timer->start();
             if (process_rule_1(c_in_cc, c_out_cc)) {
                 rule1_timer->pause();
@@ -164,12 +113,6 @@ namespace aw2 {
                 continue;
             }
             rule2_timer->pause();
-#else
-            if (process_rule_adaptive(candidate_gate_, c_in_cc, c_in)) {
-                std::cout << "Steiner point inserted by adaptive rule." << std::endl;
-                continue;
-            }
-#endif
 
 
             std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
@@ -229,10 +172,7 @@ namespace aw2 {
             }
             
             // add gate to queue
-            Gate g;
-            g.edge = *eit;
-            g.priority = sq_minimal_delaunay_ball_radius(g.edge);
-            queue_.push(g);
+            add_gate_to_queue(*eit);
         }
 
         bbox_diagonal_length_ = std::sqrt(CGAL::squared_distance(
@@ -257,29 +197,23 @@ namespace aw2 {
     EdgeAdjacencyInfo alpha_wrap_2::gate_adjacency_info(const Delaunay::Edge& edge) const {
         EdgeAdjacencyInfo info;
         info.edge = edge;
-        auto c_1 = edge.first;
+        auto c_in = edge.first;
         int i = edge.second;            
-        auto c_2 = c_1->neighbor(i);
+        auto c_out = c_in->neighbor(i);
 
-        if (c_1->info() == INSIDE) {
-            info.inside = c_1;
-            info.outside = c_2;
-        }
-        else {
-            info.inside = c_2;
-            info.outside = c_1;
+        if (dt_.is_infinite(c_in)) {
+            throw std::runtime_error("Error: c_in is infinite face.");
         }
 
+        info.cc_inside = dt_.circumcenter(c_in);
 
-        info.cc_inside = dt_.circumcenter(info.inside);
-
-        if (dt_.is_infinite(info.outside)) {
+        if (dt_.is_infinite(c_out)) {
             info.outside_infinite = true;
-            info.cc_outside = infinite_face_cc(info.inside, info.outside, i);
+            info.cc_outside = infinite_face_cc(c_in, c_out, i);
         }
         else {
             info.outside_infinite = false;
-            info.cc_outside = dt_.circumcenter(info.outside);
+            info.cc_outside = dt_.circumcenter(c_out);
         }
 
         return info;
@@ -341,12 +275,7 @@ namespace aw2 {
     void alpha_wrap_2::update_queue(const Delaunay::Face_handle& fh){
         for(int i = 0; i < 3; ++i) {
             Delaunay::Edge e(fh, i);
-            if (is_gate(e)) {
-                Gate g;
-                g.edge = e;
-                g.priority = sq_minimal_delaunay_ball_radius(g.edge);
-                queue_.push(g);
-            }
+            add_gate_to_queue(e);
         }
     }
 
@@ -435,12 +364,7 @@ namespace aw2 {
 
         // Add new gates to the queue
         for (auto eit = dt_.all_edges_begin(); eit != dt_.all_edges_end(); ++eit) {
-            if (is_gate(*eit)) {
-                Gate g;
-                g.edge = *eit;
-                g.priority = sq_minimal_delaunay_ball_radius(g.edge);
-                queue_.push(g);
-            }
+            add_gate_to_queue(*eit);
         }
     }
 
@@ -560,22 +484,11 @@ namespace aw2 {
 
     bool alpha_wrap_2::is_alpha_traversable_mod(const Gate& g) const {
         
-        auto info = gate_adjacency_info(g.edge);
         auto points = g.get_vertices();
-        Point_2 s;
-        Point_2 t;
-        
-        
+        Point_2 s = points.first;
+        Point_2 t = points.second;
 
-        CGAL::Line_2<K> line(points.first, points.second);
-        if (line.has_on_negative_side(info.cc_inside)) {
-            s = points.second;
-            t = points.first;
-        }
-        else {
-            s = points.first;
-            t = points.second;
-        }
+
         CGAL::Line_2<K> line_corr(s,t);
 
 
@@ -607,6 +520,25 @@ namespace aw2 {
             }
         }
         return false;
+    }
+
+
+    void alpha_wrap_2::add_gate_to_queue(const Delaunay::Edge& edge) {
+        if (is_gate(edge)) {
+            Gate g;
+            auto f = edge.first;
+
+            // orient such that INSIDE face is first
+            if (f->info() == INSIDE) {
+                g.edge = edge;
+            }
+            else {
+                g.edge = dt_.mirror_edge(edge);
+            }
+
+            g.priority = sq_minimal_delaunay_ball_radius(g.edge);
+            queue_.push(g);
+        }
     }
 
 }

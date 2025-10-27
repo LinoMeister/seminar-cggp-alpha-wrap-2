@@ -51,8 +51,6 @@ namespace aw2 {
 
     struct EdgeAdjacencyInfo {
         Delaunay::Edge edge;
-        Face_handle inside;
-        Face_handle outside;
         Point_2 cc_inside;
         Point_2 cc_outside;
         bool outside_infinite;
@@ -94,6 +92,8 @@ namespace aw2 {
         FT segment_deviation(const Segment_2& seg) const;
 
         bool is_alpha_traversable_mod(const Gate& g) const;
+
+        void add_gate_to_queue(const Delaunay::Edge& edge);
 
 
 
