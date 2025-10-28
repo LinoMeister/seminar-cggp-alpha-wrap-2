@@ -5,6 +5,7 @@
 #include "alpha_wrap_2/types.h"
 #include "alpha_wrap_2/point_set_oracle_2.h"
 #include "alpha_wrap_2/export_utils.h"
+#include "alpha_wrap_2/statistics.h"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Exact_circular_kernel_2.h>
 #include <CGAL/Surface_mesh.h>
@@ -99,11 +100,17 @@ namespace aw2 {
 
         std::vector<Segment_2> wrap_edges_;
 
+        // statistics tracking
+        AlgorithmStatistics statistics_;
+
         // initialization and running
         alpha_wrap_2(const Oracle& oracle);
         void init(AlgorithmConfig& config);
         void compute_wrap(AlgorithmConfig& config);
         FT adaptive_alpha(const Segment_2& seg) const;
+        
+        // Get statistics (can be called after compute_wrap)
+        const AlgorithmStatistics& get_statistics() const { return statistics_; }
 
 
     private:

@@ -101,6 +101,9 @@ int main(int argc, char *argv[])
   config.export_step_limit = 5000;
   config.max_iterations = 50000;
 
+  // Set input filename in statistics
+  aw.statistics_.config.input_file = filename;
+
   aw.compute_wrap(config);
 
   return 0;

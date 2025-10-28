@@ -1,5 +1,9 @@
 #include <alpha_wrap_2/alpha_wrap_2.h>
 #include <alpha_wrap_2/timer.h>
+#include <chrono>
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 
 
 namespace aw2 {
@@ -106,6 +110,7 @@ namespace aw2 {
             rule1_timer->start();
             if (process_rule_1(c_in_cc, c_out_cc)) {
                 rule1_timer->pause();
+                statistics_.execution_stats.n_rule_1++;
                 std::cout << "Steiner point inserted by R1." << std::endl;
                 continue;
             }
@@ -114,6 +119,7 @@ namespace aw2 {
             rule2_timer->start();
             if (process_rule_2(c_in, c_in_cc)) {
                 rule2_timer->pause();
+                statistics_.execution_stats.n_rule_2++;
                 std::cout << "Steiner point inserted by R2." << std::endl;
                 continue;
             }
@@ -133,6 +139,28 @@ namespace aw2 {
 
         total_timer->pause();
         
+        // Collect statistics
+        statistics_.execution_stats.n_iterations = iteration;
+        statistics_.timings.total_time = total_timer->elapsed_ms();
+        statistics_.timings.gate_processing = gate_processing_timer->elapsed_ms();
+        statistics_.timings.rule_1_processing = rule1_timer->elapsed_ms();
+        statistics_.timings.rule_2_processing = rule2_timer->elapsed_ms();
+        
+        statistics_.output_stats.n_vertices = dt_.number_of_vertices();
+        statistics_.output_stats.n_edges = wrap_edges_.size();
+        
+        // Get current timestamp
+        auto now = std::chrono::system_clock::now();
+        auto time_t_now = std::chrono::system_clock::to_time_t(now);
+        std::ostringstream timestamp_oss;
+        timestamp_oss << std::put_time(std::localtime(&time_t_now), "%Y-%m-%d %H:%M:%S");
+        statistics_.metadata.timestamp = timestamp_oss.str();
+        
+        // Export statistics to JSON
+        std::string stats_filepath = exporter.export_dir_.string() + "/statistics.json";
+        statistics_.export_to_json(stats_filepath);
+        std::cout << "\nStatistics exported to: " << stats_filepath << std::endl;
+        
         // Print hierarchical timing report
         registry.print_all_hierarchies();
         std::cout << "Total iterations: " << iteration << std::endl;
@@ -149,16 +177,23 @@ namespace aw2 {
         alpha_min_ = alpha_;
         alpha_max_ = 200.0;
 
+        // Populate config stats
+        statistics_.config.alpha = config.alpha;
+        statistics_.config.offset = config.offset;
+        
         // Set traversability function
         switch (config.traversability_method) {
             case CONSTANT_ALPHA:
                 is_traversable_func_ = [this](const Gate& g) { return is_traversable(g); };
+                statistics_.config.traversability_function = "CONSTANT_ALPHA";
                 break;
             case ADAPTIVE_ALPHA:
                 is_traversable_func_ = [this](const Gate& g) { return is_traversable_adaptive_alpha(g); };
+                statistics_.config.traversability_function = "ADAPTIVE_ALPHA";
                 break;
             case DISTANCE_SAMPLING:
                 is_traversable_func_ = [this](const Gate& g) { return is_traversable_dist_sampling(g); };
+                statistics_.config.traversability_function = "DISTANCE_SAMPLING";
                 break;
             default:
                 throw std::invalid_argument("Unknown traversability method.");
