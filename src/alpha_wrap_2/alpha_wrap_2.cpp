@@ -90,7 +90,7 @@ namespace aw2 {
                 continue; 
             }
 
-            if (!is_alpha_traversable_mod(candidate_gate_)) {
+            if (!is_traversable_func_(candidate_gate_)) {
                 continue; 
             }
 
@@ -141,12 +141,28 @@ namespace aw2 {
 
     void alpha_wrap_2::init(AlgorithmConfig& config) {
 
+        // apply configuration
         alpha_ = config.alpha;
         offset_ = config.offset;
         max_iterations_ = config.max_iterations;
 
         alpha_min_ = alpha_;
         alpha_max_ = 200.0;
+
+        // Set traversability function
+        switch (config.traversability_method) {
+            case CONSTANT_ALPHA:
+                is_traversable_func_ = [this](const Gate& g) { return is_traversable(g); };
+                break;
+            case ADAPTIVE_ALPHA:
+                is_traversable_func_ = [this](const Gate& g) { return is_traversable_adaptive_alpha(g); };
+                break;
+            case DISTANCE_SAMPLING:
+                is_traversable_func_ = [this](const Gate& g) { return is_traversable_dist_sampling(g); };
+                break;
+            default:
+                throw std::invalid_argument("Unknown traversability method.");
+        }
 
         // Insert bounding box points
         FT margin = 5 + offset_;
@@ -273,9 +289,14 @@ namespace aw2 {
 #endif
     }
 
-    bool alpha_wrap_2::is_alpha_traversable(const Gate& g) const {
+    bool alpha_wrap_2::is_traversable(const Gate& g) const {
+        return sq_minimal_delaunay_ball_radius(g.edge) >= alpha_;
+    }
+
+    bool alpha_wrap_2::is_traversable_adaptive_alpha(const Gate& g) const {
         return sq_minimal_delaunay_ball_radius(g.edge) >= std::pow(adaptive_alpha(dt_.segment(g.edge)), 2);
     }
+
 
     void alpha_wrap_2::update_queue(const Delaunay::Face_handle& fh){
         for(int i = 0; i < 3; ++i) {
@@ -442,7 +463,7 @@ namespace aw2 {
     }
 
 
-    bool alpha_wrap_2::is_alpha_traversable_mod(const Gate& g) const {
+    bool alpha_wrap_2::is_traversable_dist_sampling(const Gate& g) const {
         
         auto points = g.get_points();
         Point_2 s = points.first;
@@ -472,7 +493,7 @@ namespace aw2 {
                 offset_,
                 lambda
             );
-            if (intersects && CGAL::squared_distance(p0, steiner_point) > 5 * std::pow(offset_, 2)) {
+            if (intersects && CGAL::squared_distance(p0, steiner_point) > 100 * std::pow(offset_, 2)) {
                 return true;
             }
             else if (!intersects) {

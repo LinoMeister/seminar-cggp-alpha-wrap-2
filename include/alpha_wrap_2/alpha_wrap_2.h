@@ -26,11 +26,18 @@ namespace aw2 {
         using Queue = std::priority_queue<Gate, std::vector<Gate>, std::less<Gate>>;
     #endif
 
+    enum TraversabilityMethod {
+        CONSTANT_ALPHA,
+        ADAPTIVE_ALPHA,
+        DISTANCE_SAMPLING
+    };
 
     struct AlgorithmConfig {
         // algorithm parameters
         FT alpha = 10.0;
         FT offset = 2.0;
+
+        TraversabilityMethod traversability_method = CONSTANT_ALPHA;
 
         int max_iterations = 5000;
 
@@ -84,6 +91,8 @@ namespace aw2 {
         FT alpha_max_;
         FT offset_;
 
+        std::function<bool(const Gate&)> is_traversable_func_;
+
         int max_iterations_;
 
         FT bbox_diagonal_length_;
@@ -102,8 +111,9 @@ namespace aw2 {
         // gate and traversability processing methods
         bool is_gate(const Delaunay::Edge& e) const;
         FT sq_minimal_delaunay_ball_radius(const Delaunay::Edge& e) const;
-        bool is_alpha_traversable(const Gate& g) const;
-        bool is_alpha_traversable_mod(const Gate& g) const;
+        bool is_traversable(const Gate& g) const;
+        bool is_traversable_adaptive_alpha(const Gate& g) const;
+        bool is_traversable_dist_sampling(const Gate& g) const;
 
         FT subsegment_deviation(const Segment_2& seg) const;
         FT segment_deviation(const Segment_2& seg) const;
@@ -111,7 +121,6 @@ namespace aw2 {
         // rule processing
         bool process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc);
         bool process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc);
-        bool process_rule_adaptive(const Gate& f, const Point_2& c_in_cc, const Delaunay::Face_handle& c_in);
 
         // update
         void insert_steiner_point(const Point_2& steiner_point);
