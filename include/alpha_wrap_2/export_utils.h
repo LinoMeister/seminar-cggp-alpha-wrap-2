@@ -77,12 +77,20 @@ namespace aw2 {
         void draw_voronoi_diagram(std::ofstream& os);
         std::pair<double, double> to_svg(const Point_2& p);
         
+        // SVG helper methods
+
+        void draw_line(std::ofstream& os, const std::pair<double, double>& p1, 
+                      const std::pair<double, double>& p2, const std::string& color,
+                      double stroke_width);
+        void draw_polygon(std::ofstream& os, const std::pair<double, double>& p1,
+                         const std::pair<double, double>& p2, const std::pair<double, double>& p3,
+                         const std::string& fill, const std::string& stroke,
+                         double stroke_width, double opacity = 1.0);
+        void draw_circle(std::ofstream& os, const std::pair<double, double>& center,
+                        double radius);
+        
         // Enhanced styling methods
         void write_svg_defs(std::ofstream& os, const StyleConfig& style);
-        std::string get_triangle_color(const Delaunay::Face_handle& face, const StyleConfig& style);
-        std::string map_value_to_color(double value, double min_val, double max_val);
-        double compute_triangle_area(const Delaunay::Face_handle& face);
-        std::string hsl_to_string(int h, int s, int l);
 
 
         const alpha_wrap_2& wrapper_;

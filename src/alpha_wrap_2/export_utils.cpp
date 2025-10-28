@@ -62,47 +62,28 @@ namespace aw2 {
         os << R"(  <g stroke="black" stroke-width=")" << stroke_width_
         << "\" fill=\"none\">\n";
         for (auto fit = dt_.finite_faces_begin(); fit != dt_.finite_faces_end(); ++fit) {
-            Point_2 pa = fit->vertex(0)->point();
-            Point_2 pb = fit->vertex(1)->point();
-            Point_2 pc = fit->vertex(2)->point();
-            auto sa = to_svg(pa);
-            auto sb = to_svg(pb);
-            auto sc = to_svg(pc);
+            auto sa = to_svg(fit->vertex(0)->point());
+            auto sb = to_svg(fit->vertex(1)->point());
+            auto sc = to_svg(fit->vertex(2)->point());
 
             auto inside = (fit->info() == INSIDE);
-
-            std::string fill_color = get_triangle_color(fit, style_);
             double opacity = style_.use_opacity ? style_.opacity : 1.0;
 
             if (inside) {
-                os << "    <polygon points=\""
-                << std::fixed << std::setprecision(3)
-                << sa.first << "," << sa.second << " "
-                << sb.first << "," << sb.second << " "
-                << sc.first << "," << sc.second
-                << "\" fill=\"" << fill_color << "\" fill-opacity=\"" << opacity
-                << "\" stroke=\"" << style_.delaunay_edges.color << "\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
+                std::string fill_color = style_.use_gradients ? "url(#triangleGradient)" : style_.gradient_start;
+                draw_polygon(os, sa, sb, sc, fill_color, style_.delaunay_edges.color, stroke_width_/2, opacity);
             }
             else {
-                os << "    <polygon points=\""
-                << std::fixed << std::setprecision(3)
-                << sa.first << "," << sa.second << " "
-                << sb.first << "," << sb.second << " "
-                << sc.first << "," << sc.second
-                << "\" fill=\"none\" stroke=\"" << style_.delaunay_edges.color << "\" stroke-width=\"" << stroke_width_/2 << "\" />\n";
+                draw_polygon(os, sa, sb, sc, "none", style_.delaunay_edges.color, stroke_width_/2, 1.0);
             }
-
         }
         os << "  </g>\n";
 
         // Draw vertices 
         os << "  <g stroke=\"red\" stroke-width=\""<< stroke_width_ <<"\" fill=\"red\">\n";
         for (auto vit = dt_.finite_vertices_begin(); vit != dt_.finite_vertices_end(); ++vit) {
-            const Point_2& p = vit->point();
-            auto sp = to_svg(p);
-            os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
-            << sp.first << "\" cy=\"" << sp.second
-            << "\" r=\"" << vertex_radius_ << "\" />\n";
+            auto sp = to_svg(vit->point());
+            draw_circle(os, sp, vertex_radius_);
         }
         os << "  </g>\n";
 
@@ -113,53 +94,40 @@ namespace aw2 {
         // Draw input points
         draw_input_points(os);
 
-        ColorMap priority_colormap(RGBColor("#08fa00"), RGBColor("#ff1100"), 0, 500);
-
-        Queue temp_queue = wrapper_.queue_;
-        while (!temp_queue.empty() && style_.draw_queue_edges) {
-            auto gate = temp_queue.top();
-            temp_queue.pop();
-            auto edge_color = priority_colormap.get_color(gate.priority).to_string();
-            std::cout << "Gate priority: " << gate.priority << std::endl;
-
-            os  << "  <g stroke=\"" << edge_color << "\" stroke-width=\"" 
-                << stroke_width_ * style_.queue_edges.relative_stroke_width << "\" fill=\"none\">\n";
-            auto sv1 = to_svg(gate.get_points().first);
-            auto sv2 = to_svg(gate.get_points().second);
-            os << "    <line x1=\"" << sv1.first << "\" y1=\"" << sv1.second
-               << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
-            os << "  </g>\n";
-        }   
-
-
-        // draw candidate edge (only if candidate gate has a valid face handle)
-        if (candidate_gate_.edge.first != Delaunay::Face_handle()) {
-            os  << "  <g stroke=\"" << style_.candidate_edge.color << "\" stroke-width=\"" 
-                << stroke_width_ * style_.candidate_edge.relative_stroke_width << "\" fill=\"none\">\n";
-            auto sv1 = to_svg(candidate_gate_.get_points().first);
-            auto sv2 = to_svg(candidate_gate_.get_points().second);
-            os << "    <line x1=\"" << sv1.first << "\" y1=\"" << sv1.second
-               << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
+        // Draw queue edges with priority-based coloring
+        if (style_.draw_queue_edges) {
+            ColorMap priority_colormap(RGBColor("#08fa00"), RGBColor("#ff1100"), 0, 500);
+            Queue temp_queue = wrapper_.queue_;
+            os << "  <g fill=\"none\">\n";
+            while (!temp_queue.empty()) {
+                auto gate = temp_queue.top();
+                temp_queue.pop();
+                auto edge_color = priority_colormap.get_color(gate.priority).to_string();
+                auto sv1 = to_svg(gate.get_points().first);
+                auto sv2 = to_svg(gate.get_points().second);
+                draw_line(os, sv1, sv2, edge_color, stroke_width_ * style_.queue_edges.relative_stroke_width);
+            }
             os << "  </g>\n";
         }
 
-        // draw extracted wrap edges
-        auto alpha_min = wrapper_.alpha_;
-        auto alpha_max = wrapper_.alpha_max_;
+        // Draw candidate edge
+        if (candidate_gate_.edge.first != Delaunay::Face_handle()) {
+            os << "  <g fill=\"none\">\n";
+            auto sv1 = to_svg(candidate_gate_.get_points().first);
+            auto sv2 = to_svg(candidate_gate_.get_points().second);
+            draw_line(os, sv1, sv2, style_.candidate_edge.color, 
+                     stroke_width_ * style_.candidate_edge.relative_stroke_width);
+            os << "  </g>\n";
+        }
 
-        ColorMap alpha_colormap(RGBColor("#08fa00"), RGBColor("#ff1100"), alpha_min, alpha_max);
+        // Draw extracted wrap edges with adaptive alpha coloring
 
-
-        os << "  <g stroke-width=\"" << stroke_width_ 
-           << "\" fill=\"none\">\n";
+        os << "  <g fill=\"none\">\n";
+        auto wrap_edge_color = RGBColor("#e800fd").to_string();
         for (const auto& seg : wrapper_.wrap_edges_) {
-            auto alpha = wrapper_.adaptive_alpha(seg);
-            auto edge_color = alpha_colormap.get_color(alpha).to_string();
             auto sa = to_svg(seg.source());
             auto sb = to_svg(seg.target());
-            os << "    <line x1=\"" << sa.first << "\" y1=\"" << sa.second
-               << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second 
-               << "\" stroke=\"" << edge_color << "\" />\n";
+            draw_line(os, sa, sb, wrap_edge_color, stroke_width_);
         }
         os << "  </g>\n";
 
@@ -169,24 +137,20 @@ namespace aw2 {
     }
 
     void alpha_wrap_2_exporter::draw_input_points(std::ofstream& os) {
-        os << "  <g" << " fill=\"" << style_.input_points.color << "\" opacity=\"" << style_.input_points.opacity << "\">\n";
+        os << "  <g fill=\"" << style_.input_points.color 
+           << "\" opacity=\"" << style_.input_points.opacity << "\">\n";
         for (auto vit = oracle_.tree_.begin(); vit != oracle_.tree_.end(); ++vit) {
-            const Point_2& p = *vit;
-            auto sp = to_svg(p);
-            os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
-            << sp.first << "\" cy=\"" << sp.second
-            << "\" r=\"" << style_.input_point_radius << "\" />\n";
+            auto sp = to_svg(*vit);
+            draw_circle(os, sp, style_.input_point_radius);
         }
         os << "  </g>\n";
     }
 
     void alpha_wrap_2_exporter::draw_voronoi_diagram(std::ofstream& os) {
-        // Draw Voronoi diagram (dual of Delaunay triangulation)
-    
-
         os << "  <g stroke=\"" << style_.voronoi_diagram.color << "\""
-        << " opacity=\"" << style_.voronoi_diagram.opacity << "\""
-        << " stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
+           << " opacity=\"" << style_.voronoi_diagram.opacity << "\""
+           << " stroke-width=\"" << stroke_width_/2 << "\" fill=\"none\">\n";
+        
         for (auto eit = dt_.finite_edges_begin(); eit != dt_.finite_edges_end(); ++eit) {
             auto face = eit->first;
             int i = eit->second;
@@ -196,15 +160,9 @@ namespace aw2 {
 
             CGAL::Object o1 = dt_.dual(eit);
             if (const Segment_2* s = CGAL::object_cast<Segment_2>(&o1)) {
-
-                Point_2 p(s->source().x(), s->source().y());
-                Point_2 q(s->target().x(), s->target().y());
-
                 auto sa = to_svg(s->source());
                 auto sb = to_svg(s->target());
-
-                os << "    <line x1=\"" << sa.first << "\" y1=\"" << sa.second
-                << "\" x2=\"" << sb.first << "\" y2=\"" << sb.second << "\" />\n";
+                draw_line(os, sa, sb, style_.voronoi_diagram.color, stroke_width_/2);
             }
         }
         os << "  </g>\n";
@@ -215,7 +173,35 @@ namespace aw2 {
         // Flip Y so that larger y goes downward in SVG coordinate
         double y = (ymax_ - p.y()) + margin_;
         return std::pair<double, double>(x, y);
-    };
+    }
+
+    void alpha_wrap_2_exporter::draw_line(std::ofstream& os, const std::pair<double, double>& p1, 
+                                         const std::pair<double, double>& p2, const std::string& color,
+                                         double stroke_width) {
+        os << "    <line x1=\"" << p1.first << "\" y1=\"" << p1.second
+           << "\" x2=\"" << p2.first << "\" y2=\"" << p2.second 
+           << "\" stroke=\"" << color << "\" stroke-width=\"" << stroke_width << "\" />\n";
+    }
+
+    void alpha_wrap_2_exporter::draw_polygon(std::ofstream& os, const std::pair<double, double>& p1,
+                                            const std::pair<double, double>& p2, const std::pair<double, double>& p3,
+                                            const std::string& fill, const std::string& stroke,
+                                            double stroke_width, double opacity) {
+        os << "    <polygon points=\""
+           << std::fixed << std::setprecision(3)
+           << p1.first << "," << p1.second << " "
+           << p2.first << "," << p2.second << " "
+           << p3.first << "," << p3.second
+           << "\" fill=\"" << fill << "\" fill-opacity=\"" << opacity
+           << "\" stroke=\"" << stroke << "\" stroke-width=\"" << stroke_width << "\" />\n";
+    }
+
+    void alpha_wrap_2_exporter::draw_circle(std::ofstream& os, const std::pair<double, double>& center,
+                                           double radius) {
+        os << "    <circle cx=\"" << std::fixed << std::setprecision(3)
+           << center.first << "\" cy=\"" << center.second
+           << "\" r=\"" << radius << "\" />\n";
+    }
 
     void alpha_wrap_2_exporter::write_svg_defs(std::ofstream& os, const StyleConfig& style) {
         os << "  <defs>\n";
@@ -241,48 +227,6 @@ namespace aw2 {
         os << "    </pattern>\n";
         
         os << "  </defs>\n";
-    }
-
-    std::string alpha_wrap_2_exporter::get_triangle_color(const Delaunay::Face_handle& face, const StyleConfig& style) {
-        switch (style.scheme) {
-            case ColorScheme::GRADIENT:
-                return style.use_gradients ? "url(#triangleGradient)" : style.gradient_start;
-                
-            case ColorScheme::DATA_MAPPED:
-                if (style.map_to_data) {
-                    double area = compute_triangle_area(face);
-                    // You would need to compute min/max areas across all triangles
-                    return map_value_to_color(area, 0.0, 100.0); // placeholder values
-                }
-                return "lightblue";
-                
-            case ColorScheme::HEAT_MAP:
-                // Map based on some property like distance from center
-                return hsl_to_string(240, 70, 50); // Blue as default
-                
-            default: // SIMPLE
-                return "lightblue";
-        }
-    }
-
-    std::string alpha_wrap_2_exporter::map_value_to_color(double value, double min_val, double max_val) {
-        // Use the new ColorMap for consistency
-        ColorMap colormap(RGBColor(0, 0, 255), RGBColor(255, 0, 0), min_val, max_val);
-        return colormap.get_color_string(value);
-    }
-
-    double alpha_wrap_2_exporter::compute_triangle_area(const Delaunay::Face_handle& face) {
-        Point_2 p1 = face->vertex(0)->point();
-        Point_2 p2 = face->vertex(1)->point();
-        Point_2 p3 = face->vertex(2)->point();
-        
-        // Using cross product for area calculation
-        double area = std::abs((p2.x() - p1.x()) * (p3.y() - p1.y()) - (p3.x() - p1.x()) * (p2.y() - p1.y())) / 2.0;
-        return area;
-    }
-
-    std::string alpha_wrap_2_exporter::hsl_to_string(int h, int s, int l) {
-        return "hsl(" + std::to_string(h) + "," + std::to_string(s) + "%," + std::to_string(l) + "%)";
     }
 
     RGBColor::RGBColor(const std::string& hex) {
@@ -327,8 +271,6 @@ namespace aw2 {
         
         // Normalize value to [0, 1]
         double t = (value - min_value_) / (max_value_ - min_value_);
-
-        std::cout << "Value: " << value << ", t: " << t << std::endl;
         
         // Linear interpolation between colors
         int r = static_cast<int>(min_color_.r + t * (max_color_.r - min_color_.r));
