@@ -441,50 +441,6 @@ namespace aw2 {
         return std::clamp(max_dev, 0.0, 1.0);
     }
 
-    bool alpha_wrap_2::process_rule_adaptive(const Gate& f, const Point_2& c_in_cc, const Delaunay::Face_handle& c_in) {
-        if (!oracle_.do_intersect(dt_.triangle(c_in))) {
-            return false;
-        }
-
-        auto points = f.get_points();
-        auto s = points.first;
-        auto t = points.second;
-        CGAL::Line_2<K> line(points.first, points.second);
-        if (line.has_on_positive_side(c_in_cc)) {
-            s = points.second;
-            t = points.first;
-        }
-
-
-
-        Segment_2 seg(s, t);
-        auto segment_length = alpha_min_;
-        int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
-
-        for (int i = 1; i < m; ++i) {
-            FT t0 = static_cast<FT>(i) / m;
-            Point_2 p0 = s + t0 * (t - s);
-
-            auto perp = line.perpendicular(p0).direction().to_vector();
-            Point_2 p1 = p0 + 1000*perp;
-
-            Point_2 steiner_point;
-            FT lambda;
-            bool intersects = oracle_.first_intersection(
-                p0,
-                p1,
-                steiner_point,
-                offset_,
-                lambda
-            );
-            if (intersects && CGAL::squared_distance(p0, p1) > 2 * std::pow(offset_, 2)) {
-                insert_steiner_point(steiner_point);
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     bool alpha_wrap_2::is_alpha_traversable_mod(const Gate& g) const {
         
