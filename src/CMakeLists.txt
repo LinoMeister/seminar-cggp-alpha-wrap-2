@@ -13,6 +13,7 @@ add_library(alpha_wrap2 STATIC ${AW2_SOURCES})
 target_include_directories(alpha_wrap2
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external>
     $<INSTALL_INTERFACE:include>
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/alpha_wrap_2

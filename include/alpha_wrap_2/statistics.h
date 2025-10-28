@@ -3,8 +3,7 @@
 
 #include <string>
 #include <fstream>
-#include <sstream>
-#include <iomanip>
+#include <nlohmann/json.hpp>
 
 namespace aw2 {
 
@@ -13,17 +12,23 @@ struct TimingStats {
     double gate_processing = 0.0;
     double rule_1_processing = 0.0;
     double rule_2_processing = 0.0;
+    
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(TimingStats, total_time, gate_processing, rule_1_processing, rule_2_processing)
 };
 
 struct ExecutionStats {
     int n_iterations = 0;
     int n_rule_1 = 0;
     int n_rule_2 = 0;
+    
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ExecutionStats, n_iterations, n_rule_1, n_rule_2)
 };
 
 struct OutputStats {
     int n_vertices = 0;
     int n_edges = 0;
+    
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(OutputStats, n_vertices, n_edges)
 };
 
 struct ConfigStats {
@@ -32,12 +37,16 @@ struct ConfigStats {
     double offset = 0.0;
     std::string traversability_function;
     std::string traversability_params; // JSON string for additional params
+    
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ConfigStats, input_file, alpha, offset, traversability_function, traversability_params)
 };
 
 struct MetadataStats {
-    bool is_test = false;
+    bool is_test = true; // set to false for 'real' experiments
     std::string timestamp;
     std::string version = "1.0";
+    
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(MetadataStats, is_test, timestamp, version)
 };
 
 struct AlgorithmStatistics {
@@ -50,8 +59,7 @@ struct AlgorithmStatistics {
     // Export to JSON file
     void export_to_json(const std::string& filepath) const;
     
-    // Convert to JSON string
-    std::string to_json_string() const;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(AlgorithmStatistics, config, output_stats, execution_stats, timings, metadata)
 };
 
 } // namespace aw2
