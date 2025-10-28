@@ -4,7 +4,12 @@
 
 namespace aw2 {
 
-    std::pair<Point_2, Point_2> Gate::get_vertices() const {
+    std::pair<Delaunay::Vertex_handle, Delaunay::Vertex_handle> Gate::get_vertices() const {
+        auto v1 = edge.first->vertex(edge.first->cw(edge.second));
+        auto v2 = edge.first->vertex(edge.first->ccw(edge.second));
+        return std::make_pair(v1, v2);
+    }
+    std::pair<Point_2, Point_2> Gate::get_points() const {
         auto v1 = edge.first->vertex(edge.first->cw(edge.second))->point();
         auto v2 = edge.first->vertex(edge.first->ccw(edge.second))->point();
         return std::make_pair(v1, v2);
@@ -79,7 +84,7 @@ namespace aw2 {
                 exporter.export_svg("in_progress_iter_" + std::to_string(iteration) + ".svg");
             }
 
-            std::cout << "Candidate gate: " << candidate_gate_.get_vertices().first << " -- " << candidate_gate_.get_vertices().second << std::endl;
+            std::cout << "Candidate gate: " << candidate_gate_.get_points().first << " -- " << candidate_gate_.get_points().second << std::endl;
 
             if (!is_gate(candidate_gate_.edge)) {
                 continue; 
@@ -358,7 +363,6 @@ namespace aw2 {
             } else {
                 fit->info() = INSIDE;
             }
-
             if (++fit == dt_.incident_faces(vh)) break;
         }
 
@@ -442,7 +446,7 @@ namespace aw2 {
             return false;
         }
 
-        auto points = f.get_vertices();
+        auto points = f.get_points();
         auto s = points.first;
         auto t = points.second;
         CGAL::Line_2<K> line(points.first, points.second);
@@ -484,7 +488,7 @@ namespace aw2 {
 
     bool alpha_wrap_2::is_alpha_traversable_mod(const Gate& g) const {
         
-        auto points = g.get_vertices();
+        auto points = g.get_points();
         Point_2 s = points.first;
         Point_2 t = points.second;
 

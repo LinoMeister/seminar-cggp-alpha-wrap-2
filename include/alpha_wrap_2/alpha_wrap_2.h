@@ -46,7 +46,8 @@ namespace aw2 {
         Delaunay::Edge edge;
         FT priority;
 
-        std::pair<Point_2, Point_2> get_vertices() const;
+        std::pair<Point_2, Point_2> get_points() const;
+        std::pair<Delaunay::Vertex_handle, Delaunay::Vertex_handle> get_vertices() const;
 
         bool operator<(const Gate& other) const {
             return priority < other.priority;

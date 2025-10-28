@@ -124,8 +124,8 @@ namespace aw2 {
 
             os  << "  <g stroke=\"" << edge_color << "\" stroke-width=\"" 
                 << stroke_width_ * style_.queue_edges.relative_stroke_width << "\" fill=\"none\">\n";
-            auto sv1 = to_svg(gate.get_vertices().first);
-            auto sv2 = to_svg(gate.get_vertices().second);
+            auto sv1 = to_svg(gate.get_points().first);
+            auto sv2 = to_svg(gate.get_points().second);
             os << "    <line x1=\"" << sv1.first << "\" y1=\"" << sv1.second
                << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
             os << "  </g>\n";
@@ -136,8 +136,8 @@ namespace aw2 {
         if (candidate_gate_.edge.first != Delaunay::Face_handle()) {
             os  << "  <g stroke=\"" << style_.candidate_edge.color << "\" stroke-width=\"" 
                 << stroke_width_ * style_.candidate_edge.relative_stroke_width << "\" fill=\"none\">\n";
-            auto sv1 = to_svg(candidate_gate_.get_vertices().first);
-            auto sv2 = to_svg(candidate_gate_.get_vertices().second);
+            auto sv1 = to_svg(candidate_gate_.get_points().first);
+            auto sv2 = to_svg(candidate_gate_.get_points().second);
             os << "    <line x1=\"" << sv1.first << "\" y1=\"" << sv1.second
                << "\" x2=\"" << sv2.first << "\" y2=\"" << sv2.second << "\" />\n";
             os << "  </g>\n";
