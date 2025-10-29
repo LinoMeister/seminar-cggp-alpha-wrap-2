@@ -13,11 +13,7 @@ namespace aw2 {
         auto v2 = edge.first->vertex(edge.first->ccw(edge.second));
         return std::make_pair(v1, v2);
     }
-    std::pair<Point_2, Point_2> Gate::get_points() const {
-        auto v1 = edge.first->vertex(edge.first->cw(edge.second))->point();
-        auto v2 = edge.first->vertex(edge.first->ccw(edge.second))->point();
-        return std::make_pair(v1, v2);
-    }
+
 
     std::pair<Point_2, Point_2> EdgeAdjacencyInfo::get_points() const {
         auto v1 = edge.first->vertex(edge.first->cw(edge.second))->point();
@@ -26,7 +22,11 @@ namespace aw2 {
     }
 
 
-    alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) : oracle_(oracle) {}
+    alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) : oracle_(oracle), traversability_(nullptr) {}
+
+    alpha_wrap_2::~alpha_wrap_2() {
+        delete traversability_;
+    }
 
     void alpha_wrap_2::compute_wrap(AlgorithmConfig& config) {
 
@@ -94,7 +94,7 @@ namespace aw2 {
                 continue; 
             }
 
-            if (!is_traversable_func_(candidate_gate_)) {
+            if (!(*traversability_)(candidate_gate_)) {
                 continue; 
             }
 
@@ -181,18 +181,18 @@ namespace aw2 {
         statistics_.config.alpha = config.alpha;
         statistics_.config.offset = config.offset;
         
-        // Set traversability function
+        // Set traversability object
         switch (config.traversability_method) {
             case CONSTANT_ALPHA:
-                is_traversable_func_ = [this](const Gate& g) { return is_traversable(g); };
+                traversability_ = new ConstantAlphaTraversability(alpha_);
                 statistics_.config.traversability_function = "CONSTANT_ALPHA";
                 break;
             case ADAPTIVE_ALPHA:
-                is_traversable_func_ = [this](const Gate& g) { return is_traversable_adaptive_alpha(g); };
+                traversability_ = new AdaptiveAlphaTraversability(alpha_, offset_, oracle_);
                 statistics_.config.traversability_function = "ADAPTIVE_ALPHA";
                 break;
             case DISTANCE_SAMPLING:
-                is_traversable_func_ = [this](const Gate& g) { return is_traversable_dist_sampling(g); };
+                traversability_ = new DistanceSamplingTraversability(alpha_, offset_, oracle_);
                 statistics_.config.traversability_function = "DISTANCE_SAMPLING";
                 break;
             default:
@@ -324,15 +324,6 @@ namespace aw2 {
 #endif
     }
 
-    bool alpha_wrap_2::is_traversable(const Gate& g) const {
-        return sq_minimal_delaunay_ball_radius(g.edge) >= alpha_;
-    }
-
-    bool alpha_wrap_2::is_traversable_adaptive_alpha(const Gate& g) const {
-        return sq_minimal_delaunay_ball_radius(g.edge) >= std::pow(adaptive_alpha(dt_.segment(g.edge)), 2);
-    }
-
-
     void alpha_wrap_2::update_queue(const Delaunay::Face_handle& fh){
         for(int i = 0; i < 3; ++i) {
             Delaunay::Edge e(fh, i);
@@ -438,106 +429,6 @@ namespace aw2 {
             }
         }
     }
-
-    FT alpha_wrap_2::adaptive_alpha(const Segment_2& seg) const {
-
-        auto dev = segment_deviation(seg);
-        auto adaptive_alpha = alpha_max_ * (1 - dev) + alpha_min_ * dev;
-        return adaptive_alpha;
-    }
-
-    FT alpha_wrap_2::subsegment_deviation(const Segment_2& seg) const {
-        auto local_pts = oracle_.local_points(seg, offset_ + 4);
-        int n = local_pts.size();
-
-        // not enough points to compute a meaningful adaptive alpha
-        if (n < 5) {
-            return 1.0;
-        }
-
-        // compute average squared deviation from the segment
-        auto avg_sq_deviation = 0.0;
-        for (const auto& pt : local_pts) {
-            avg_sq_deviation += CGAL::squared_distance(seg, pt);
-        }
-
-        avg_sq_deviation /= n;
-        auto dev = 0.05 * (avg_sq_deviation - std::pow(offset_, 2));
-        dev = std::clamp(dev, 0.0, 1.0);
-
-        std::cout << "dev: " << dev << " from " << avg_sq_deviation << std::endl;
-        return dev;
-    }
-
-    FT alpha_wrap_2::segment_deviation(const Segment_2& seg) const {
-
-        //auto segment_length = bbox_diagonal_length_ / 100.0;
-        auto segment_length = alpha_min_;
-        int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
-        auto s = seg.source();
-        auto t = seg.target();
-
-        auto avg_dev = 0.0;
-        auto max_dev = 0.0;
-        for (int i = 0; i < m; ++i) {
-            FT t0 = static_cast<FT>(i) / m;
-            FT t1 = static_cast<FT>(i + 1) / m;
-            auto p0 = s + t0 * (t - s);
-            auto p1 = s + t1 * (t - s);
-            Segment_2 sub_seg(p0, p1);
-            auto dev = subsegment_deviation(sub_seg);
-            avg_dev += dev;
-            if (dev > max_dev) {
-                max_dev = dev;
-            }
-        }
-        avg_dev /= m;
-
-        // return std::clamp(avg_dev, 0.0, 1.0);
-        return std::clamp(max_dev, 0.0, 1.0);
-    }
-
-
-    bool alpha_wrap_2::is_traversable_dist_sampling(const Gate& g) const {
-        
-        auto points = g.get_points();
-        Point_2 s = points.first;
-        Point_2 t = points.second;
-
-
-        CGAL::Line_2<K> line_corr(s,t);
-
-
-        Segment_2 seg(s, t);
-        auto segment_length = alpha_min_;
-        int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
-
-        for (int i = 1; i < m; ++i) {
-            FT t0 = static_cast<FT>(i) / m;
-            Point_2 p0 = s + t0 * (t - s);
-
-            auto perp = line_corr.perpendicular(p0).direction().to_vector();
-            Point_2 p1 = p0 + 1000*perp;
-
-            Point_2 steiner_point;
-            FT lambda;
-            bool intersects = oracle_.first_intersection(
-                p0,
-                p1,
-                steiner_point,
-                offset_,
-                lambda
-            );
-            if (intersects && CGAL::squared_distance(p0, steiner_point) > 100 * std::pow(offset_, 2)) {
-                return true;
-            }
-            else if (!intersects) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     void alpha_wrap_2::add_gate_to_queue(const Delaunay::Edge& edge) {
         if (is_gate(edge)) {

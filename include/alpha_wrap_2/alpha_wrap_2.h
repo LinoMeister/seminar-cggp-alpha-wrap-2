@@ -6,6 +6,7 @@
 #include "alpha_wrap_2/point_set_oracle_2.h"
 #include "alpha_wrap_2/export_utils.h"
 #include "alpha_wrap_2/statistics.h"
+#include "alpha_wrap_2/traversability.h"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Exact_circular_kernel_2.h>
 #include <CGAL/Surface_mesh.h>
@@ -50,21 +51,7 @@ namespace aw2 {
         int export_step_limit = 1000; 
     };
 
-    struct Gate {
-        Delaunay::Edge edge;
-        FT priority;
 
-        std::pair<Point_2, Point_2> get_points() const;
-        std::pair<Delaunay::Vertex_handle, Delaunay::Vertex_handle> get_vertices() const;
-
-        bool operator<(const Gate& other) const {
-            return priority < other.priority;
-        }
-        
-        bool operator>(const Gate& other) const {
-            return priority > other.priority;
-        }
-    };
 
     struct EdgeAdjacencyInfo {
         Delaunay::Edge edge;
@@ -74,8 +61,8 @@ namespace aw2 {
 
         std::pair<Point_2, Point_2> get_points() const;
     };
-    
-    
+
+
     class alpha_wrap_2 {
     public:
 
@@ -92,7 +79,7 @@ namespace aw2 {
         FT alpha_max_;
         FT offset_;
 
-        std::function<bool(const Gate&)> is_traversable_func_;
+        Traversability* traversability_;
 
         int max_iterations_;
 
@@ -105,9 +92,9 @@ namespace aw2 {
 
         // initialization and running
         alpha_wrap_2(const Oracle& oracle);
+        ~alpha_wrap_2();
         void init(AlgorithmConfig& config);
         void compute_wrap(AlgorithmConfig& config);
-        FT adaptive_alpha(const Segment_2& seg) const;
         
         // Get statistics (can be called after compute_wrap)
         const AlgorithmStatistics& get_statistics() const { return statistics_; }
@@ -118,12 +105,6 @@ namespace aw2 {
         // gate and traversability processing methods
         bool is_gate(const Delaunay::Edge& e) const;
         FT sq_minimal_delaunay_ball_radius(const Delaunay::Edge& e) const;
-        bool is_traversable(const Gate& g) const;
-        bool is_traversable_adaptive_alpha(const Gate& g) const;
-        bool is_traversable_dist_sampling(const Gate& g) const;
-
-        FT subsegment_deviation(const Segment_2& seg) const;
-        FT segment_deviation(const Segment_2& seg) const;
 
         // rule processing
         bool process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc);
