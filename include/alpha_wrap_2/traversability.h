@@ -54,6 +54,8 @@ namespace aw2 {
         FT alpha_;
         FT alpha_max_ = 200; // TODO make configurable
         FT offset_;
+        int point_threshold_ = 5;
+        FT deviation_factor_ = 0.05;
         const Oracle& oracle_;
     };
 
@@ -66,6 +68,7 @@ namespace aw2 {
     private:
         FT alpha_;
         FT offset_;
+        FT tolerance_factor_ = 5.0;
         const Oracle& oracle_;
     };
 

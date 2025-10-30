@@ -22,7 +22,7 @@ namespace aw2 {
         int n = local_pts.size();
 
         // not enough points to compute a meaningful adaptive alpha
-        if (n < 5) {
+        if (n < point_threshold_) {
             return 1.0;
         }
 
@@ -33,10 +33,9 @@ namespace aw2 {
         }
 
         avg_sq_deviation /= n;
-        auto dev = 0.05 * (avg_sq_deviation - std::pow(offset_, 2));
+        auto dev = deviation_factor_ * (avg_sq_deviation - std::pow(offset_, 2));
         dev = std::clamp(dev, 0.0, 1.0);
 
-        std::cout << "dev: " << dev << " from " << avg_sq_deviation << std::endl;
         return dev;
     }
 
@@ -47,7 +46,6 @@ namespace aw2 {
         auto s = seg.source();
         auto t = seg.target();
 
-        auto avg_dev = 0.0;
         auto max_dev = 0.0;
         for (int i = 0; i < m; ++i) {
             FT t0 = static_cast<FT>(i) / m;
@@ -56,14 +54,11 @@ namespace aw2 {
             auto p1 = s + t1 * (t - s);
             Segment_2 sub_seg(p0, p1);
             auto dev = subsegment_deviation(sub_seg);
-            avg_dev += dev;
             if (dev > max_dev) {
                 max_dev = dev;
             }
         }
-        avg_dev /= m;
 
-        // return std::clamp(avg_dev, 0.0, 1.0);
         return std::clamp(max_dev, 0.0, 1.0);
     }
 
@@ -97,7 +92,7 @@ namespace aw2 {
                 offset_,
                 lambda
             );
-            if (intersects && CGAL::squared_distance(p0, steiner_point) > 100 * std::pow(offset_, 2)) {
+            if (intersects && CGAL::squared_distance(p0, steiner_point) > std::pow(tolerance_factor_ * offset_, 2)) {
                 return true;
             }
             else if (!intersects) {
