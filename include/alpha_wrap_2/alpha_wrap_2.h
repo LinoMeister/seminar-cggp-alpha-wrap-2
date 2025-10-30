@@ -58,8 +58,6 @@ namespace aw2 {
         Point_2 cc_inside;
         Point_2 cc_outside;
         bool outside_infinite;
-
-        std::pair<Point_2, Point_2> get_points() const;
     };
 
 
@@ -104,7 +102,7 @@ namespace aw2 {
 
         // gate and traversability processing methods
         bool is_gate(const Delaunay::Edge& e) const;
-        FT sq_minimal_delaunay_ball_radius(const Delaunay::Edge& e) const;
+        FT sq_minimal_delaunay_ball_radius(const Gate& gate) const;
 
         // rule processing
         bool process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc);

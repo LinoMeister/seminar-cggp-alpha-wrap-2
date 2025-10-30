@@ -8,20 +8,6 @@
 
 namespace aw2 {
 
-    std::pair<Delaunay::Vertex_handle, Delaunay::Vertex_handle> Gate::get_vertices() const {
-        auto v1 = edge.first->vertex(edge.first->cw(edge.second));
-        auto v2 = edge.first->vertex(edge.first->ccw(edge.second));
-        return std::make_pair(v1, v2);
-    }
-
-
-    std::pair<Point_2, Point_2> EdgeAdjacencyInfo::get_points() const {
-        auto v1 = edge.first->vertex(edge.first->cw(edge.second))->point();
-        auto v2 = edge.first->vertex(edge.first->ccw(edge.second))->point();
-        return std::make_pair(v1, v2);
-    }
-
-
     alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) : oracle_(oracle), traversability_(nullptr) {}
 
     alpha_wrap_2::~alpha_wrap_2() {
@@ -277,11 +263,11 @@ namespace aw2 {
 
 
     // Return the squared radius of the minimal Delaunay ball through the edge
-    FT alpha_wrap_2::sq_minimal_delaunay_ball_radius(const Delaunay::Edge& e) const {
+    FT alpha_wrap_2::sq_minimal_delaunay_ball_radius(const Gate& gate) const {
 
-        auto adj = gate_adjacency_info(e);
-        auto p1 = adj.get_points().first;
-        auto p2 = adj.get_points().second;
+        auto adj = gate_adjacency_info(gate.edge);
+        auto p1 = gate.get_points().first;
+        auto p2 = gate.get_points().second;
         auto min_ball_center = CGAL::midpoint(p1, p2);
         auto sq_min_ball_radius = CGAL::squared_distance(p1, p2) / 4;
 
@@ -443,7 +429,7 @@ namespace aw2 {
                 g.edge = dt_.mirror_edge(edge);
             }
 
-            g.priority = sq_minimal_delaunay_ball_radius(g.edge);
+            g.priority = sq_minimal_delaunay_ball_radius(g);
             queue_.push(g);
         }
     }

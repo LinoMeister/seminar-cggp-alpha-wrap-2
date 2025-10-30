@@ -2,6 +2,12 @@
 
 namespace aw2 {
 
+    std::pair<Delaunay::Vertex_handle, Delaunay::Vertex_handle> Gate::get_vertices() const {
+        auto v1 = edge.first->vertex(edge.first->cw(edge.second));
+        auto v2 = edge.first->vertex(edge.first->ccw(edge.second));
+        return std::make_pair(v1, v2);
+    }
+    
     std::pair<Point_2, Point_2> Gate::get_points() const {
         auto v1 = edge.first->vertex(edge.first->cw(edge.second))->point();
         auto v2 = edge.first->vertex(edge.first->ccw(edge.second))->point();
