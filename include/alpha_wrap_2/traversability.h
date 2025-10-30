@@ -68,7 +68,7 @@ namespace aw2 {
     private:
         FT alpha_;
         FT offset_;
-        FT tolerance_factor_ = 5.0;
+        FT tolerance_ = 5 * offset_;
         const Oracle& oracle_;
     };
 

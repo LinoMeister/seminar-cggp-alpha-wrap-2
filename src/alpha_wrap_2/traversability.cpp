@@ -14,7 +14,6 @@ namespace aw2 {
         return std::make_pair(v1, v2);
     }
 
-    // AdaptiveAlphaTraversability implementation
     bool AdaptiveAlphaTraversability::operator()(Gate& g) {
         auto points = g.get_points();
         Segment_2 seg(points.first, points.second);
@@ -68,26 +67,26 @@ namespace aw2 {
         return std::clamp(max_dev, 0.0, 1.0);
     }
 
-    // DistanceSamplingTraversability implementation
     bool DistanceSamplingTraversability::operator()(Gate& g) {
         auto points = g.get_points();
         Point_2 s = points.first;
         Point_2 t = points.second;
+        CGAL::Line_2<K> line(s,t);
 
-
-        CGAL::Line_2<K> line_corr(s,t);
-
-
-        Segment_2 seg(s, t);
+        // determine the number of samples based on alpha
         auto segment_length = alpha_;
-        int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
+        int m = std::ceil(std::sqrt(CGAL::squared_distance(s, t)) / segment_length);
 
+        // perform offset surface intersection tests at m-1 evenly spaced samples along the edge
         for (int i = 1; i < m; ++i) {
             FT t0 = static_cast<FT>(i) / m;
             Point_2 p0 = s + t0 * (t - s);
 
-            auto perp = line_corr.perpendicular(p0).direction().to_vector();
-            Point_2 p1 = p0 + 1000*perp;
+            // check for intersection along the normal direction,
+            // tolerance_ determines the length of the segment (p0, p1)
+            auto perp = line.perpendicular(p0).to_vector();
+            perp /= std::sqrt(perp.squared_length());
+            Point_2 p1 = p0 + tolerance_ * perp;
 
             Point_2 steiner_point;
             FT lambda;
@@ -98,15 +97,13 @@ namespace aw2 {
                 offset_,
                 lambda
             );
-            if (intersects && CGAL::squared_distance(p0, steiner_point) > std::pow(tolerance_factor_ * offset_, 2)) {
-                return true;
-            }
-            else if (!intersects) {
+
+            // offset surface deviates more than tolerance at this sample -> mark as traversable
+            if (!intersects) {
                 return true;
             }
         }
         return false;
     }
-
 
 }

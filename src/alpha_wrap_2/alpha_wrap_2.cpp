@@ -76,14 +76,6 @@ namespace aw2 {
 
             std::cout << "Candidate gate: " << candidate_gate_.get_points().first << " -- " << candidate_gate_.get_points().second << std::endl;
 
-            if (!is_gate(candidate_gate_.edge)) {
-                continue; 
-            }
-
-            if (!(*traversability_)(candidate_gate_)) {
-                continue; 
-            }
-
             auto info = gate_adjacency_info(candidate_gate_.edge);
             auto c_in = candidate_gate_.edge.first;
             auto c_in_cc = info.cc_inside;
@@ -227,12 +219,8 @@ namespace aw2 {
     }
 
     bool alpha_wrap_2::is_gate(const Delaunay::Edge& e) const {
-
-        // c_in and c_out are the faces
         auto c_in = e.first;
-        int i = e.second;            
-        auto c_out = c_in->neighbor(i);
-                    
+        auto c_out = c_in->neighbor(e.second);
         return (c_in->info() != c_out->info());
     }
 
@@ -382,10 +370,7 @@ namespace aw2 {
 
     void alpha_wrap_2::insert_steiner_point(const Point_2& steiner_point) {
         std::cout << "Inserting Steiner point at " << steiner_point << std::endl;
-        // clear the queue
-        Queue empty;
-        std::swap(queue_, empty);
-        
+ 
         // insert Steiner point
         auto vh = dt_.insert(steiner_point);
 
@@ -398,6 +383,10 @@ namespace aw2 {
             }
             if (++fit == dt_.incident_faces(vh)) break;
         }
+
+        // clear the queue
+        Queue empty;
+        std::swap(queue_, empty);
 
         // Add new gates to the queue
         for (auto eit = dt_.all_edges_begin(); eit != dt_.all_edges_end(); ++eit) {
@@ -417,19 +406,17 @@ namespace aw2 {
     }
 
     void alpha_wrap_2::add_gate_to_queue(const Delaunay::Edge& edge) {
-        if (is_gate(edge)) {
-            Gate g;
-            auto f = edge.first;
+        if (!is_gate(edge)) return;
 
-            // orient such that INSIDE face is first
-            if (f->info() == INSIDE) {
-                g.edge = edge;
-            }
-            else {
-                g.edge = dt_.mirror_edge(edge);
-            }
+        Gate g;
+        auto f = edge.first;
 
-            g.priority = sq_minimal_delaunay_ball_radius(g);
+        // orient such that INSIDE face is first
+        g.edge = f->info() == INSIDE ? edge : dt_.mirror_edge(edge);
+        g.priority = sq_minimal_delaunay_ball_radius(g);
+
+        // add to queue if traversable
+        if ((*traversability_)(g)) {
             queue_.push(g);
         }
     }
