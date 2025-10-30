@@ -166,12 +166,24 @@ namespace aw2 {
                 statistics_.config.traversability_function = "CONSTANT_ALPHA";
                 break;
             case ADAPTIVE_ALPHA:
-                traversability_ = new AdaptiveAlphaTraversability(alpha_, offset_, oracle_);
+                traversability_ = new AdaptiveAlphaTraversability(
+                    alpha_, 
+                    offset_, 
+                    oracle_,
+                    std::get<AdaptiveAlphaParams>(config.traversability_params)
+                );
                 statistics_.config.traversability_function = "ADAPTIVE_ALPHA";
+                
                 break;
             case DISTANCE_SAMPLING:
-                traversability_ = new DistanceSamplingTraversability(alpha_, offset_, oracle_);
+                traversability_ = new DistanceSamplingTraversability(
+                    alpha_, 
+                    offset_, 
+                    oracle_,
+                    std::get<DistanceSamplingParams>(config.traversability_params)
+                );
                 statistics_.config.traversability_function = "DISTANCE_SAMPLING";
+                
                 break;
             default:
                 throw std::invalid_argument("Unknown traversability method.");

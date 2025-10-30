@@ -41,6 +41,9 @@ namespace aw2 {
 
         TraversabilityMethod traversability_method = CONSTANT_ALPHA;
 
+        // Method-specific parameters
+        TraversabilityParams traversability_params;
+
         int max_iterations = 5000;
 
         // interval for exporting intermediate results

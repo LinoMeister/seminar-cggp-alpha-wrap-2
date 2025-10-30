@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include "alpha_wrap_2/traversability.h"
 
 namespace aw2 {
 
@@ -36,7 +37,7 @@ struct ConfigStats {
     double alpha = 0.0;
     double offset = 0.0;
     std::string traversability_function;
-    std::string traversability_params; // JSON string for additional params
+    TraversabilityParams traversability_params;
     
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ConfigStats, input_file, alpha, offset, traversability_function, traversability_params)
 };
