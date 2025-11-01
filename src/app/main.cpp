@@ -81,10 +81,13 @@ int main(int argc, char *argv[])
   if (!traversability_arg.empty()) {
       if (traversability_arg == "CONSTANT_ALPHA") {
           traversability_method = aw2::CONSTANT_ALPHA;
+          config.traversability_params = aw2::ConstantAlphaParams{};
       } else if (traversability_arg == "ADAPTIVE_ALPHA") {
           traversability_method = aw2::ADAPTIVE_ALPHA;
+          config.traversability_params = aw2::AdaptiveAlphaParams{};
       } else if (traversability_arg == "DISTANCE_SAMPLING") {
           traversability_method = aw2::DISTANCE_SAMPLING;
+          config.traversability_params = aw2::DistanceSamplingParams{};
       } else {
           std::cerr << "Unknown traversability method: " << traversability_arg << std::endl;
           return 1;

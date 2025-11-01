@@ -158,6 +158,7 @@ namespace aw2 {
         // Populate config stats
         statistics_.config.alpha = config.alpha;
         statistics_.config.offset = config.offset;
+        statistics_.config.traversability_params = config.traversability_params;
         
         // Set traversability object
         switch (config.traversability_method) {

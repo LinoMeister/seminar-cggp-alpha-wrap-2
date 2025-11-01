@@ -1,3 +1,6 @@
+#ifndef AW2_TRAVERSABILITY_H
+#define AW2_TRAVERSABILITY_H
+
 #include "alpha_wrap_2/types.h"
 #include "alpha_wrap_2/point_set_oracle_2.h"
 #include <nlohmann/json.hpp>
@@ -34,9 +37,15 @@ namespace aw2 {
     // Method-specific parameter structs
     struct ConstantAlphaParams {
         // No additional parameters for constant alpha
-
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(ConstantAlphaParams) // Empty struct
     };
+
+    inline void to_json(nlohmann::json& j, const ConstantAlphaParams&) {
+        j = nlohmann::json::object();
+    }
+
+    inline void from_json(const nlohmann::json&, ConstantAlphaParams&) {
+        // No fields to populate
+    }
 
     struct AdaptiveAlphaParams {
         FT alpha_max = 200.0;
@@ -51,6 +60,27 @@ namespace aw2 {
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(DistanceSamplingParams, tolerance_factor)
     };
+
+    // JSON serialization for TraversabilityParams variant
+    inline void to_json(nlohmann::json& j, const TraversabilityParams& params) {
+        std::visit([&j](const auto& p) {
+            j = p;
+        }, params);
+    }
+
+    inline void from_json(const nlohmann::json& j, TraversabilityParams& params) {
+        // Note: This requires knowing which type to deserialize to
+        // For now, we'll try each type and use the first one that works
+        try {
+            params = j.get<AdaptiveAlphaParams>();
+        } catch (...) {
+            try {
+                params = j.get<DistanceSamplingParams>();
+            } catch (...) {
+                params = j.get<ConstantAlphaParams>();
+            }
+        }
+    }
 
     class Traversability {
     public:
@@ -83,11 +113,11 @@ namespace aw2 {
         FT subsegment_deviation(const Segment_2& seg) const;
         FT segment_deviation(const Segment_2& seg) const;
         FT alpha_;
-        FT alpha_max_;
         FT offset_;
+        const Oracle& oracle_;
+        FT alpha_max_;
         int point_threshold_;
         FT deviation_factor_;
-        const Oracle& oracle_;
     };
 
     class DistanceSamplingTraversability : public Traversability {
@@ -101,9 +131,10 @@ namespace aw2 {
     private:
         FT alpha_;
         FT offset_;
-        FT tolerance_;
         const Oracle& oracle_;
+        FT tolerance_;
     };
 
 }
 
+#endif // AW2_TRAVERSABILITY_H
