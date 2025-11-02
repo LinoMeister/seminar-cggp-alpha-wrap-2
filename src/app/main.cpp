@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
   aw.statistics_.config.input_file = filename;
 
   aw.init(config);
-  aw.run(config);
+  aw.run();
 
   return 0;
 }

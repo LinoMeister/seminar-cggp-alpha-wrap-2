@@ -15,52 +15,36 @@ namespace aw2 {
         delete traversability_;
     }
 
-    void alpha_wrap_2::run(AlgorithmConfig& config) {
+    void alpha_wrap_2::run() {
 
         namespace fs = std::filesystem;
 
-
-        // export config
-        auto style = StyleConfig{};
-        style.voronoi_diagram = {"pink", 0.6};
-        style.use_gradients = true;
-        style.use_opacity = true;
-        style.opacity = 1.0;
-        style.scheme = ColorScheme::GRADIENT;
-
+        auto style = StyleConfig::preset_style();
         alpha_wrap_2_exporter exporter(*this, style);
-        exporter.setup_export_dir(config.output_directory);
-
-
-        // main loop
-
-        std::cout << "Queue contains " << queue_.size() << " gates." << std::endl;
-
-        int iteration = 0;
+        exporter.setup_export_dir(config_.output_directory);
         
         total_timer_->start();
         main_loop_timer_->start();
 
+        int iteration = 0;
         while (!queue_.empty()) {
-            gate_processing_timer_->start();
-
+            
             if (++iteration > max_iterations_) {
                 std::cout << "Reached maximum number of iterations (" << max_iterations_ << "). Stopping." << std::endl;
                 break;
             }
-
             std::cout << "\nIteration: " << iteration << " Queue size: " << queue_.size() << std::endl;
 
+            // ** Get candidate gate **
             candidate_gate_ = queue_.top();
             queue_.pop();
 
-            
-            if ((iteration % config.intermediate_steps) == 0 && (iteration < config.export_step_limit)) {
-                // Export current state
+            if ((iteration % config_.intermediate_steps) == 0 && (iteration < config_.export_step_limit)) {
                 exporter.export_svg("in_progress_iter_" + std::to_string(iteration) + ".svg");
             }
 
-            std::cout << "Candidate gate: " << candidate_gate_.get_points().first << " -- " << candidate_gate_.get_points().second << std::endl;
+            // ** Get candidate gate info **
+            gate_processing_timer_->start();
 
             auto info = gate_adjacency_info(candidate_gate_.edge);
             auto c_in = candidate_gate_.edge.first;
@@ -69,27 +53,21 @@ namespace aw2 {
 
             gate_processing_timer_->pause();
 
-            std::cout << "Dual edge: " << c_out_cc << " -> " << c_in_cc << std::endl;
-
-            rule1_timer_->start();
+            // ** Process rule 1 **
             if (process_rule_1(c_in_cc, c_out_cc)) {
-                rule1_timer_->pause();
                 statistics_.execution_stats.n_rule_1++;
                 std::cout << "Steiner point inserted by R1." << std::endl;
                 continue;
             }
-            rule1_timer_->pause();
 
-            rule2_timer_->start();
+            // ** Process rule 2 **
             if (process_rule_2(c_in, c_in_cc)) {
-                rule2_timer_->pause();
                 statistics_.execution_stats.n_rule_2++;
                 std::cout << "Steiner point inserted by R2." << std::endl;
                 continue;
             }
-            rule2_timer_->pause();
 
-
+            // ** Carve face **
             std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
             c_in->info() = OUTSIDE;
             update_queue(c_in);
@@ -97,16 +75,16 @@ namespace aw2 {
 
         main_loop_timer_->pause();
 
+        // ** Extract wrap surface **
         extraction_timer_->start();
         extract_wrap_surface();
         extraction_timer_->pause();
 
-
-        exporter.export_svg("final_result.svg");
-
         total_timer_->pause();
         
-        // Collect statistics
+        // Export result and collect statistics
+        exporter.export_svg("final_result.svg");
+
         statistics_.execution_stats.n_iterations = iteration;
         statistics_.timings.total_time = total_timer_->elapsed_ms();
         statistics_.timings.gate_processing = gate_processing_timer_->elapsed_ms();
@@ -151,10 +129,7 @@ namespace aw2 {
         // apply configuration
         alpha_ = config.alpha;
         offset_ = config.offset;
-        max_iterations_ = config.max_iterations;
-
-        alpha_min_ = alpha_;
-        alpha_max_ = 200.0;
+        config_ = config;
 
         // Populate config stats
         statistics_.config.alpha = config.alpha;
@@ -342,6 +317,7 @@ namespace aw2 {
     }
 
     bool alpha_wrap_2::process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc) {
+        rule1_timer_->start();
         Point_2 steiner_point;
         bool insert = oracle_.first_intersection(
             c_out_cc,
@@ -351,12 +327,15 @@ namespace aw2 {
         );
         if (insert) {
             insert_steiner_point(steiner_point);
+            rule1_timer_->pause();
             return true;
         }
+        rule1_timer_->pause();
         return false;
     }
 
     bool alpha_wrap_2::process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc) {
+        rule2_timer_->start();
         Point_2 steiner_point;
         auto c_in_triangle = dt_.triangle(c_in);
 
@@ -377,8 +356,10 @@ namespace aw2 {
             else {
                 throw std::runtime_error("Error: R2 failed to compute intersection point.");
             }
+            rule2_timer_->pause();
             return true;
         }
+        rule2_timer_->pause();
         return false;
     }
 

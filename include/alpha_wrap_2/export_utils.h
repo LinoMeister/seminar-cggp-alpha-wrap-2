@@ -59,6 +59,16 @@ namespace aw2 {
         bool draw_voronoi_diagram = false;
         bool draw_queue_edges = true;
         bool draw_candidate_edge = true;
+
+        static StyleConfig preset_style() {
+            StyleConfig style;
+            style.voronoi_diagram = {"pink", 0.6};
+            style.use_gradients = true;
+            style.use_opacity = true;
+            style.opacity = 1.0;
+            style.scheme = ColorScheme::GRADIENT;
+            return style;
+        }
     };
 
 

@@ -83,9 +83,8 @@ namespace aw2 {
 
         // algorithm configuration
         FT alpha_;
-        FT alpha_min_;
-        FT alpha_max_;
         FT offset_;
+        AlgorithmConfig config_;
 
         Traversability* traversability_;
 
@@ -112,7 +111,7 @@ namespace aw2 {
         alpha_wrap_2(const Oracle& oracle);
         ~alpha_wrap_2();
         void init(AlgorithmConfig& config);
-        void run(AlgorithmConfig& config);
+        void run();
         
         // Get statistics (can be called after compute_wrap)
         const AlgorithmStatistics& get_statistics() const { return statistics_; }
