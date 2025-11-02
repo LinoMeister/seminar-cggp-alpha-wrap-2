@@ -1,5 +1,4 @@
 #include <alpha_wrap_2/alpha_wrap_2.h>
-#include <alpha_wrap_2/timer.h>
 #include <chrono>
 #include <ctime>
 #include <sstream>
@@ -16,26 +15,10 @@ namespace aw2 {
         delete traversability_;
     }
 
-    void alpha_wrap_2::compute_wrap(AlgorithmConfig& config) {
+    void alpha_wrap_2::run(AlgorithmConfig& config) {
 
         namespace fs = std::filesystem;
 
-        // Create hierarchical timer structure
-        auto& registry = TimerRegistry::instance();
-        total_timer_ = registry.create_root_timer("Alpha Wrap Algorithm");
-        init_timer_ = total_timer_->create_child("Initialization");
-        main_loop_timer_ = total_timer_->create_child("Main Loop");
-        rule1_timer_ = main_loop_timer_->create_child("Rule 1 Processing");
-        rule2_timer_ = main_loop_timer_->create_child("Rule 2 Processing");
-        gate_processing_timer_ = main_loop_timer_->create_child("Gate Processing");
-        
-        total_timer_->start();
-        
-
-        
-        init_timer_->start();
-        init(config);
-        init_timer_->pause();
 
         // export config
         auto style = StyleConfig{};
@@ -55,6 +38,7 @@ namespace aw2 {
 
         int iteration = 0;
         
+        total_timer_->start();
         main_loop_timer_->start();
 
         while (!queue_.empty()) {
@@ -111,9 +95,12 @@ namespace aw2 {
             update_queue(c_in);
         }
 
-        extract_wrap_surface();
-
         main_loop_timer_->pause();
+
+        extraction_timer_->start();
+        extract_wrap_surface();
+        extraction_timer_->pause();
+
 
         exporter.export_svg("final_result.svg");
 
@@ -142,12 +129,24 @@ namespace aw2 {
         std::cout << "\nStatistics exported to: " << stats_filepath << std::endl;
         
         // Print hierarchical timing report
-        registry.print_all_hierarchies();
+        registry_.print_all_hierarchies();
         std::cout << "Total iterations: " << iteration << std::endl;
     }
 
 
     void alpha_wrap_2::init(AlgorithmConfig& config) {
+
+        // Create hierarchical timer structure
+        total_timer_ = registry_.create_root_timer("Alpha Wrap Algorithm");
+        init_timer_ = total_timer_->create_child("Initialization");
+        main_loop_timer_ = total_timer_->create_child("Main Loop");
+        rule1_timer_ = main_loop_timer_->create_child("Rule 1 Processing");
+        rule2_timer_ = main_loop_timer_->create_child("Rule 2 Processing");
+        gate_processing_timer_ = main_loop_timer_->create_child("Gate Processing");
+        extraction_timer_ = main_loop_timer_->create_child("Extraction");
+
+        total_timer_->start();
+        init_timer_->start();
 
         // apply configuration
         alpha_ = config.alpha;
@@ -229,8 +228,8 @@ namespace aw2 {
             Point_2(bbox.x_max, bbox.y_max)
         ));
 
-
-
+        init_timer_->pause();
+        total_timer_->pause();
     }
 
     bool alpha_wrap_2::is_gate(const Delaunay::Edge& e) const {
@@ -399,6 +398,7 @@ namespace aw2 {
             if (++fit == dt_.incident_faces(vh)) break;
         }
 
+        gate_processing_timer_->start();
         // clear the queue
         Queue empty;
         std::swap(queue_, empty);
@@ -407,6 +407,7 @@ namespace aw2 {
         for (auto eit = dt_.all_edges_begin(); eit != dt_.all_edges_end(); ++eit) {
             add_gate_to_queue(*eit);
         }
+        gate_processing_timer_->pause();
     }
 
     void alpha_wrap_2::extract_wrap_surface() {

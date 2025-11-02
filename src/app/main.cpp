@@ -122,7 +122,8 @@ int main(int argc, char *argv[])
   // Set input filename in statistics
   aw.statistics_.config.input_file = filename;
 
-  aw.compute_wrap(config);
+  aw.init(config);
+  aw.run(config);
 
   return 0;
 }

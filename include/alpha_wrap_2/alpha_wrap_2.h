@@ -7,6 +7,8 @@
 #include "alpha_wrap_2/export_utils.h"
 #include "alpha_wrap_2/statistics.h"
 #include "alpha_wrap_2/traversability.h"
+#include "alpha_wrap_2/timer.h"
+
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Exact_circular_kernel_2.h>
 #include <CGAL/Surface_mesh.h>
@@ -97,18 +99,20 @@ namespace aw2 {
         AlgorithmStatistics statistics_;
 
         // timers for performance tracking
+        TimerRegistry& registry_ = TimerRegistry::instance();
         Timer* total_timer_ = nullptr;
         Timer* init_timer_ = nullptr;
         Timer* main_loop_timer_ = nullptr;
         Timer* rule1_timer_ = nullptr;
         Timer* rule2_timer_ = nullptr;
         Timer* gate_processing_timer_ = nullptr;
+        Timer* extraction_timer_ = nullptr;
 
         // initialization and running
         alpha_wrap_2(const Oracle& oracle);
         ~alpha_wrap_2();
         void init(AlgorithmConfig& config);
-        void compute_wrap(AlgorithmConfig& config);
+        void run(AlgorithmConfig& config);
         
         // Get statistics (can be called after compute_wrap)
         const AlgorithmStatistics& get_statistics() const { return statistics_; }
