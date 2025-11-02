@@ -19,6 +19,9 @@
 
 namespace aw2 {
 
+    // Forward declaration
+    class Timer;
+
     // type definitions
     using Oracle = point_set_oracle_2;
 
@@ -92,6 +95,14 @@ namespace aw2 {
 
         // statistics tracking
         AlgorithmStatistics statistics_;
+
+        // timers for performance tracking
+        Timer* total_timer_ = nullptr;
+        Timer* init_timer_ = nullptr;
+        Timer* main_loop_timer_ = nullptr;
+        Timer* rule1_timer_ = nullptr;
+        Timer* rule2_timer_ = nullptr;
+        Timer* gate_processing_timer_ = nullptr;
 
         // initialization and running
         alpha_wrap_2(const Oracle& oracle);

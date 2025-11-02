@@ -8,7 +8,9 @@
 
 namespace aw2 {
 
-    alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) : oracle_(oracle), traversability_(nullptr) {}
+    alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) 
+        : oracle_(oracle), 
+          traversability_(nullptr) {}
 
     alpha_wrap_2::~alpha_wrap_2() {
         delete traversability_;
@@ -20,20 +22,20 @@ namespace aw2 {
 
         // Create hierarchical timer structure
         auto& registry = TimerRegistry::instance();
-        Timer* total_timer = registry.create_root_timer("Alpha Wrap Algorithm");
-        Timer* init_timer = total_timer->create_child("Initialization");
-        Timer* main_loop_timer = total_timer->create_child("Main Loop");
-        Timer* rule1_timer = main_loop_timer->create_child("Rule 1 Processing");
-        Timer* rule2_timer = main_loop_timer->create_child("Rule 2 Processing");
-        Timer* gate_processing_timer = main_loop_timer->create_child("Gate Processing");
+        total_timer_ = registry.create_root_timer("Alpha Wrap Algorithm");
+        init_timer_ = total_timer_->create_child("Initialization");
+        main_loop_timer_ = total_timer_->create_child("Main Loop");
+        rule1_timer_ = main_loop_timer_->create_child("Rule 1 Processing");
+        rule2_timer_ = main_loop_timer_->create_child("Rule 2 Processing");
+        gate_processing_timer_ = main_loop_timer_->create_child("Gate Processing");
         
-        total_timer->start();
+        total_timer_->start();
         
 
         
-        init_timer->start();
+        init_timer_->start();
         init(config);
-        init_timer->pause();
+        init_timer_->pause();
 
         // export config
         auto style = StyleConfig{};
@@ -53,10 +55,10 @@ namespace aw2 {
 
         int iteration = 0;
         
-        main_loop_timer->start();
+        main_loop_timer_->start();
 
         while (!queue_.empty()) {
-            gate_processing_timer->start();
+            gate_processing_timer_->start();
 
             if (++iteration > max_iterations_) {
                 std::cout << "Reached maximum number of iterations (" << max_iterations_ << "). Stopping." << std::endl;
@@ -81,27 +83,27 @@ namespace aw2 {
             auto c_in_cc = info.cc_inside;
             auto c_out_cc = info.cc_outside;
 
-            gate_processing_timer->pause();
+            gate_processing_timer_->pause();
 
             std::cout << "Dual edge: " << c_out_cc << " -> " << c_in_cc << std::endl;
 
-            rule1_timer->start();
+            rule1_timer_->start();
             if (process_rule_1(c_in_cc, c_out_cc)) {
-                rule1_timer->pause();
+                rule1_timer_->pause();
                 statistics_.execution_stats.n_rule_1++;
                 std::cout << "Steiner point inserted by R1." << std::endl;
                 continue;
             }
-            rule1_timer->pause();
+            rule1_timer_->pause();
 
-            rule2_timer->start();
+            rule2_timer_->start();
             if (process_rule_2(c_in, c_in_cc)) {
-                rule2_timer->pause();
+                rule2_timer_->pause();
                 statistics_.execution_stats.n_rule_2++;
                 std::cout << "Steiner point inserted by R2." << std::endl;
                 continue;
             }
-            rule2_timer->pause();
+            rule2_timer_->pause();
 
 
             std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
@@ -111,18 +113,18 @@ namespace aw2 {
 
         extract_wrap_surface();
 
-        main_loop_timer->pause();
+        main_loop_timer_->pause();
 
         exporter.export_svg("final_result.svg");
 
-        total_timer->pause();
+        total_timer_->pause();
         
         // Collect statistics
         statistics_.execution_stats.n_iterations = iteration;
-        statistics_.timings.total_time = total_timer->elapsed_ms();
-        statistics_.timings.gate_processing = gate_processing_timer->elapsed_ms();
-        statistics_.timings.rule_1_processing = rule1_timer->elapsed_ms();
-        statistics_.timings.rule_2_processing = rule2_timer->elapsed_ms();
+        statistics_.timings.total_time = total_timer_->elapsed_ms();
+        statistics_.timings.gate_processing = gate_processing_timer_->elapsed_ms();
+        statistics_.timings.rule_1_processing = rule1_timer_->elapsed_ms();
+        statistics_.timings.rule_2_processing = rule2_timer_->elapsed_ms();
         
         statistics_.output_stats.n_vertices = dt_.number_of_vertices();
         statistics_.output_stats.n_edges = wrap_edges_.size();
