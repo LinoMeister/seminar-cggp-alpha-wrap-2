@@ -3,15 +3,15 @@
 namespace aw2 {
 
     std::pair<Delaunay::Vertex_handle, Delaunay::Vertex_handle> Gate::get_vertices() const {
-        auto v1 = edge.first->vertex(edge.first->cw(edge.second));
-        auto v2 = edge.first->vertex(edge.first->ccw(edge.second));
-        return std::make_pair(v1, v2);
+        auto v_target = edge.first->vertex(edge.first->cw(edge.second));
+        auto v_source = edge.first->vertex(edge.first->ccw(edge.second));
+        return std::make_pair(v_source, v_target);
     }
     
     std::pair<Point_2, Point_2> Gate::get_points() const {
-        auto v1 = edge.first->vertex(edge.first->cw(edge.second))->point();
-        auto v2 = edge.first->vertex(edge.first->ccw(edge.second))->point();
-        return std::make_pair(v1, v2);
+        auto p_target = edge.first->vertex(edge.first->cw(edge.second))->point();
+        auto p_source = edge.first->vertex(edge.first->ccw(edge.second))->point();
+        return std::make_pair(p_source, p_target);
     }
 
     bool AdaptiveAlphaTraversability::operator()(Gate& g) {
@@ -46,7 +46,7 @@ namespace aw2 {
 
     FT AdaptiveAlphaTraversability::segment_deviation(const Segment_2& seg) const {
         //auto segment_length = bbox_diagonal_length_ / 100.0;
-        auto segment_length = alpha_;
+        auto segment_length = alpha_/4.0;
         int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
         auto s = seg.source();
         auto t = seg.target();
@@ -74,7 +74,7 @@ namespace aw2 {
         CGAL::Line_2<K> line(s,t);
 
         // determine the number of samples based on alpha
-        auto segment_length = alpha_;
+        auto segment_length = alpha_/4.0;
         int m = std::ceil(std::sqrt(CGAL::squared_distance(s, t)) / segment_length);
 
         // perform offset surface intersection tests at m-1 evenly spaced samples along the edge

@@ -56,7 +56,7 @@ namespace aw2 {
     };
 
     struct DistanceSamplingParams {
-        FT tolerance_factor = 5.0;  // Multiplied by offset to get tolerance
+        FT tolerance_factor = 1.5;  // Multiplied by offset to get tolerance
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(DistanceSamplingParams, tolerance_factor)
     };
