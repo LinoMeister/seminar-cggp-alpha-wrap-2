@@ -52,6 +52,8 @@ namespace aw2 {
         // after this iteration we stop exporting intermediate results
         // this is useful when we only want to export the first few steps
         int export_step_limit = 1000; 
+
+        std::string output_directory = "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/";
     };
 
 

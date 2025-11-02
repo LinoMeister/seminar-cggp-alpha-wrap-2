@@ -64,6 +64,21 @@ int main(int argc, char *argv[])
     filename = input_arg;
   }
 
+  std::string output_arg = get_cmd_option(argv, argv + argc, "--output");
+  if (!output_arg.empty())
+  {
+    config.output_directory = output_arg;
+  }
+
+  std::string output_use_subdir_arg = get_cmd_option(argv, argv + argc, "--output_use_subdir");
+  if (!output_use_subdir_arg.empty())
+  {
+    if (output_use_subdir_arg == "true") {
+      fs::path base_export_path(config.output_directory);
+      config.output_directory = base_export_path / std::to_string(std::time(nullptr));
+    }
+  }
+
   std::string alpha_arg = get_cmd_option(argv, argv + argc, "--alpha");
   if (!alpha_arg.empty())
   {

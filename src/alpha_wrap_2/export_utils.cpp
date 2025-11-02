@@ -21,17 +21,15 @@ namespace aw2 {
     void alpha_wrap_2_exporter::setup_export_dir(const std::string& base_path) {
 
         fs::path base_export_path(base_path);
-        if (!fs::exists(base_export_path)) {
-            throw std::runtime_error("Export path does not exist: " + base_export_path.string());
-        }
+        export_dir_ = base_export_path;
 
-        // use current timestamp for unique directory
-        export_dir_ = base_export_path / std::to_string(std::time(nullptr));
-        try {
-            fs::create_directories(export_dir_); // no-op if already exists
-        } catch (const fs::filesystem_error& e) {
-            throw std::runtime_error("Failed to create directory: " + std::string(e.what()));
-        }     
+        if (!fs::exists(base_export_path)) {
+            try {
+                fs::create_directories(base_export_path);
+            } catch (const fs::filesystem_error& e) {
+                throw std::runtime_error("Failed to create directory: " + std::string(e.what()));
+            }
+        }
     }
 
 

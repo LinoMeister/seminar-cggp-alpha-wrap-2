@@ -44,7 +44,7 @@ namespace aw2 {
         style.scheme = ColorScheme::GRADIENT;
 
         alpha_wrap_2_exporter exporter(*this, style);
-        exporter.setup_export_dir("/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/");
+        exporter.setup_export_dir(config.output_directory);
 
 
         // main loop
