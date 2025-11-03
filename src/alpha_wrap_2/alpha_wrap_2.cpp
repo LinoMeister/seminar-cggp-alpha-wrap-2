@@ -121,7 +121,7 @@ namespace aw2 {
         rule1_timer_ = main_loop_timer_->create_child("Rule 1 Processing");
         rule2_timer_ = main_loop_timer_->create_child("Rule 2 Processing");
         gate_processing_timer_ = main_loop_timer_->create_child("Gate Processing");
-        extraction_timer_ = main_loop_timer_->create_child("Extraction");
+        extraction_timer_ = total_timer_->create_child("Extraction");
 
         total_timer_->start();
         init_timer_->start();
@@ -327,8 +327,8 @@ namespace aw2 {
             offset_
         );
         if (insert) {
-            insert_steiner_point(steiner_point);
             rule1_timer_->pause();
+            insert_steiner_point(steiner_point);
             return true;
         }
         rule1_timer_->pause();
@@ -352,13 +352,13 @@ namespace aw2 {
                 offset_
             );
             if (insert) {
+                rule2_timer_->pause();
                 insert_steiner_point(steiner_point);
+                return true;
             }
             else {
                 throw std::runtime_error("Error: R2 failed to compute intersection point.");
             }
-            rule2_timer_->pause();
-            return true;
         }
         rule2_timer_->pause();
         return false;
