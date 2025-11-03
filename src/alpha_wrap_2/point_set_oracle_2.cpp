@@ -72,17 +72,41 @@ namespace aw2 {
         Tree candidates_tree(candidates.begin(), candidates.end());
         Incremental_neighbor_search inc_search(candidates_tree, p);
 
-        
+        // Precompute segment length for distance pruning
+        FT seg_length = std::sqrt(CGAL::squared_distance(p, q));
+
+        bool found = false;
+        FT min_t = std::numeric_limits<FT>::max();
+        FT max_sq_dist = std::numeric_limits<FT>::max();
+        Point_2 best_intersection;
+
         // Iterate through candidates by proximity to p
         for (auto it = inc_search.begin(); it != inc_search.end(); ++it)
-        {
+        {       
+            if (found && it->second > max_sq_dist) {
+                break; // No need to check further candidates (it->second is squared distance)
+            }
+            
+            Point_2 intersection;
             FT t;
-            if (segment_circle_intersection(p, q, it->first, offset_size, o, t)) {
-                lambda = t;
-                return true;
+
+            if (!segment_circle_intersection(p, q, it->first, offset_size, intersection, t)) continue;
+            if (t >= min_t) continue;
+
+            min_t = t;
+            best_intersection = intersection;
+
+            if (!found) {
+                found = true;
+                max_sq_dist = std::pow(min_t * seg_length + offset_size, 2); // only update when we find the first intersection
             }
         }
-        return false;
+        
+        if (found) {
+            o = best_intersection;
+            lambda = min_t;
+        }
+        return found;
     }
 
     bool point_set_oracle_2::first_intersection(const Point_2 &p, const Point_2 &q,
