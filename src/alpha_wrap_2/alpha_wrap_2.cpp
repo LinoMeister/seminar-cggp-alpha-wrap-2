@@ -129,6 +129,7 @@ namespace aw2 {
         // apply configuration
         alpha_ = config.alpha;
         offset_ = config.offset;
+        max_iterations_ = config.max_iterations;
         config_ = config;
 
         // Populate config stats
