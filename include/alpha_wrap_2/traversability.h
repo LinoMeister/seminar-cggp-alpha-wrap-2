@@ -14,17 +14,17 @@ namespace aw2 {
 
     struct Gate {
         Delaunay::Edge edge;
-        FT priority;
+        FT sq_min_delaunay_rad;
 
         std::pair<Point_2, Point_2> get_points() const;
         std::pair<Delaunay::Vertex_handle, Delaunay::Vertex_handle> get_vertices() const;
 
         bool operator<(const Gate& other) const {
-            return priority < other.priority;
+            return sq_min_delaunay_rad < other.sq_min_delaunay_rad;
         }
         
         bool operator>(const Gate& other) const {
-            return priority > other.priority;
+            return sq_min_delaunay_rad > other.sq_min_delaunay_rad;
         }
     };
 
@@ -93,7 +93,7 @@ namespace aw2 {
         ConstantAlphaTraversability(FT alpha) : alpha_(alpha) {}
 
         virtual bool operator()(Gate& g) override {
-            return g.priority >= alpha_;
+            return g.sq_min_delaunay_rad >= alpha_ * alpha_;
         }
 
     private:

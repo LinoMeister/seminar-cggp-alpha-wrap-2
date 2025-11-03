@@ -411,7 +411,7 @@ namespace aw2 {
 
         // orient such that INSIDE face is first
         g.edge = f->info() == INSIDE ? edge : dt_.mirror_edge(edge);
-        g.priority = sq_minimal_delaunay_ball_radius(g);
+        g.sq_min_delaunay_rad = sq_minimal_delaunay_ball_radius(g);
 
         // add to queue if traversable
         if ((*traversability_)(g)) {

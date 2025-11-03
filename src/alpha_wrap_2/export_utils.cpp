@@ -100,7 +100,7 @@ namespace aw2 {
             while (!temp_queue.empty()) {
                 auto gate = temp_queue.top();
                 temp_queue.pop();
-                auto edge_color = priority_colormap.get_color(gate.priority).to_string();
+                auto edge_color = priority_colormap.get_color(gate.sq_min_delaunay_rad).to_string();
                 auto sv1 = to_svg(gate.get_points().first);
                 auto sv2 = to_svg(gate.get_points().second);
                 draw_line(os, sv1, sv2, edge_color, stroke_width_ * style_.queue_edges.relative_stroke_width);

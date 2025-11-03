@@ -19,7 +19,7 @@ namespace aw2 {
         Segment_2 seg(points.first, points.second);
         auto dev = segment_deviation(seg);
         auto adaptive_alpha = alpha_max_ * (1 - dev) + alpha_ * dev;
-        return g.priority >= std::pow(adaptive_alpha, 2);
+        return g.sq_min_delaunay_rad >= std::pow(adaptive_alpha, 2);
     }
 
     FT AdaptiveAlphaTraversability::subsegment_deviation(const Segment_2& seg) const {
@@ -46,7 +46,7 @@ namespace aw2 {
 
     FT AdaptiveAlphaTraversability::segment_deviation(const Segment_2& seg) const {
         //auto segment_length = bbox_diagonal_length_ / 100.0;
-        auto segment_length = alpha_/4.0;
+        auto segment_length = alpha_;
         int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
         auto s = seg.source();
         auto t = seg.target();
@@ -74,7 +74,7 @@ namespace aw2 {
         CGAL::Line_2<K> line(s,t);
 
         // determine the number of samples based on alpha
-        auto segment_length = alpha_/4.0;
+        auto segment_length = alpha_;
         int m = std::ceil(std::sqrt(CGAL::squared_distance(s, t)) / segment_length);
 
         // perform offset surface intersection tests at m-1 evenly spaced samples along the edge
