@@ -7,6 +7,7 @@
 /.vscode/
 .idea
 .vscode
+.github
 build*/
 data
 external
