@@ -83,6 +83,7 @@ namespace aw2 {
         total_timer_->pause();
         
         // Export result and collect statistics
+        exporter.style_.draw_candidate_edge = false;
         exporter.export_svg("final_result.svg");
 
         statistics_.execution_stats.n_iterations = iteration;

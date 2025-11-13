@@ -81,8 +81,8 @@ namespace aw2 {
         void export_svg(const std::string& filename);
         void setup_export_dir(const std::string& base_path);
         
-        // Public access to export directory
         fs::path export_dir_;
+        StyleConfig style_;
     
     private:
         void draw_input_points(std::ofstream& os);
@@ -118,8 +118,6 @@ namespace aw2 {
         double ymin_;
         double xmax_;
         double ymax_;
-
-        StyleConfig style_;
     };
 
         // Add this new class before the alpha_wrap_2_exporter class
