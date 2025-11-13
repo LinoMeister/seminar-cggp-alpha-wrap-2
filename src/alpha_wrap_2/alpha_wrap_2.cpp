@@ -168,7 +168,7 @@ namespace aw2 {
         }
 
         // Insert bounding box points
-        FT margin = 5 + offset_;
+        FT margin = offset_ + bbox_diagonal_length_ / 10.0;
         auto bbox = oracle_.bbox_;
         std::vector<Point_2> pts_bbox = {
             {bbox.x_min - margin, bbox.y_min - margin}, 
