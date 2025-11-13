@@ -143,24 +143,24 @@ namespace aw2 {
                 traversability_ = new ConstantAlphaTraversability(alpha_);
                 statistics_.config.traversability_function = "CONSTANT_ALPHA";
                 break;
-            case ADAPTIVE_ALPHA:
-                traversability_ = new AdaptiveAlphaTraversability(
+            case DEVIATION_BASED:
+                traversability_ = new DeviationBasedTraversability(
                     alpha_, 
                     offset_, 
                     oracle_,
-                    std::get<AdaptiveAlphaParams>(config.traversability_params)
+                    std::get<DeviationBasedParams>(config.traversability_params)
                 );
-                statistics_.config.traversability_function = "ADAPTIVE_ALPHA";
+                statistics_.config.traversability_function = "DEVIATION_BASED";
                 
                 break;
-            case DISTANCE_SAMPLING:
-                traversability_ = new DistanceSamplingTraversability(
+            case INTERSECTION_BASED:
+                traversability_ = new IntersectionBasedTraversability(
                     alpha_, 
                     offset_, 
                     oracle_,
-                    std::get<DistanceSamplingParams>(config.traversability_params)
+                    std::get<IntersectionBasedParams>(config.traversability_params)
                 );
-                statistics_.config.traversability_function = "DISTANCE_SAMPLING";
+                statistics_.config.traversability_function = "INTERSECTION_BASED";
                 
                 break;
             default:

@@ -35,8 +35,8 @@ namespace aw2 {
 
     enum TraversabilityMethod {
         CONSTANT_ALPHA,
-        ADAPTIVE_ALPHA,
-        DISTANCE_SAMPLING
+        DEVIATION_BASED,
+        INTERSECTION_BASED
     };
 
     struct AlgorithmConfig {

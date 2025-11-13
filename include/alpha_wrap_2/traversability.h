@@ -30,8 +30,8 @@ namespace aw2 {
 
     using TraversabilityParams = std::variant<
         struct ConstantAlphaParams,
-        struct AdaptiveAlphaParams,
-        struct DistanceSamplingParams
+        struct DeviationBasedParams,
+        struct IntersectionBasedParams
     >;
 
     // Method-specific parameter structs
@@ -47,18 +47,18 @@ namespace aw2 {
         // No fields to populate
     }
 
-    struct AdaptiveAlphaParams {
+    struct DeviationBasedParams {
         FT alpha_max = 200.0;
         int point_threshold = 5;
         FT deviation_factor = 0.05;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(AdaptiveAlphaParams, alpha_max, point_threshold, deviation_factor)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(DeviationBasedParams, alpha_max, point_threshold, deviation_factor)
     };
 
-    struct DistanceSamplingParams {
+    struct IntersectionBasedParams {
         FT tolerance_factor = 1.5;  // Multiplied by offset to get tolerance
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(DistanceSamplingParams, tolerance_factor)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(IntersectionBasedParams, tolerance_factor)
     };
 
     // JSON serialization for TraversabilityParams variant
@@ -72,10 +72,10 @@ namespace aw2 {
         // Note: This requires knowing which type to deserialize to
         // For now, we'll try each type and use the first one that works
         try {
-            params = j.get<AdaptiveAlphaParams>();
+            params = j.get<DeviationBasedParams>();
         } catch (...) {
             try {
-                params = j.get<DistanceSamplingParams>();
+                params = j.get<IntersectionBasedParams>();
             } catch (...) {
                 params = j.get<ConstantAlphaParams>();
             }
@@ -100,9 +100,9 @@ namespace aw2 {
         FT alpha_;
     };
 
-    class AdaptiveAlphaTraversability : public Traversability {
+    class DeviationBasedTraversability : public Traversability {
     public:
-        AdaptiveAlphaTraversability(FT alpha, FT offset, const Oracle& oracle, AdaptiveAlphaParams params) 
+        DeviationBasedTraversability(FT alpha, FT offset, const Oracle& oracle, DeviationBasedParams params) 
             : alpha_(alpha), offset_(offset), oracle_(oracle),
               alpha_max_(params.alpha_max), point_threshold_(params.point_threshold), 
               deviation_factor_(params.deviation_factor) {}
@@ -120,9 +120,9 @@ namespace aw2 {
         FT deviation_factor_;
     };
 
-    class DistanceSamplingTraversability : public Traversability {
+    class IntersectionBasedTraversability : public Traversability {
     public:
-        DistanceSamplingTraversability(FT alpha, FT offset, const Oracle& oracle, DistanceSamplingParams params) 
+        IntersectionBasedTraversability(FT alpha, FT offset, const Oracle& oracle, IntersectionBasedParams params) 
             : alpha_(alpha), offset_(offset), oracle_(oracle),
               tolerance_(params.tolerance_factor * offset) {}
 

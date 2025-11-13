@@ -14,7 +14,7 @@ namespace aw2 {
         return std::make_pair(p_source, p_target);
     }
 
-    bool AdaptiveAlphaTraversability::operator()(Gate& g) {
+    bool DeviationBasedTraversability::operator()(Gate& g) {
         auto points = g.get_points();
         Segment_2 seg(points.first, points.second);
         auto dev = segment_deviation(seg);
@@ -22,7 +22,7 @@ namespace aw2 {
         return g.sq_min_delaunay_rad >= std::pow(adaptive_alpha, 2);
     }
 
-    FT AdaptiveAlphaTraversability::subsegment_deviation(const Segment_2& seg) const {
+    FT DeviationBasedTraversability::subsegment_deviation(const Segment_2& seg) const {
         auto local_pts = oracle_.local_points(seg, offset_ + 4);
         int n = local_pts.size();
 
@@ -44,7 +44,7 @@ namespace aw2 {
         return dev;
     }
 
-    FT AdaptiveAlphaTraversability::segment_deviation(const Segment_2& seg) const {
+    FT DeviationBasedTraversability::segment_deviation(const Segment_2& seg) const {
         //auto segment_length = bbox_diagonal_length_ / 100.0;
         auto segment_length = alpha_;
         int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
@@ -67,7 +67,7 @@ namespace aw2 {
         return std::clamp(max_dev, 0.0, 1.0);
     }
 
-    bool DistanceSamplingTraversability::operator()(Gate& g) {
+    bool IntersectionBasedTraversability::operator()(Gate& g) {
         auto points = g.get_points();
         Point_2 s = points.first;
         Point_2 t = points.second;

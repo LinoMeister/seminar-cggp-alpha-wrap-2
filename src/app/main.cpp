@@ -39,7 +39,7 @@ void print_usage(const char *program_name)
             << "  --input <file>     Input file path \n"
             << "  --alpha <value>    Alpha value\n"
             << "  --offset <value>   Offset value\n"
-            << "  --traversability <method>   Traversability method (CONSTANT_ALPHA, ADAPTIVE_ALPHA, DISTANCE_SAMPLING)\n"
+            << "  --traversability <method>   Traversability method (CONSTANT_ALPHA, DEVIATION_BASED, INTERSECTION_BASED)\n"
             << "  --help             Show this help message\n";
 }
 
@@ -97,12 +97,12 @@ int main(int argc, char *argv[])
       if (traversability_arg == "CONSTANT_ALPHA") {
           traversability_method = aw2::CONSTANT_ALPHA;
           config.traversability_params = aw2::ConstantAlphaParams{};
-      } else if (traversability_arg == "ADAPTIVE_ALPHA") {
-          traversability_method = aw2::ADAPTIVE_ALPHA;
-          config.traversability_params = aw2::AdaptiveAlphaParams{};
-      } else if (traversability_arg == "DISTANCE_SAMPLING") {
-          traversability_method = aw2::DISTANCE_SAMPLING;
-          config.traversability_params = aw2::DistanceSamplingParams{};
+      } else if (traversability_arg == "DEVIATION_BASED") {
+          traversability_method = aw2::DEVIATION_BASED;
+          config.traversability_params = aw2::DeviationBasedParams{};
+      } else if (traversability_arg == "INTERSECTION_BASED") {
+          traversability_method = aw2::INTERSECTION_BASED;
+          config.traversability_params = aw2::IntersectionBasedParams{};
       } else {
           std::cerr << "Unknown traversability method: " << traversability_arg << std::endl;
           return 1;
