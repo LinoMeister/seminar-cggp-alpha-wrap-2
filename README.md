@@ -3,7 +3,7 @@
 ## Commands
 
 ```
-./alpha_wrap2_app "/mnt/storage/repos/HS25/seminar-cg-gp/visual-tools/points_dense.pts" 10 2
+./alpha_wrap2_app --input "/mnt/storage/repos/HS25/seminar-cg-gp/visual-tools/export/example6_dense.pts" --output "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results" --output_use_subdir true  --alpha 10 --offset 3 --traversability CONSTANT_ALPHA
 ```
 
 ## TODO
