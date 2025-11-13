@@ -38,8 +38,8 @@ namespace aw2 {
         ColorScheme scheme = ColorScheme::SIMPLE;
         bool use_gradients = false;
         bool use_opacity = false;
-        double opacity = 0.7;
-        std::string gradient_start = "#1a73bdff";
+        double opacity = 1.0;
+        std::string gradient_start = "#0e5086";
         std::string gradient_end = "#4ecdc4";
         bool map_to_data = false;
         std::string data_property = "area"; // "area", "circumradius", "quality"
@@ -67,6 +67,8 @@ namespace aw2 {
             style.use_opacity = true;
             style.opacity = 1.0;
             style.scheme = ColorScheme::GRADIENT;
+            style.queue_edges = {"#ff8800", 1.0, 2.0};
+            style.candidate_edge = {"#225706", 1.0, 2.0};
             return style;
         }
     };

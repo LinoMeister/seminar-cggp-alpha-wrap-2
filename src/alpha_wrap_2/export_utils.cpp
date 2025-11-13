@@ -100,7 +100,7 @@ namespace aw2 {
             while (!temp_queue.empty()) {
                 auto gate = temp_queue.top();
                 temp_queue.pop();
-                auto edge_color = priority_colormap.get_color(gate.sq_min_delaunay_rad).to_string();
+                auto edge_color = style_.queue_edges.color;
                 auto sv1 = to_svg(gate.get_points().first);
                 auto sv2 = to_svg(gate.get_points().second);
                 draw_line(os, sv1, sv2, edge_color, stroke_width_ * style_.queue_edges.relative_stroke_width);
@@ -206,13 +206,13 @@ namespace aw2 {
         
         if (style.use_gradients) {
             // Linear gradient for triangles
-            os << "    <linearGradient id=\"triangleGradient\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\">\n";
+            os << "    <linearGradient id=\"triangleGradient\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\" color-interpolation=\"sRGB\">\n";
             os << "      <stop offset=\"0%\" style=\"stop-color:" << style.gradient_start << ";stop-opacity:1\" />\n";
             os << "      <stop offset=\"100%\" style=\"stop-color:" << style.gradient_end << ";stop-opacity:1\" />\n";
             os << "    </linearGradient>\n";
             
             // Radial gradient for vertices
-            os << "    <radialGradient id=\"vertexGradient\" cx=\"50%\" cy=\"50%\" r=\"50%\">\n";
+            os << "    <radialGradient id=\"vertexGradient\" cx=\"50%\" cy=\"50%\" r=\"50%\" color-interpolation=\"sRGB\">\n";
             os << "      <stop offset=\"0%\" style=\"stop-color:#ffffff;stop-opacity:1\" />\n";
             os << "      <stop offset=\"100%\" style=\"stop-color:#ff4444;stop-opacity:1\" />\n";
             os << "    </radialGradient>\n";
