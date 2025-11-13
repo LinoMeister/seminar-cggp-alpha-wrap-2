@@ -110,14 +110,34 @@ int main(int argc, char *argv[])
       config.traversability_method = traversability_method;
   }
 
+
+  config.intermediate_steps = 200;
+  config.export_step_limit = 2000;
+  config.max_iterations = 50000;
+
+  std::string intermediate_step_arg = get_cmd_option(argv, argv + argc, "--intermediate_steps");
+  if (!intermediate_step_arg.empty())
+  {
+    config.intermediate_steps = std::stoi(intermediate_step_arg);
+  }
+
+  std::string export_step_limit_arg = get_cmd_option(argv, argv + argc, "--export_step_limit");
+  if (!export_step_limit_arg.empty())
+  {
+    config.export_step_limit = std::stoi(export_step_limit_arg);
+  }
+
+  std::string max_iter_arg = get_cmd_option(argv, argv + argc, "--max_iterations");
+  if (!max_iter_arg.empty())
+  {
+    config.max_iterations = std::stoi(max_iter_arg);
+  }
+
   aw2::Oracle oracle;
   oracle.load_points(filename);
 
   aw2::alpha_wrap_2 aw(oracle);
 
-  config.intermediate_steps = 200;
-  config.export_step_limit = 5000;
-  config.max_iterations = 50000;
 
   // Set input filename in statistics
   aw.statistics_.config.input_file = filename;
