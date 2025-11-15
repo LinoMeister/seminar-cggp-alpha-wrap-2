@@ -56,7 +56,7 @@ namespace aw2 {
     };
 
     struct IntersectionBasedParams {
-        FT tolerance_factor = 1.5;  // Multiplied by offset to get tolerance
+        FT tolerance_factor = 0.001;  // Multiplied by bbox diagonal length to get tolerance
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(IntersectionBasedParams, tolerance_factor)
     };
@@ -122,9 +122,9 @@ namespace aw2 {
 
     class IntersectionBasedTraversability : public Traversability {
     public:
-        IntersectionBasedTraversability(FT alpha, FT offset, const Oracle& oracle, IntersectionBasedParams params) 
+        IntersectionBasedTraversability(FT alpha, FT offset, FT bbox_diagonal_length, const Oracle& oracle, IntersectionBasedParams params) 
             : alpha_(alpha), offset_(offset), oracle_(oracle),
-              tolerance_(params.tolerance_factor * offset) {}
+              tolerance_(params.tolerance_factor * bbox_diagonal_length) {}
 
         virtual bool operator()(Gate& g) override;
 

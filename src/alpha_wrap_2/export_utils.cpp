@@ -42,6 +42,7 @@ namespace aw2 {
 
         double width = xmax_ - xmin_;
         double height = ymax_ - ymin_;
+        double margin_ = wrapper_.offset_ + (wrapper_.bbox_diagonal_length_ / 10.0) + 5;
 
         // Make an SVG canvas somewhat larger (margin)
         double svg_w = width + 2*margin_;

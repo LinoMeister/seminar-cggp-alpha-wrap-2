@@ -166,6 +166,7 @@ namespace aw2 {
                 traversability_ = new IntersectionBasedTraversability(
                     alpha_, 
                     offset_, 
+                    bbox_diagonal_length_,
                     oracle_,
                     std::get<IntersectionBasedParams>(config.traversability_params)
                 );
@@ -177,7 +178,7 @@ namespace aw2 {
         }
 
         // Insert bounding box points
-        FT margin = offset_ + bbox_diagonal_length_ / 7.0;
+        FT margin = offset_ + bbox_diagonal_length_ / 10.0;
         
         std::vector<Point_2> pts_bbox = {
             {bbox.x_min - margin, bbox.y_min - margin}, 

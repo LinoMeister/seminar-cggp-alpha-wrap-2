@@ -82,11 +82,14 @@ namespace aw2 {
             FT t0 = static_cast<FT>(i) / m;
             Point_2 p0 = s + t0 * (t - s);
 
+            auto input_dist_sq = CGAL::squared_distance(p0, oracle_.closest_point(p0));
+            auto sign = (input_dist_sq >= std::pow(offset_, 2)) ? 1 : -1;
+
             // check for intersection along the normal direction,
             // tolerance_ determines the length of the segment (p0, p1)
             auto perp = line.perpendicular(p0).to_vector();
             perp /= std::sqrt(perp.squared_length());
-            Point_2 p1 = p0 + tolerance_ * perp;
+            Point_2 p1 = p0 + sign * tolerance_ * perp;
 
             Point_2 steiner_point;
             FT lambda;
