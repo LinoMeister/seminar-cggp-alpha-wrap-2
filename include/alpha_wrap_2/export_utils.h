@@ -69,7 +69,7 @@ namespace aw2 {
             style.scheme = ColorScheme::GRADIENT;
             style.queue_edges = {"#ff8800", 1.0, 2.0};
             style.candidate_edge = {"#225706", 1.0, 2.0};
-            style.margin = 60;
+            style.margin = 15;
             return style;
         }
     };

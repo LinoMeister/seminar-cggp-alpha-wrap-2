@@ -179,6 +179,8 @@ namespace aw2 {
 
         // Insert bounding box points
         FT margin = offset_ + bbox_diagonal_length_ / 10.0;
+        dt_bbox_min_ = Point_2(bbox.x_min - margin, bbox.y_min - margin);
+        dt_bbox_max_ = Point_2(bbox.x_max + margin, bbox.y_max + margin);
         
         std::vector<Point_2> pts_bbox = {
             {bbox.x_min - margin, bbox.y_min - margin}, 

@@ -91,6 +91,8 @@ namespace aw2 {
         int max_iterations_;
 
         FT bbox_diagonal_length_;
+        Point_2 dt_bbox_min_;
+        Point_2 dt_bbox_max_;
 
         std::vector<Segment_2> wrap_edges_;
 

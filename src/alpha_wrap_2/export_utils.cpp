@@ -12,10 +12,10 @@ namespace aw2 {
           stroke_width_(style.stroke_width), vertex_radius_(style.vertex_radius), style_(style)
     {
         // First, compute bounding box of finite vertices
-        xmin_ = oracle_.bbox_.x_min;
-        ymin_ = oracle_.bbox_.y_min;
-        xmax_ = oracle_.bbox_.x_max;
-        ymax_ = oracle_.bbox_.y_max;
+        xmin_ = wrapper_.dt_bbox_min_.x();
+        ymin_ = wrapper_.dt_bbox_min_.y();
+        xmax_ = wrapper_.dt_bbox_max_.x();
+        ymax_ = wrapper_.dt_bbox_max_.y();
     }
 
     void alpha_wrap_2_exporter::setup_export_dir(const std::string& base_path) {
@@ -40,18 +40,23 @@ namespace aw2 {
             return;
         }
 
+
         double width = xmax_ - xmin_;
         double height = ymax_ - ymin_;
-        double margin_ = wrapper_.offset_ + (wrapper_.bbox_diagonal_length_ / 10.0) + 5;
 
-        // Make an SVG canvas somewhat larger (margin)
-        double svg_w = width + 2*margin_;
-        double svg_h = height + 2*margin_;
+        // Define viewBox coordinates (automatically fits to container)
+        // Y is flipped in SVG, so viewBox uses negative Y coordinates
+        double viewbox_x = xmin_ - margin_;
+        double viewbox_y = -ymax_ - margin_;
+        double viewbox_w = width + 2*margin_;
+        double viewbox_h = height + 2*margin_;
 
         std::ofstream os(export_dir_ / filename);
         os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
         os << R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1" )";
-        os << "width=\"" << svg_w << "\" height=\"" << svg_h << "\">\n";
+        os << "viewBox=\"" << viewbox_x << " " << viewbox_y << " " 
+           << viewbox_w << " " << viewbox_h << "\" "
+           << "preserveAspectRatio=\"xMidYMid meet\">\n";
 
         // Write SVG definitions (gradients, patterns, etc.)
         write_svg_defs(os, style_);
@@ -168,9 +173,10 @@ namespace aw2 {
     }
 
     std::pair<double, double> alpha_wrap_2_exporter::to_svg(const Point_2& p) {
-        double x = (p.x() - xmin_) + margin_;
+        // Use actual coordinates directly - viewBox handles the coordinate system
+        double x = p.x();
         // Flip Y so that larger y goes downward in SVG coordinate
-        double y = (ymax_ - p.y()) + margin_;
+        double y = -p.y();
         return std::pair<double, double>(x, y);
     }
 
