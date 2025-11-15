@@ -127,9 +127,17 @@ namespace aw2 {
         total_timer_->start();
         init_timer_->start();
 
+        // Compute bounding box diagonal length
+        auto bbox = oracle_.bbox_;
+        bbox_diagonal_length_ = std::sqrt(CGAL::squared_distance(
+            Point_2(bbox.x_min, bbox.y_min),
+            Point_2(bbox.x_max, bbox.y_max)
+        ));
+
         // apply configuration
-        alpha_ = config.alpha;
-        offset_ = config.offset;
+
+        alpha_ = config.alpha * bbox_diagonal_length_;
+        offset_ = config.offset * bbox_diagonal_length_;
         max_iterations_ = config.max_iterations;
         config_ = config;
 
@@ -169,8 +177,8 @@ namespace aw2 {
         }
 
         // Insert bounding box points
-        FT margin = offset_ + bbox_diagonal_length_ / 10.0;
-        auto bbox = oracle_.bbox_;
+        FT margin = offset_ + bbox_diagonal_length_ / 7.0;
+        
         std::vector<Point_2> pts_bbox = {
             {bbox.x_min - margin, bbox.y_min - margin}, 
             {bbox.x_min - margin, bbox.y_max + margin}, 
@@ -199,11 +207,6 @@ namespace aw2 {
             // add gate to queue
             add_gate_to_queue(*eit);
         }
-
-        bbox_diagonal_length_ = std::sqrt(CGAL::squared_distance(
-            Point_2(bbox.x_min, bbox.y_min),
-            Point_2(bbox.x_max, bbox.y_max)
-        ));
 
         init_timer_->pause();
         total_timer_->pause();

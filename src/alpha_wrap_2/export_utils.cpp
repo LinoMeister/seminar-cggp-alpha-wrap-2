@@ -109,7 +109,7 @@ namespace aw2 {
         }
 
         // Draw candidate edge
-        if (candidate_gate_.edge.first != Delaunay::Face_handle()) {
+        if (style_.draw_candidate_edge && candidate_gate_.edge.first != Delaunay::Face_handle()) {
             os << "  <g fill=\"none\">\n";
             auto sv1 = to_svg(candidate_gate_.get_points().first);
             auto sv2 = to_svg(candidate_gate_.get_points().second);
