@@ -44,6 +44,13 @@ namespace aw2 {
         bool map_to_data = false;
         std::string data_property = "area"; // "area", "circumradius", "quality"
 
+        // Outside face filling options
+        bool fill_outside_faces = false;
+        bool use_gradients_outside = false;
+        double opacity_outside = 0.3;
+        std::string gradient_start_outside = "#ff6b6b";
+        std::string gradient_end_outside = "#ffd93d";
+
         double stroke_width = 2.0;
         double vertex_radius = 3.0;
         double input_point_radius = 1.5;
@@ -60,7 +67,7 @@ namespace aw2 {
         bool draw_queue_edges = true;
         bool draw_candidate_edge = true;
 
-        static StyleConfig preset_style() {
+        static StyleConfig default_style() {
             StyleConfig style;
             style.voronoi_diagram = {"pink", 0.6};
             style.use_gradients = true;
@@ -69,6 +76,38 @@ namespace aw2 {
             style.scheme = ColorScheme::GRADIENT;
             style.queue_edges = {"#ff8800", 1.0, 2.0};
             style.candidate_edge = {"#225706", 1.0, 2.0};
+            style.margin = 15;
+            return style;
+        }
+
+        static StyleConfig clean_style() {
+            StyleConfig style;
+            style.use_gradients = true;
+            style.use_opacity = true;
+            style.opacity = 1.0;
+            style.scheme = ColorScheme::GRADIENT;
+            style.draw_voronoi_diagram = false;
+            style.draw_queue_edges = false;
+            style.draw_candidate_edge = false;
+            style.delaunay_edges = {"#000000", 1.0};
+            style.margin = 15;
+            return style;
+        }
+
+        static StyleConfig outside_filled_style() {
+            StyleConfig style;
+            style.use_gradients = true;
+            style.use_opacity = true;
+            style.opacity = 1.0;
+            style.scheme = ColorScheme::GRADIENT;
+            
+            // Enable outside face filling with different colors
+            style.fill_outside_faces = true;
+            style.use_gradients_outside = true;
+            style.opacity_outside = 0.3;
+            style.gradient_start_outside = "#ce2813ff";
+            style.gradient_end_outside = "#ffd93d";
+            
             style.margin = 15;
             return style;
         }

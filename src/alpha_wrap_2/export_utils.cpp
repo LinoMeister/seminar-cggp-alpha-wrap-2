@@ -71,11 +71,16 @@ namespace aw2 {
             auto sc = to_svg(fit->vertex(2)->point());
 
             auto inside = (fit->info() == INSIDE);
-            double opacity = style_.use_opacity ? style_.opacity : 1.0;
-
+            
             if (inside) {
+                double opacity = style_.use_opacity ? style_.opacity : 1.0;
                 std::string fill_color = style_.use_gradients ? "url(#triangleGradient)" : style_.gradient_start;
                 draw_polygon(os, sa, sb, sc, fill_color, style_.delaunay_edges.color, stroke_width_/2, opacity);
+            }
+            else if (style_.fill_outside_faces) {
+                double opacity_outside = style_.opacity_outside;
+                std::string fill_color_outside = style_.use_gradients_outside ? "url(#outsideGradient)" : style_.gradient_start_outside;
+                draw_polygon(os, sa, sb, sc, fill_color_outside, style_.delaunay_edges.color, stroke_width_/2, opacity_outside);
             }
             else {
                 draw_polygon(os, sa, sb, sc, "none", style_.delaunay_edges.color, stroke_width_/2, 1.0);
@@ -223,6 +228,14 @@ namespace aw2 {
             os << "      <stop offset=\"0%\" style=\"stop-color:#ffffff;stop-opacity:1\" />\n";
             os << "      <stop offset=\"100%\" style=\"stop-color:#ff4444;stop-opacity:1\" />\n";
             os << "    </radialGradient>\n";
+        }
+        
+        if (style.use_gradients_outside) {
+            // Linear gradient for outside triangles
+            os << "    <linearGradient id=\"outsideGradient\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\" color-interpolation=\"sRGB\">\n";
+            os << "      <stop offset=\"0%\" style=\"stop-color:" << style.gradient_start_outside << ";stop-opacity:1\" />\n";
+            os << "      <stop offset=\"100%\" style=\"stop-color:" << style.gradient_end_outside << ";stop-opacity:1\" />\n";
+            os << "    </linearGradient>\n";
         }
         
         // Pattern for special elements

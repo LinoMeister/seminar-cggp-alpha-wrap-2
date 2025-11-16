@@ -19,7 +19,7 @@ namespace aw2 {
 
         namespace fs = std::filesystem;
 
-        auto style = StyleConfig::preset_style();
+        auto style = StyleConfig::default_style();
         alpha_wrap_2_exporter exporter(*this, style);
         exporter.setup_export_dir(config_.output_directory);
         
