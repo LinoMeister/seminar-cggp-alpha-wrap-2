@@ -56,7 +56,7 @@ namespace aw2 {
     };
 
     struct IntersectionBasedParams {
-        FT tolerance_factor = 0.001;  // Multiplied by bbox diagonal length to get tolerance
+        FT tolerance_factor = 0.01;  // Multiplied by bbox diagonal length to get tolerance
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(IntersectionBasedParams, tolerance_factor)
     };
