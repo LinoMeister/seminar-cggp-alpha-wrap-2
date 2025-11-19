@@ -1,6 +1,8 @@
 #include <alpha_wrap_2/export_utils.h>
 #include <alpha_wrap_2/alpha_wrap_2.h>
 #include <utility>
+#include <random>
+#include <sstream>
 
 namespace aw2 {
 
@@ -9,7 +11,9 @@ namespace aw2 {
         const StyleConfig& style)
         : wrapper_(wrapper), oracle_(wrapper.oracle_), dt_(wrapper.dt_), 
           candidate_gate_(wrapper.candidate_gate_), margin_(style.margin), 
-          stroke_width_(style.stroke_width), vertex_radius_(style.vertex_radius), style_(style)
+          stroke_width_(style.stroke_width), vertex_radius_(style.vertex_radius), style_(style),
+          inside_rng_(style.inside_faces.random_seed),
+          outside_rng_(style.outside_faces.random_seed)
     {
         // First, compute bounding box of finite vertices
         xmin_ = wrapper_.dt_bbox_min_.x();
@@ -59,32 +63,22 @@ namespace aw2 {
            << "preserveAspectRatio=\"xMidYMid meet\">\n";
 
         // Write SVG definitions (gradients, patterns, etc.)
-        write_svg_defs(os, style_);
+        write_svg_defs(os);
 
-
-        // Draw edges of all finite faces
+        // Draw all finite faces
         os << R"(  <g stroke="black" stroke-width=")" << stroke_width_
         << "\" fill=\"none\">\n";
-        for (auto fit = dt_.finite_faces_begin(); fit != dt_.finite_faces_end(); ++fit) {
+        
+        int face_index = 0;
+        for (auto fit = dt_.finite_faces_begin(); fit != dt_.finite_faces_end(); ++fit, ++face_index) {
             auto sa = to_svg(fit->vertex(0)->point());
             auto sb = to_svg(fit->vertex(1)->point());
             auto sc = to_svg(fit->vertex(2)->point());
 
-            auto inside = (fit->info() == INSIDE);
+            bool is_inside = (fit->info() == INSIDE);
+            const FaceFillStyle& fill_style = is_inside ? style_.inside_faces : style_.outside_faces;
             
-            if (inside) {
-                double opacity = style_.use_opacity ? style_.opacity : 1.0;
-                std::string fill_color = style_.use_gradients ? "url(#triangleGradient)" : style_.gradient_start;
-                draw_polygon(os, sa, sb, sc, fill_color, style_.delaunay_edges.color, stroke_width_/2, opacity);
-            }
-            else if (style_.fill_outside_faces) {
-                double opacity_outside = style_.opacity_outside;
-                std::string fill_color_outside = style_.use_gradients_outside ? "url(#outsideGradient)" : style_.gradient_start_outside;
-                draw_polygon(os, sa, sb, sc, fill_color_outside, style_.delaunay_edges.color, stroke_width_/2, opacity_outside);
-            }
-            else {
-                draw_polygon(os, sa, sb, sc, "none", style_.delaunay_edges.color, stroke_width_/2, 1.0);
-            }
+            draw_face(os, sa, sb, sc, fill_style, is_inside, face_index);
         }
         os << "  </g>\n";
 
@@ -213,38 +207,40 @@ namespace aw2 {
            << "\" r=\"" << radius << "\" />\n";
     }
 
-    void alpha_wrap_2_exporter::write_svg_defs(std::ofstream& os, const StyleConfig& style) {
+    void alpha_wrap_2_exporter::write_svg_defs(std::ofstream& os) {
         os << "  <defs>\n";
         
-        if (style.use_gradients) {
-            // Linear gradient for triangles
-            os << "    <linearGradient id=\"triangleGradient\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\" color-interpolation=\"sRGB\">\n";
-            os << "      <stop offset=\"0%\" style=\"stop-color:" << style.gradient_start << ";stop-opacity:1\" />\n";
-            os << "      <stop offset=\"100%\" style=\"stop-color:" << style.gradient_end << ";stop-opacity:1\" />\n";
-            os << "    </linearGradient>\n";
-            
-            // Radial gradient for vertices
-            os << "    <radialGradient id=\"vertexGradient\" cx=\"50%\" cy=\"50%\" r=\"50%\" color-interpolation=\"sRGB\">\n";
-            os << "      <stop offset=\"0%\" style=\"stop-color:#ffffff;stop-opacity:1\" />\n";
-            os << "      <stop offset=\"100%\" style=\"stop-color:#ff4444;stop-opacity:1\" />\n";
-            os << "    </radialGradient>\n";
+        // Write gradient for inside faces if needed
+        if (style_.inside_faces.mode == FillMode::GRADIENT) {
+            write_gradient_def(os, get_gradient_id(style_.inside_faces, true),
+                             style_.inside_faces.gradient_start, 
+                             style_.inside_faces.gradient_end);
         }
         
-        if (style.use_gradients_outside) {
-            // Linear gradient for outside triangles
-            os << "    <linearGradient id=\"outsideGradient\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\" color-interpolation=\"sRGB\">\n";
-            os << "      <stop offset=\"0%\" style=\"stop-color:" << style.gradient_start_outside << ";stop-opacity:1\" />\n";
-            os << "      <stop offset=\"100%\" style=\"stop-color:" << style.gradient_end_outside << ";stop-opacity:1\" />\n";
-            os << "    </linearGradient>\n";
+        // Write gradient for outside faces if needed
+        if (style_.outside_faces.mode == FillMode::GRADIENT) {
+            write_gradient_def(os, get_gradient_id(style_.outside_faces, false),
+                             style_.outside_faces.gradient_start,
+                             style_.outside_faces.gradient_end);
         }
         
-        // Pattern for special elements
-        os << "    <pattern id=\"stripes\" patternUnits=\"userSpaceOnUse\" width=\"4\" height=\"4\">\n";
-        os << "      <rect width=\"2\" height=\"4\" fill=\"#cccccc\"/>\n";
-        os << "      <rect x=\"2\" width=\"2\" height=\"4\" fill=\"#ffffff\"/>\n";
-        os << "    </pattern>\n";
+        // Radial gradient for vertices
+        os << "    <radialGradient id=\"vertexGradient\" cx=\"50%\" cy=\"50%\" r=\"50%\" color-interpolation=\"sRGB\">\n";
+        os << "      <stop offset=\"0%\" style=\"stop-color:#ffffff;stop-opacity:1\" />\n";
+        os << "      <stop offset=\"100%\" style=\"stop-color:#ff4444;stop-opacity:1\" />\n";
+        os << "    </radialGradient>\n";
         
         os << "  </defs>\n";
+    }
+    
+    void alpha_wrap_2_exporter::write_gradient_def(std::ofstream& os, const std::string& id,
+                                                    const std::string& start_color, 
+                                                    const std::string& end_color) {
+        os << "    <linearGradient id=\"" << id 
+           << "\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\" color-interpolation=\"sRGB\">\n";
+        os << "      <stop offset=\"0%\" style=\"stop-color:" << start_color << ";stop-opacity:1\" />\n";
+        os << "      <stop offset=\"100%\" style=\"stop-color:" << end_color << ";stop-opacity:1\" />\n";
+        os << "    </linearGradient>\n";
     }
 
     RGBColor::RGBColor(const std::string& hex) {
@@ -313,6 +309,86 @@ namespace aw2 {
     void ColorMap::set_colors(const RGBColor& min_color, const RGBColor& max_color) {
         min_color_ = min_color;
         max_color_ = max_color;
+    }
+
+    // RGBColor utility methods
+    std::string RGBColor::to_hex() const {
+        std::ostringstream oss;
+        oss << "#" << std::hex << std::setfill('0') 
+            << std::setw(2) << r 
+            << std::setw(2) << g 
+            << std::setw(2) << b;
+        return oss.str();
+    }
+
+    void RGBColor::clamp() {
+        r = std::max(0, std::min(255, r));
+        g = std::max(0, std::min(255, g));
+        b = std::max(0, std::min(255, b));
+    }
+
+    RGBColor RGBColor::vary(double variation, std::mt19937& rng) const {
+        if (variation <= 0.0) {
+            return *this;
+        }
+        
+        std::uniform_real_distribution<double> dist(-variation, variation);
+        
+        // Apply variation as a percentage of the color value
+        auto d = dist(rng);
+        int new_r = static_cast<int>(r + d * 255);
+        int new_g = static_cast<int>(g + d * 255);
+        int new_b = static_cast<int>(b + d * 255);
+        
+        RGBColor result(new_r, new_g, new_b);
+        result.clamp();
+        return result;
+    }
+
+    // Face drawing helper methods
+    void alpha_wrap_2_exporter::draw_face(std::ofstream& os,
+                                          const std::pair<double, double>& p1,
+                                          const std::pair<double, double>& p2,
+                                          const std::pair<double, double>& p3,
+                                          const FaceFillStyle& fill_style,
+                                          bool is_inside,
+                                          int face_index) {
+        if (fill_style.mode == FillMode::NONE) {
+            draw_polygon(os, p1, p2, p3, "none", style_.delaunay_edges.color, 
+                        stroke_width_/2, 1.0);
+        } else {
+            std::string fill_color = get_face_fill_color(fill_style, is_inside, face_index);
+            draw_polygon(os, p1, p2, p3, fill_color, style_.delaunay_edges.color,
+                        stroke_width_/2, fill_style.opacity);
+        }
+    }
+
+    std::string alpha_wrap_2_exporter::get_face_fill_color(const FaceFillStyle& style, bool is_inside, int face_index) {
+        switch (style.mode) {
+            case FillMode::NONE:
+                return "none";
+                
+            case FillMode::SOLID:
+                return style.base_color;
+                
+            case FillMode::GRADIENT:
+                return "url(#" + get_gradient_id(style, is_inside) + ")";
+                
+            case FillMode::VARIED: {
+                RGBColor base(style.base_color);
+                // Use face_index to seed variation for consistency
+                std::mt19937 local_rng(style.random_seed + face_index);
+                RGBColor varied = base.vary(style.color_variation, local_rng);
+                return varied.to_hex();
+            }
+            
+            default:
+                return "none";
+        }
+    }
+
+    std::string alpha_wrap_2_exporter::get_gradient_id(const FaceFillStyle& /* style */, bool is_inside) const {
+        return is_inside ? "insideGradient" : "outsideGradient";
     }
 
 }
