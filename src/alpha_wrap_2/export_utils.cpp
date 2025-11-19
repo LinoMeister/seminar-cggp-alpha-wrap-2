@@ -3,6 +3,7 @@
 #include <utility>
 #include <random>
 #include <sstream>
+#include <cmath>
 
 namespace aw2 {
 
@@ -210,19 +211,8 @@ namespace aw2 {
     void alpha_wrap_2_exporter::write_svg_defs(std::ofstream& os) {
         os << "  <defs>\n";
         
-        // Write gradient for inside faces if needed
-        if (style_.inside_faces.mode == FillMode::GRADIENT) {
-            write_gradient_def(os, get_gradient_id(style_.inside_faces, true),
-                             style_.inside_faces.gradient_start, 
-                             style_.inside_faces.gradient_end);
-        }
-        
-        // Write gradient for outside faces if needed
-        if (style_.outside_faces.mode == FillMode::GRADIENT) {
-            write_gradient_def(os, get_gradient_id(style_.outside_faces, false),
-                             style_.outside_faces.gradient_start,
-                             style_.outside_faces.gradient_end);
-        }
+        // Note: Gradients for faces are now generated inline with random orientations
+        // No need to pre-define them here
         
         // Radial gradient for vertices
         os << "    <radialGradient id=\"vertexGradient\" cx=\"50%\" cy=\"50%\" r=\"50%\" color-interpolation=\"sRGB\">\n";
@@ -235,9 +225,25 @@ namespace aw2 {
     
     void alpha_wrap_2_exporter::write_gradient_def(std::ofstream& os, const std::string& id,
                                                     const std::string& start_color, 
-                                                    const std::string& end_color) {
+                                                    const std::string& end_color,
+                                                    double angle_degrees) {
+        // Convert angle to x1,y1,x2,y2 coordinates
+        // Angle of 0° = horizontal (left to right)
+        // Angle of 90° = vertical (top to bottom)
+        // Angle of 180° = horizontal (right to left)
+        // Angle of 270° = vertical (bottom to top)
+        double angle_rad = angle_degrees * M_PI / 180.0;
+        
+        // Calculate gradient vector endpoints
+        // We want the gradient to go from one side to the opposite side
+        double x1 = 50.0 - 50.0 * std::cos(angle_rad);
+        double y1 = 50.0 - 50.0 * std::sin(angle_rad);
+        double x2 = 50.0 + 50.0 * std::cos(angle_rad);
+        double y2 = 50.0 + 50.0 * std::sin(angle_rad);
+        
         os << "    <linearGradient id=\"" << id 
-           << "\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\" color-interpolation=\"sRGB\">\n";
+           << "\" x1=\"" << x1 << "%\" y1=\"" << y1 << "%\" "
+           << "x2=\"" << x2 << "%\" y2=\"" << y2 << "%\" color-interpolation=\"sRGB\">\n";
         os << "      <stop offset=\"0%\" style=\"stop-color:" << start_color << ";stop-opacity:1\" />\n";
         os << "      <stop offset=\"100%\" style=\"stop-color:" << end_color << ";stop-opacity:1\" />\n";
         os << "    </linearGradient>\n";
@@ -356,6 +362,23 @@ namespace aw2 {
         if (fill_style.mode == FillMode::NONE) {
             draw_polygon(os, p1, p2, p3, "none", style_.delaunay_edges.color, 
                         stroke_width_/2, 1.0);
+        } else if (fill_style.mode == FillMode::GRADIENT) {
+            // Generate gradient definition inline with random angle
+            std::mt19937 rng(fill_style.random_seed + face_index);
+            std::uniform_real_distribution<double> angle_dist(0.0, 360.0);
+            double random_angle = angle_dist(rng);
+            
+            std::string gradient_id = get_gradient_id(fill_style, is_inside, face_index);
+            
+            // Write inline gradient definition
+            os << "    <defs>\n";
+            write_gradient_def(os, gradient_id, fill_style.gradient_start, fill_style.gradient_end, random_angle);
+            os << "    </defs>\n";
+            
+            // Draw polygon with gradient
+            std::string fill_color = "url(#" + gradient_id + ")";
+            draw_polygon(os, p1, p2, p3, fill_color, style_.delaunay_edges.color,
+                        stroke_width_/2, fill_style.opacity);
         } else {
             std::string fill_color = get_face_fill_color(fill_style, is_inside, face_index);
             draw_polygon(os, p1, p2, p3, fill_color, style_.delaunay_edges.color,
@@ -372,7 +395,7 @@ namespace aw2 {
                 return style.base_color;
                 
             case FillMode::GRADIENT:
-                return "url(#" + get_gradient_id(style, is_inside) + ")";
+                return "url(#" + get_gradient_id(style, is_inside, face_index) + ")";
                 
             case FillMode::VARIED: {
                 RGBColor base(style.base_color);
@@ -387,8 +410,8 @@ namespace aw2 {
         }
     }
 
-    std::string alpha_wrap_2_exporter::get_gradient_id(const FaceFillStyle& /* style */, bool is_inside) const {
-        return is_inside ? "insideGradient" : "outsideGradient";
+    std::string alpha_wrap_2_exporter::get_gradient_id(const FaceFillStyle& /* style */, bool is_inside, int face_index) const {
+        return (is_inside ? "insideGradient_" : "outsideGradient_") + std::to_string(face_index);
     }
 
 }

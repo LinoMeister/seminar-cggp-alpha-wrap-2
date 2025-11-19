@@ -95,11 +95,11 @@ namespace aw2 {
 
         static StyleConfig default_style() {
             StyleConfig style;
-            style.inside_faces = FaceFillStyle::gradient("#0e5086", "#4ecdc4", 1.0);
+            style.inside_faces = FaceFillStyle::gradient("#0e80dd", "#18aac4", 1.0);
             style.outside_faces = FaceFillStyle::none();
             style.voronoi_diagram = {"pink", 0.6};
-            style.queue_edges = {"#ff8800", 1.0, 2.0};
-            style.candidate_edge = {"#225706", 1.0, 2.0};
+            style.queue_edges = {"#20a83d", 1.0, 2.0};
+            style.candidate_edge = {"#ff9900", 1.0, 2.0};
             style.margin = 15;
             return style;
         }
@@ -221,12 +221,13 @@ namespace aw2 {
                       int face_index);
         
         std::string get_face_fill_color(const FaceFillStyle& style, bool is_inside, int face_index);
-        std::string get_gradient_id(const FaceFillStyle& style, bool is_inside) const;
+        std::string get_gradient_id(const FaceFillStyle& style, bool is_inside, int face_index) const;
         
         // SVG definitions
         void write_svg_defs(std::ofstream& os);
         void write_gradient_def(std::ofstream& os, const std::string& id, 
-                               const std::string& start_color, const std::string& end_color);
+                               const std::string& start_color, const std::string& end_color,
+                               double angle_degrees = 135.0);
 
 
         const alpha_wrap_2& wrapper_;
