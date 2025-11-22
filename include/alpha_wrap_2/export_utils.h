@@ -92,6 +92,7 @@ namespace aw2 {
         bool draw_voronoi_diagram = false;
         bool draw_queue_edges = true;
         bool draw_candidate_edge = true;
+        bool draw_candidate_cc = false;
 
         static StyleConfig default_style() {
             StyleConfig style;
@@ -100,7 +101,9 @@ namespace aw2 {
             style.voronoi_diagram = {"pink", 0.6};
             style.queue_edges = {"#20a83d", 1.0, 2.0};
             style.candidate_edge = {"#ff9900", 1.0, 2.0};
+            style.input_points = {"black", 1.0, 2.5};
             style.margin = 15;
+            style.draw_candidate_cc = false;
             return style;
         }
 

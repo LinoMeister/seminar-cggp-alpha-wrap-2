@@ -122,6 +122,17 @@ namespace aw2 {
             draw_line(os, sv1, sv2, style_.candidate_edge.color, 
                      stroke_width_ * style_.candidate_edge.relative_stroke_width);
             os << "  </g>\n";
+
+            // Draw candidate circumcenter
+            if (style_.draw_candidate_cc) {
+                os << "  <g fill=\"" << style_.candidate_edge.color
+                << "\" opacity=\"" << style_.candidate_edge.opacity << "\">\n";
+                auto adj_info = wrapper_.gate_adjacency_info(candidate_gate_.edge);
+                draw_circle(os, to_svg(adj_info.cc_inside), vertex_radius_ * 1.5);
+                draw_circle(os, to_svg(adj_info.cc_outside), vertex_radius_ * 1.5);
+                os << "  </g>\n";
+            }
+                
         }
 
         // Draw extracted wrap edges with adaptive alpha coloring
@@ -145,7 +156,7 @@ namespace aw2 {
            << "\" opacity=\"" << style_.input_points.opacity << "\">\n";
         for (auto vit = oracle_.tree_.begin(); vit != oracle_.tree_.end(); ++vit) {
             auto sp = to_svg(*vit);
-            draw_circle(os, sp, style_.input_point_radius);
+            draw_circle(os, sp, style_.input_points.relative_stroke_width);
         }
         os << "  </g>\n";
     }

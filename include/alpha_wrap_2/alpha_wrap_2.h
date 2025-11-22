@@ -117,6 +117,7 @@ namespace aw2 {
         
         // Get statistics (can be called after compute_wrap)
         const AlgorithmStatistics& get_statistics() const { return statistics_; }
+        EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
 
 
     private:
@@ -136,7 +137,6 @@ namespace aw2 {
 
         // utils
         Point_2 infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) const;
-        EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
         void extract_wrap_surface();
     };
 }
