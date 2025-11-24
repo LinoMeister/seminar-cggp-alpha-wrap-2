@@ -59,6 +59,9 @@ namespace aw2 {
         int export_step_limit = 1000; 
 
         std::string output_directory = "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/";
+
+        // visualization style (default, clean, outside_filled)
+        std::string style = "default";
     };
 
 

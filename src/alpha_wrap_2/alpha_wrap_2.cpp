@@ -19,7 +19,16 @@ namespace aw2 {
 
         namespace fs = std::filesystem;
 
-        auto style = StyleConfig::default_style();
+        // Select style based on configuration
+        StyleConfig style;
+        if (config_.style == "clean") {
+            style = StyleConfig::clean_style();
+        } else if (config_.style == "outside_filled") {
+            style = StyleConfig::outside_filled_style();
+        } else {
+            style = StyleConfig::default_style();
+        }
+        
         alpha_wrap_2_exporter exporter(*this, style);
         exporter.setup_export_dir(config_.output_directory);
         

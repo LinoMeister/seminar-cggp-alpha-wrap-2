@@ -40,6 +40,7 @@ void print_usage(const char *program_name)
             << "  --alpha <value>    Alpha value\n"
             << "  --offset <value>   Offset value\n"
             << "  --traversability <method>   Traversability method (CONSTANT_ALPHA, DEVIATION_BASED, INTERSECTION_BASED)\n"
+            << "  --style <style>    Visualization style (default, clean, outside_filled)\n"
             << "  --help             Show this help message\n";
 }
 
@@ -131,6 +132,17 @@ int main(int argc, char *argv[])
   if (!max_iter_arg.empty())
   {
     config.max_iterations = std::stoi(max_iter_arg);
+  }
+
+  std::string style_arg = get_cmd_option(argv, argv + argc, "--style");
+  if (!style_arg.empty())
+  {
+    if (style_arg == "default" || style_arg == "clean" || style_arg == "outside_filled") {
+      config.style = style_arg;
+    } else {
+      std::cerr << "Unknown style: " << style_arg << " (valid options: default, clean, outside_filled)" << std::endl;
+      return 1;
+    }
   }
 
   aw2::Oracle oracle;

@@ -108,38 +108,17 @@ namespace aw2 {
         }
 
         static StyleConfig clean_style() {
-            StyleConfig style;
-            style.inside_faces = FaceFillStyle::gradient("#0e5086", "#4ecdc4", 1.0);
-            style.outside_faces = FaceFillStyle::none();
+            StyleConfig style = default_style();
             style.draw_voronoi_diagram = false;
             style.draw_queue_edges = false;
             style.draw_candidate_edge = false;
-            style.delaunay_edges = {"#000000", 1.0};
-            style.margin = 15;
+
             return style;
         }
 
         static StyleConfig outside_filled_style() {
-            StyleConfig style;
-            style.inside_faces = FaceFillStyle::gradient("#0e5086", "#4ecdc4", 1.0);
+            StyleConfig style = default_style();
             style.outside_faces = FaceFillStyle::gradient("#ff6b6b", "#ffd93d", 0.3);
-            style.draw_voronoi_diagram = false;
-            style.draw_queue_edges = false;
-            style.draw_candidate_edge = false;
-            style.delaunay_edges = {"#000000", 1.0};
-            style.margin = 15;
-            return style;
-        }
-        
-        static StyleConfig varied_style() {
-            StyleConfig style;
-            style.inside_faces = FaceFillStyle::varied("#3498db", 0.2, 0.85);
-            style.outside_faces = FaceFillStyle::varied("#e74c3c", 0.15, 0.3);
-            style.draw_voronoi_diagram = false;
-            style.draw_queue_edges = false;
-            style.draw_candidate_edge = false;
-            style.delaunay_edges = {"#000000", 1.0};
-            style.margin = 15;
             return style;
         }
     };
