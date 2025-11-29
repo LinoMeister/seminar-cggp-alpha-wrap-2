@@ -46,7 +46,6 @@ namespace aw2 {
                     candidate_gate_.get_points().first,
                     candidate_gate_.get_points().second
                 );
-                exporter_->export_svg(std::to_string(iteration_) + "_start.svg", ITERATION_START);
             }
 
             // ** Get candidate gate info **
@@ -75,9 +74,12 @@ namespace aw2 {
 
             // ** Carve face **
             std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
+            if (export_step_) {
+                exporter_->export_svg("iteration_" + std::to_string(iteration_) + "_0", ITERATION_CARVE);
+            }
             c_in->info() = OUTSIDE;
             if (export_step_) {
-                exporter_->export_svg(std::to_string(iteration_) + "_end.svg", ITERATION_CARVE);
+                exporter_->export_svg("iteration_" + std::to_string(iteration_) + "_1", ITERATION_CARVE);
             }
             update_queue(c_in);
         }
@@ -93,7 +95,7 @@ namespace aw2 {
         
         // Export result and collect statistics
         exporter_->style_.draw_candidate_edge = false;
-        exporter_->export_svg("final_result.svg");
+        exporter_->export_svg("final_result");
 
         statistics_.execution_stats.n_iterations = iteration_;
         statistics_.timings.total_time = total_timer_->elapsed_ms();
@@ -350,9 +352,9 @@ namespace aw2 {
         if (insert) {
             rule1_timer_->pause();
             if (export_step_) {
-                exporter_->r1_segment_ = Segment_2(c_out_cc, c_in_cc);
+                exporter_->rule_segment_ = Segment_2(c_out_cc, c_in_cc);
                 exporter_->steiner_point_ = steiner_point;
-                exporter_->export_svg(std::to_string(iteration_) + "_end.svg", ITERATION_R1);
+                exporter_->export_svg("iteration_" + std::to_string(iteration_), ITERATION_RULE);
             }
             insert_steiner_point(steiner_point);
             return true;
@@ -380,9 +382,9 @@ namespace aw2 {
             if (insert) {
                 rule2_timer_->pause();
                 if (export_step_) {
-                    exporter_->r2_segment_ = Segment_2(c_in_cc, p_input);
+                    exporter_->rule_segment_ = Segment_2(c_in_cc, p_input);
                     exporter_->steiner_point_ = steiner_point;
-                    exporter_->export_svg(std::to_string(iteration_) + "_end.svg", ITERATION_R2);
+                    exporter_->export_svg("iteration_" + std::to_string(iteration_), ITERATION_RULE);
                 }
                 insert_steiner_point(steiner_point);
                 return true;

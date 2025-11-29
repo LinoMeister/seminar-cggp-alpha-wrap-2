@@ -101,10 +101,10 @@ namespace aw2 {
             style.outside_faces = FaceFillStyle::none();
             style.voronoi_diagram = {"pink", 0.6};
             style.queue_edges = {"#20a83d", 1.0, 2.0};
-            style.candidate_edge = {"#ff9900", 1.0, 2.0};
+            style.candidate_edge = {"#ff9100", 1.0, 2.0};
             style.input_points = {"black", 1.0, 2.5};
             style.margin = 15;
-            style.draw_candidate_cc = true;
+            style.draw_queue_edges = false;
             return style;
         }
 
@@ -168,9 +168,7 @@ namespace aw2 {
     };
 
     enum export_context {
-        ITERATION_START,
-        ITERATION_R1,
-        ITERATION_R2,
+        ITERATION_RULE,
         ITERATION_CARVE,
         FINAL_RESULT
     };
@@ -188,12 +186,23 @@ namespace aw2 {
 
         // intermediate step states
         Segment_2 candidate_edge_;
-        Segment_2 r1_segment_;
-        Segment_2 r2_segment_;
+        Segment_2 rule_segment_;
         Point_2 steiner_point_;
 
     
     private:
+
+        // export flags
+        struct export_flags
+        {
+            bool candidate_gate = true;
+            bool rule_segment = false;
+            bool steiner_point = false;
+            bool wrap_edges = false;
+        };
+        
+
+        void export_svg_internal(const std::string& filename, const export_flags& flags);
         void draw_input_points(std::ofstream& os);
         void draw_voronoi_diagram(std::ofstream& os);
         std::pair<double, double> to_svg(const Point_2& p);

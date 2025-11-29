@@ -58,8 +58,30 @@ namespace aw2 {
         }
     }
 
+    void alpha_wrap_2_exporter::export_svg(const std::string& filename, export_context context) {
+        if (context == FINAL_RESULT) {
+            export_flags flags;
+            flags.candidate_gate = false;
+            flags.wrap_edges = false;
+            export_svg_internal(filename + ".svg", flags);
+            flags.wrap_edges = true;
+            export_svg_internal(filename + "_empty.svg", flags);
+        }
+        else if (context == ITERATION_RULE) {
+            export_flags flags;
+            export_svg_internal(filename + "_0.svg", flags);
+            flags.rule_segment = true;
+            export_svg_internal(filename + "_1.svg", flags);
+            flags.steiner_point = true;
+            export_svg_internal(filename + "_2.svg", flags);
+        }
+        else if (context == ITERATION_CARVE) {
+            export_flags flags;
+            export_svg_internal(filename + ".svg", flags);
+        }
+    }
 
-    void alpha_wrap_2_exporter::export_svg(const std::string& filename, export_context context)
+    void alpha_wrap_2_exporter::export_svg_internal(const std::string& filename, const export_flags& flags)
     {
 
         if (xmin_ > xmax_ || ymin_ > ymax_) {
@@ -92,23 +114,16 @@ namespace aw2 {
         << "\" fill=\"none\">\n";
         
         int face_index = 0;
+        auto inside_face_style = flags.wrap_edges ? FaceFillStyle::none() : style_.inside_faces;
         for (auto fit = dt_.finite_faces_begin(); fit != dt_.finite_faces_end(); ++fit, ++face_index) {
             auto sa = to_svg(fit->vertex(0)->point());
             auto sb = to_svg(fit->vertex(1)->point());
             auto sc = to_svg(fit->vertex(2)->point());
 
             bool is_inside = (fit->info() == INSIDE);
-            const FaceFillStyle& fill_style = is_inside ? style_.inside_faces : style_.outside_faces;
+            const FaceFillStyle& fill_style = is_inside ? inside_face_style : style_.outside_faces;
             
             draw_face(os, sa, sb, sc, fill_style, is_inside, face_index);
-        }
-        os << "  </g>\n";
-
-        // Draw vertices 
-        os << "  <g stroke=\"red\" stroke-width=\""<< stroke_width_ <<"\" fill=\"red\">\n";
-        for (auto vit = dt_.finite_vertices_begin(); vit != dt_.finite_vertices_end(); ++vit) {
-            auto sp = to_svg(vit->point());
-            draw_circle(os, sp, vertex_radius_);
         }
         os << "  </g>\n";
 
@@ -137,7 +152,7 @@ namespace aw2 {
 
         // Draw candidate edge
 
-        if (style_.draw_candidate_edge) {
+        if (flags.candidate_gate) {
             os << "  <g fill=\"none\">\n";
             auto sv1 = to_svg(candidate_edge_.source());
             auto sv2 = to_svg(candidate_edge_.target());
@@ -145,44 +160,48 @@ namespace aw2 {
                      stroke_width_ * style_.candidate_edge.relative_stroke_width);
             os << "  </g>\n";
 
-            if (context == ITERATION_R1) {
-                // Draw R1 segment
-                os << "  <g fill=\"none\">\n";
-                auto r1_sv1 = to_svg(r1_segment_.source());
-                auto r1_sv2 = to_svg(r1_segment_.target());
-                draw_line(os, r1_sv1, r1_sv2, "#ff00ff", stroke_width_ * 2);
-                os << "  </g>\n";
-
-                // Draw Steiner point
-                os << "  <g fill=\"none\">\n";
-                draw_circle(os, to_svg(steiner_point_), vertex_radius_ * 1.5);
-                os << "  </g>\n";
-            } else if (context == ITERATION_R2) {
-                // Draw R2 segment
-                os << "  <g fill=\"none\">\n";
-                auto r2_sv1 = to_svg(r2_segment_.source());
-                auto r2_sv2 = to_svg(r2_segment_.target());
-                draw_line(os, r2_sv1, r2_sv2, "#00ffff", stroke_width_ * 2);
-                os << "  </g>\n";
-
-                // Draw Steiner point
-                os << "  <g fill=\"none\">\n";
-                draw_circle(os, to_svg(steiner_point_), vertex_radius_ * 1.5);
-                os << "  </g>\n";
-            }
+           
         }
+
+         if (flags.rule_segment) {
+                // Draw R1 segment
+                os << "  <g fill=\"#d1df14\">\n";
+                auto r1_sv1 = to_svg(rule_segment_.source());
+                auto r1_sv2 = to_svg(rule_segment_.target());
+                draw_line(os, r1_sv1, r1_sv2, "#d1df14", stroke_width_ * 2);
+                draw_circle(os, r1_sv1, vertex_radius_);
+                draw_circle(os, r1_sv2, vertex_radius_);
+                os << "  </g>\n";
+         }
+
+         if (flags.steiner_point) {
+            // Draw Steiner point
+            os << "  <g stroke=\"red\" stroke-width=\"" << stroke_width_ << "\" fill=\"red\">\n";
+            auto sp_svg = to_svg(steiner_point_);
+            draw_circle(os, sp_svg, vertex_radius_);
+            os << "  </g>\n";
+         }
 
         // Draw extracted wrap edges with adaptive alpha coloring
 
-        os << "  <g fill=\"none\">\n";
-        auto wrap_edge_color = RGBColor("#e800fd").to_string();
-        for (const auto& seg : wrapper_.wrap_edges_) {
-            auto sa = to_svg(seg.source());
-            auto sb = to_svg(seg.target());
-            draw_line(os, sa, sb, wrap_edge_color, stroke_width_);
+        if (flags.wrap_edges) {
+            os << "  <g fill=\"none\">\n";
+            auto wrap_edge_color = RGBColor("#e800fd").to_string();
+            for (const auto& seg : wrapper_.wrap_edges_) {
+                auto sa = to_svg(seg.source());
+                auto sb = to_svg(seg.target());
+                draw_line(os, sa, sb, wrap_edge_color, stroke_width_);
+            }
+            os << "  </g>\n";
+        }
+
+        // Draw vertices 
+        os << "  <g stroke=\"red\" stroke-width=\""<< stroke_width_ <<"\" fill=\"red\">\n";
+        for (auto vit = dt_.finite_vertices_begin(); vit != dt_.finite_vertices_end(); ++vit) {
+            auto sp = to_svg(vit->point());
+            draw_circle(os, sp, vertex_radius_);
         }
         os << "  </g>\n";
-
 
         os << "</svg>\n";
         os.close();
