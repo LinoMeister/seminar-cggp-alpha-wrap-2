@@ -74,6 +74,9 @@ namespace aw2 {
     };
 
 
+    // Forward declaration
+    class alpha_wrap_2_exporter;
+
     class alpha_wrap_2 {
     public:
 
@@ -91,13 +94,14 @@ namespace aw2 {
 
         Traversability* traversability_;
 
-        int max_iterations_;
-
         FT bbox_diagonal_length_;
         Point_2 dt_bbox_min_;
         Point_2 dt_bbox_max_;
 
         std::vector<Segment_2> wrap_edges_;
+
+        // exporter
+        alpha_wrap_2_exporter* exporter_;
 
         // statistics tracking
         AlgorithmStatistics statistics_;
@@ -141,6 +145,10 @@ namespace aw2 {
         // utils
         Point_2 infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) const;
         void extract_wrap_surface();
+
+        int max_iterations_ = 0;
+        int iteration_ = 0;
+        bool export_step_;
     };
 }
 

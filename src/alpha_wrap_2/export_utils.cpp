@@ -9,6 +9,27 @@ namespace aw2 {
 
     alpha_wrap_2_exporter::alpha_wrap_2_exporter(
         const alpha_wrap_2& wrapper, 
+        const AlgorithmConfig& config)
+        : wrapper_(wrapper), oracle_(wrapper.oracle_), dt_(wrapper.dt_), 
+          candidate_gate_(wrapper.candidate_gate_), 
+          style_(config.style == "clean" ? StyleConfig::clean_style() :
+                 config.style == "outside_filled" ? StyleConfig::outside_filled_style() :
+                 StyleConfig::default_style()),
+          margin_(style_.margin), 
+          stroke_width_(style_.stroke_width), 
+          vertex_radius_(style_.vertex_radius),
+          inside_rng_(style_.inside_faces.random_seed),
+          outside_rng_(style_.outside_faces.random_seed)
+    {
+        // First, compute bounding box of finite vertices
+        xmin_ = wrapper_.dt_bbox_min_.x();
+        ymin_ = wrapper_.dt_bbox_min_.y();
+        xmax_ = wrapper_.dt_bbox_max_.x();
+        ymax_ = wrapper_.dt_bbox_max_.y();
+    }
+
+    alpha_wrap_2_exporter::alpha_wrap_2_exporter(
+        const alpha_wrap_2& wrapper, 
         const StyleConfig& style)
         : wrapper_(wrapper), oracle_(wrapper.oracle_), dt_(wrapper.dt_), 
           candidate_gate_(wrapper.candidate_gate_), margin_(style.margin), 
@@ -38,7 +59,7 @@ namespace aw2 {
     }
 
 
-    void alpha_wrap_2_exporter::export_svg(const std::string& filename)
+    void alpha_wrap_2_exporter::export_svg(const std::string& filename, export_context context)
     {
 
         if (xmin_ > xmax_ || ymin_ > ymax_) {
@@ -115,24 +136,40 @@ namespace aw2 {
         }
 
         // Draw candidate edge
-        if (style_.draw_candidate_edge && candidate_gate_.edge.first != Delaunay::Face_handle()) {
+
+        if (style_.draw_candidate_edge) {
             os << "  <g fill=\"none\">\n";
-            auto sv1 = to_svg(candidate_gate_.get_points().first);
-            auto sv2 = to_svg(candidate_gate_.get_points().second);
+            auto sv1 = to_svg(candidate_edge_.source());
+            auto sv2 = to_svg(candidate_edge_.target());
             draw_line(os, sv1, sv2, style_.candidate_edge.color, 
                      stroke_width_ * style_.candidate_edge.relative_stroke_width);
             os << "  </g>\n";
 
-            // Draw candidate circumcenter
-            if (style_.draw_candidate_cc) {
-                os << "  <g fill=\"" << style_.candidate_edge.color
-                << "\" opacity=\"" << style_.candidate_edge.opacity << "\">\n";
-                auto adj_info = wrapper_.gate_adjacency_info(candidate_gate_.edge);
-                draw_circle(os, to_svg(adj_info.cc_inside), vertex_radius_ * 1.5);
-                draw_circle(os, to_svg(adj_info.cc_outside), vertex_radius_ * 1.5);
+            if (context == ITERATION_R1) {
+                // Draw R1 segment
+                os << "  <g fill=\"none\">\n";
+                auto r1_sv1 = to_svg(r1_segment_.source());
+                auto r1_sv2 = to_svg(r1_segment_.target());
+                draw_line(os, r1_sv1, r1_sv2, "#ff00ff", stroke_width_ * 2);
+                os << "  </g>\n";
+
+                // Draw Steiner point
+                os << "  <g fill=\"none\">\n";
+                draw_circle(os, to_svg(steiner_point_), vertex_radius_ * 1.5);
+                os << "  </g>\n";
+            } else if (context == ITERATION_R2) {
+                // Draw R2 segment
+                os << "  <g fill=\"none\">\n";
+                auto r2_sv1 = to_svg(r2_segment_.source());
+                auto r2_sv2 = to_svg(r2_segment_.target());
+                draw_line(os, r2_sv1, r2_sv2, "#00ffff", stroke_width_ * 2);
+                os << "  </g>\n";
+
+                // Draw Steiner point
+                os << "  <g fill=\"none\">\n";
+                draw_circle(os, to_svg(steiner_point_), vertex_radius_ * 1.5);
                 os << "  </g>\n";
             }
-                
         }
 
         // Draw extracted wrap edges with adaptive alpha coloring

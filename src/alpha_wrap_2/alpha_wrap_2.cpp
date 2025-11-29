@@ -9,47 +9,44 @@ namespace aw2 {
 
     alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) 
         : oracle_(oracle), 
-          traversability_(nullptr) {}
+          traversability_(nullptr),
+          exporter_(nullptr) {}
 
     alpha_wrap_2::~alpha_wrap_2() {
         delete traversability_;
+        delete exporter_;
     }
 
     void alpha_wrap_2::run() {
 
         namespace fs = std::filesystem;
 
-        // Select style based on configuration
-        StyleConfig style;
-        if (config_.style == "clean") {
-            style = StyleConfig::clean_style();
-        } else if (config_.style == "outside_filled") {
-            style = StyleConfig::outside_filled_style();
-        } else {
-            style = StyleConfig::default_style();
+        if (!exporter_) {
+            throw std::runtime_error("Exporter not initialized. Call init() before run().");
         }
-        
-        alpha_wrap_2_exporter exporter(*this, style);
-        exporter.setup_export_dir(config_.output_directory);
         
         total_timer_->start();
         main_loop_timer_->start();
 
-        int iteration = 0;
         while (!queue_.empty()) {
             
-            if (++iteration > max_iterations_) {
+            if (++iteration_ > max_iterations_) {
                 std::cout << "Reached maximum number of iterations (" << max_iterations_ << "). Stopping." << std::endl;
                 break;
             }
-            std::cout << "\nIteration: " << iteration << " Queue size: " << queue_.size() << std::endl;
+            std::cout << "\nIteration: " << iteration_ << " Queue size: " << queue_.size() << std::endl;
 
             // ** Get candidate gate **
             candidate_gate_ = queue_.top();
             queue_.pop();
-
-            if ((iteration % config_.intermediate_steps) == 0 && (iteration < config_.export_step_limit)) {
-                exporter.export_svg("in_progress_iter_" + std::to_string(iteration) + ".svg");
+            
+            export_step_ = ((iteration_ % config_.intermediate_steps) == 0 && (iteration_ < config_.export_step_limit));
+            if (export_step_) {
+                exporter_->candidate_edge_ = Segment_2(
+                    candidate_gate_.get_points().first,
+                    candidate_gate_.get_points().second
+                );
+                exporter_->export_svg(std::to_string(iteration_) + "_start.svg", ITERATION_START);
             }
 
             // ** Get candidate gate info **
@@ -79,6 +76,9 @@ namespace aw2 {
             // ** Carve face **
             std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
             c_in->info() = OUTSIDE;
+            if (export_step_) {
+                exporter_->export_svg(std::to_string(iteration_) + "_end.svg", ITERATION_CARVE);
+            }
             update_queue(c_in);
         }
 
@@ -92,10 +92,10 @@ namespace aw2 {
         total_timer_->pause();
         
         // Export result and collect statistics
-        exporter.style_.draw_candidate_edge = false;
-        exporter.export_svg("final_result.svg");
+        exporter_->style_.draw_candidate_edge = false;
+        exporter_->export_svg("final_result.svg");
 
-        statistics_.execution_stats.n_iterations = iteration;
+        statistics_.execution_stats.n_iterations = iteration_;
         statistics_.timings.total_time = total_timer_->elapsed_ms();
         statistics_.timings.gate_processing = gate_processing_timer_->elapsed_ms();
         statistics_.timings.rule_1_processing = rule1_timer_->elapsed_ms();
@@ -112,13 +112,13 @@ namespace aw2 {
         statistics_.metadata.timestamp = timestamp_oss.str();
         
         // Export statistics to JSON
-        std::string stats_filepath = exporter.export_dir_.string() + "/statistics.json";
+        std::string stats_filepath = exporter_->export_dir_.string() + "/statistics.json";
         statistics_.export_to_json(stats_filepath);
         std::cout << "\nStatistics exported to: " << stats_filepath << std::endl;
         
         // Print hierarchical timing report
         registry_.print_all_hierarchies();
-        std::cout << "Total iterations: " << iteration << std::endl;
+        std::cout << "Total iterations: " << iteration_ << std::endl;
     }
 
 
@@ -148,6 +148,7 @@ namespace aw2 {
         alpha_ = config.alpha * bbox_diagonal_length_;
         offset_ = config.offset * bbox_diagonal_length_;
         max_iterations_ = config.max_iterations;
+        iteration_ = 0;
         config_ = config;
 
         // Populate config stats
@@ -219,6 +220,10 @@ namespace aw2 {
             // add gate to queue
             add_gate_to_queue(*eit);
         }
+
+        // Initialize exporter after configuration is applied
+        exporter_ = new alpha_wrap_2_exporter(*this, config_);
+        exporter_->setup_export_dir(config_.output_directory);
 
         init_timer_->pause();
         total_timer_->pause();
@@ -344,6 +349,11 @@ namespace aw2 {
         );
         if (insert) {
             rule1_timer_->pause();
+            if (export_step_) {
+                exporter_->r1_segment_ = Segment_2(c_out_cc, c_in_cc);
+                exporter_->steiner_point_ = steiner_point;
+                exporter_->export_svg(std::to_string(iteration_) + "_end.svg", ITERATION_R1);
+            }
             insert_steiner_point(steiner_point);
             return true;
         }
@@ -369,6 +379,11 @@ namespace aw2 {
             );
             if (insert) {
                 rule2_timer_->pause();
+                if (export_step_) {
+                    exporter_->r2_segment_ = Segment_2(c_in_cc, p_input);
+                    exporter_->steiner_point_ = steiner_point;
+                    exporter_->export_svg(std::to_string(iteration_) + "_end.svg", ITERATION_R2);
+                }
                 insert_steiner_point(steiner_point);
                 return true;
             }

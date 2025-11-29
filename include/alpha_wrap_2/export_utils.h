@@ -19,6 +19,7 @@ namespace aw2 {
     // Forward declaration
     class alpha_wrap_2;
     struct Gate;
+    struct AlgorithmConfig;
 
     // Forward declarations
     struct RGBColor;
@@ -103,7 +104,7 @@ namespace aw2 {
             style.candidate_edge = {"#ff9900", 1.0, 2.0};
             style.input_points = {"black", 1.0, 2.5};
             style.margin = 15;
-            style.draw_candidate_cc = false;
+            style.draw_candidate_cc = true;
             return style;
         }
 
@@ -166,16 +167,31 @@ namespace aw2 {
         void set_colors(const RGBColor& min_color, const RGBColor& max_color);
     };
 
+    enum export_context {
+        ITERATION_START,
+        ITERATION_R1,
+        ITERATION_R2,
+        ITERATION_CARVE,
+        FINAL_RESULT
+    };
 
     class alpha_wrap_2_exporter {
     public:
+        alpha_wrap_2_exporter(const alpha_wrap_2& wrapper, const AlgorithmConfig& config);
         alpha_wrap_2_exporter(const alpha_wrap_2& wrapper, const StyleConfig& style = StyleConfig{});
 
-        void export_svg(const std::string& filename);
+        void export_svg(const std::string& filename, export_context context = FINAL_RESULT);
         void setup_export_dir(const std::string& base_path);
         
         fs::path export_dir_;
         StyleConfig style_;
+
+        // intermediate step states
+        Segment_2 candidate_edge_;
+        Segment_2 r1_segment_;
+        Segment_2 r2_segment_;
+        Point_2 steiner_point_;
+
     
     private:
         void draw_input_points(std::ofstream& os);
