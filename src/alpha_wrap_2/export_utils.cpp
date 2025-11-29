@@ -164,11 +164,11 @@ namespace aw2 {
         }
 
          if (flags.rule_segment) {
-                // Draw R1 segment
+                // Draw R1 segment with dotted line
                 os << "  <g fill=\"#d1df14\">\n";
                 auto r1_sv1 = to_svg(rule_segment_.source());
                 auto r1_sv2 = to_svg(rule_segment_.target());
-                draw_line(os, r1_sv1, r1_sv2, "#d1df14", stroke_width_ * 2);
+                draw_line(os, r1_sv1, r1_sv2, "#d1df14", stroke_width_ * 2, "5,5");
                 draw_circle(os, r1_sv1, vertex_radius_);
                 draw_circle(os, r1_sv2, vertex_radius_);
                 os << "  </g>\n";
@@ -249,10 +249,14 @@ namespace aw2 {
 
     void alpha_wrap_2_exporter::draw_line(std::ofstream& os, const std::pair<double, double>& p1, 
                                          const std::pair<double, double>& p2, const std::string& color,
-                                         double stroke_width) {
+                                         double stroke_width, const std::string& dash_array) {
         os << "    <line x1=\"" << p1.first << "\" y1=\"" << p1.second
            << "\" x2=\"" << p2.first << "\" y2=\"" << p2.second 
-           << "\" stroke=\"" << color << "\" stroke-width=\"" << stroke_width << "\" />\n";
+           << "\" stroke=\"" << color << "\" stroke-width=\"" << stroke_width << "\""; 
+        if (!dash_array.empty()) {
+            os << " stroke-dasharray=\"" << dash_array << "\"";
+        }
+        os << " />\n";
     }
 
     void alpha_wrap_2_exporter::draw_polygon(std::ofstream& os, const std::pair<double, double>& p1,

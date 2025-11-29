@@ -210,7 +210,7 @@ namespace aw2 {
         // SVG helper methods
         void draw_line(std::ofstream& os, const std::pair<double, double>& p1, 
                       const std::pair<double, double>& p2, const std::string& color,
-                      double stroke_width);
+                      double stroke_width, const std::string& dash_array = "");
         void draw_polygon(std::ofstream& os, const std::pair<double, double>& p1,
                          const std::pair<double, double>& p2, const std::pair<double, double>& p3,
                          const std::string& fill, const std::string& stroke,
