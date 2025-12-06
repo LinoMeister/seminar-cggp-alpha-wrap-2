@@ -101,7 +101,7 @@ namespace aw2 {
             style.outside_faces = FaceFillStyle::none();
             style.voronoi_diagram = {"pink", 0.6};
             style.queue_edges = {"#20a83d", 1.0, 2.0};
-            style.candidate_edge = {"#ff9100", 1.0, 2.0};
+            style.candidate_edge = {"#ff9100", 1.0, 4.0};
             style.input_points = {"black", 1.0, 2.5};
             style.margin = 15;
             style.draw_queue_edges = false;
