@@ -10,4 +10,5 @@
 .github
 build*/
 data
-external
+_deps/
+CMakeUserPresets.json

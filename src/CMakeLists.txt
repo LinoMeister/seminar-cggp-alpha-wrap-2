@@ -13,7 +13,6 @@ add_library(alpha_wrap2 STATIC ${AW2_SOURCES})
 target_include_directories(alpha_wrap2
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external>
     $<INSTALL_INTERFACE:include>
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/alpha_wrap_2
@@ -21,10 +20,19 @@ target_include_directories(alpha_wrap2
 
 target_compile_features(alpha_wrap2 PUBLIC cxx_std_17)
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(CGAL REQUIRED)
+message(STATUS "Using CGAL version: ${CGAL_VERSION}")
 
-target_link_libraries(alpha_wrap2 PRIVATE Eigen3::Eigen CGAL::CGAL)
+# Fetch nlohmann/json if not already available
+include(FetchContent)
+FetchContent_Declare(
+  json
+  URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(json)
+
+target_link_libraries(alpha_wrap2 PUBLIC CGAL::CGAL nlohmann_json::nlohmann_json)
 
 # Apply preprocessor definitions based on options
 if(USE_STACK_QUEUE)
