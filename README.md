@@ -48,4 +48,4 @@ The project includes several CMake presets for different algorithm variants:
 - `--output_use_subdir`: Create timestamped subdirectory for outputs
 - `--alpha`: Alpha parameter controlling traversability
 - `--offset`: Offset distance from input points
-- `--traversability`: Traversability method (`CONSTANT_ALPHA`, `ADAPTIVE_ALPHA`, or `DISTANCE_SAMPLING`)
+- `--traversability`: Traversability method (`CONSTANT_ALPHA`, `DEVIATION_BASED`, or `INTERSECTION_BASED`)
