@@ -56,7 +56,7 @@ The project includes several CMake presets for different algorithm variants:
 
 #### Core Algorithm Parameters
 
->[!INFO] 
+>[!IMPORTANT] 
 >The alpha and offset parameters are specified relative to a reference length (diagonal length of input bounding box). Hence the actual values used in the algorithm are `alpha*bbox_diagonal_length` and `offset*bbox_diagonal_length`.
 
 - `--alpha <value>`
