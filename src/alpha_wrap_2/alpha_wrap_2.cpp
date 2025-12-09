@@ -106,12 +106,7 @@ namespace aw2 {
         statistics_.output_stats.n_vertices = dt_.number_of_vertices();
         statistics_.output_stats.n_edges = wrap_edges_.size();
         
-        // Get current timestamp
-        auto now = std::chrono::system_clock::now();
-        auto time_t_now = std::chrono::system_clock::to_time_t(now);
-        std::ostringstream timestamp_oss;
-        timestamp_oss << std::put_time(std::localtime(&time_t_now), "%Y-%m-%d %H:%M:%S");
-        statistics_.metadata.timestamp = timestamp_oss.str();
+        statistics_.execution_stats.n_input_points = oracle_.tree_.size();
         
         // Export statistics to JSON
         std::string stats_filepath = exporter_->export_dir_.string() + "/statistics.json";

@@ -21,8 +21,9 @@ struct ExecutionStats {
     int n_iterations = 0;
     int n_rule_1 = 0;
     int n_rule_2 = 0;
+    int n_input_points = 0;
     
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ExecutionStats, n_iterations, n_rule_1, n_rule_2)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ExecutionStats, n_iterations, n_rule_1, n_rule_2, n_input_points)
 };
 
 struct OutputStats {
@@ -42,25 +43,16 @@ struct ConfigStats {
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ConfigStats, input_file, alpha, offset, traversability_function, traversability_params)
 };
 
-struct MetadataStats {
-    bool is_test = true; // set to false for 'real' experiments
-    std::string timestamp;
-    std::string version = "1.0";
-    
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(MetadataStats, is_test, timestamp, version)
-};
-
 struct AlgorithmStatistics {
     ConfigStats config;
     OutputStats output_stats;
     ExecutionStats execution_stats;
     TimingStats timings;
-    MetadataStats metadata;
 
     // Export to JSON file
     void export_to_json(const std::string& filepath) const;
     
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(AlgorithmStatistics, config, output_stats, execution_stats, timings, metadata)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(AlgorithmStatistics, config, output_stats, execution_stats, timings)
 };
 
 } // namespace aw2
