@@ -108,10 +108,16 @@ int main(int argc, char *argv[])
           config.traversability_params = aw2::ConstantAlphaParams{};
       } else if (traversability_arg == "DEVIATION_BASED") {
           traversability_method = aw2::DEVIATION_BASED;
-          config.traversability_params = aw2::DeviationBasedParams{};
+          config.traversability_params = aw2::DeviationBasedParams{
+            0.5,  // alpha_max
+            5,    // point_threshold
+            0.5  // deviation_factor
+          };
       } else if (traversability_arg == "INTERSECTION_BASED") {
           traversability_method = aw2::INTERSECTION_BASED;
-          config.traversability_params = aw2::IntersectionBasedParams{};
+          config.traversability_params = aw2::IntersectionBasedParams{
+            0.005  // tolerance_factor
+          };
       } else {
           std::cerr << "Unknown traversability method: " << traversability_arg << std::endl;
           return 1;
