@@ -50,16 +50,16 @@ namespace aw2 {
     struct DeviationBasedParams {
 
         // The adaptive alpha is interpolated between alpha_ and alpha_max_ based on deviation
-        FT alpha_max = 200.0;
+        FT alpha_max = 1.0;
 
         // Minimum number of points required to compute deviation
         // if fewer points are found, deviation is set to 1.0
         int point_threshold = 5;
 
-        // Factor used to scale deviation to [0,1]. Higher values increase sensitivity,
-        // meaning a gate is more likely to be considered traversable.
+        // Factor used to scale deviation to [0,1]. Higher values increase sensitivity, meaning deviation reaches 1.0 more quickly
+        // and hence we end up with lower adaptive alpha values. => more gates are traversable.
         // This also implicitly defines the maximum deviation after which deviation is clamped to 1.0
-        FT deviation_factor = 0.05;
+        FT deviation_factor = 0.01;
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(DeviationBasedParams, alpha_max, point_threshold, deviation_factor)
     };
@@ -114,9 +114,9 @@ namespace aw2 {
 
     class DeviationBasedTraversability : public Traversability {
     public:
-        DeviationBasedTraversability(FT alpha, FT offset, const Oracle& oracle, DeviationBasedParams params) 
+        DeviationBasedTraversability(FT alpha, FT offset, FT bbox_diagonal_length, const Oracle& oracle, DeviationBasedParams params) 
             : alpha_(alpha), offset_(offset), oracle_(oracle),
-              alpha_max_(params.alpha_max), point_threshold_(params.point_threshold), 
+              alpha_max_(params.alpha_max * bbox_diagonal_length), point_threshold_(params.point_threshold), 
               deviation_factor_(params.deviation_factor) {}
 
         virtual bool operator()(Gate& g) override;

@@ -38,7 +38,7 @@ namespace aw2 {
         }
 
         avg_sq_deviation /= n;
-        auto dev = deviation_factor_ * (avg_sq_deviation - std::pow(offset_, 2));
+        auto dev = deviation_factor_ * std::abs((avg_sq_deviation - std::pow(offset_, 2)));
         dev = std::clamp(dev, 0.0, 1.0);
 
         return dev;
@@ -64,7 +64,7 @@ namespace aw2 {
             }
         }
 
-        return std::clamp(max_dev, 0.0, 1.0);
+        return max_dev;
     }
 
     bool IntersectionBasedTraversability::operator()(Gate& g) {

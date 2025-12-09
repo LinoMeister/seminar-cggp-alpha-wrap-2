@@ -163,6 +163,7 @@ namespace aw2 {
                 traversability_ = new DeviationBasedTraversability(
                     alpha_, 
                     offset_, 
+                    bbox_diagonal_length_,
                     oracle_,
                     std::get<DeviationBasedParams>(config.traversability_params)
                 );
