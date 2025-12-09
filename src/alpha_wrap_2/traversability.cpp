@@ -23,7 +23,7 @@ namespace aw2 {
     }
 
     FT DeviationBasedTraversability::subsegment_deviation(const Segment_2& seg) const {
-        auto local_pts = oracle_.local_points(seg, offset_ + 4);
+        auto local_pts = oracle_.local_points(seg, 1.1*offset_);
         int n = local_pts.size();
 
         // not enough points to compute a meaningful adaptive alpha
