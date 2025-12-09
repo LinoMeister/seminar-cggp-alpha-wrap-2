@@ -2,14 +2,22 @@
 
 An implementation of 2D Alpha Wrapping with an offset for point cloud data.
 
-## Dependencies
+## Documentation
+
+A more detailed documentation about this project is available in `/doc`
+- [Project Overview](doc/project.md): Provides an overview of the project.
+- [Code](doc/code.md): Describes the involved code components.
+- [Experiments](doc/experiments.md): Documents the experiments that were conducted as part of the project.
+
+
+## Building
+
+### Dependencies
 
 - **C++17** compatible compiler
 - **CMake** 3.16 or higher
 - **CGAL** (I only tested it with version 5.6)
 - **nlohmann/json** (automatically fetched via CMake FetchContent)
-
-## Building
 
 ### Quick Start
 
