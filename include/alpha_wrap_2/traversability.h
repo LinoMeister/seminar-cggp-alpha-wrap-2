@@ -48,15 +48,27 @@ namespace aw2 {
     }
 
     struct DeviationBasedParams {
+
+        // The adaptive alpha is interpolated between alpha_ and alpha_max_ based on deviation
         FT alpha_max = 200.0;
+
+        // Minimum number of points required to compute deviation
+        // if fewer points are found, deviation is set to 1.0
         int point_threshold = 5;
+
+        // Factor used to scale deviation to [0,1]. Higher values increase sensitivity,
+        // meaning a gate is more likely to be considered traversable.
+        // This also implicitly defines the maximum deviation after which deviation is clamped to 1.0
         FT deviation_factor = 0.05;
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(DeviationBasedParams, alpha_max, point_threshold, deviation_factor)
     };
 
     struct IntersectionBasedParams {
-        FT tolerance_factor = 0.005;  // Multiplied by bbox diagonal length to get tolerance
+        
+        // Multiplied by bbox diagonal length to get tolerance
+        // A smaller tolerance means stricter traversability checks and potentially fewer traversable gates
+        FT tolerance_factor = 0.005;  
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(IntersectionBasedParams, tolerance_factor)
     };
