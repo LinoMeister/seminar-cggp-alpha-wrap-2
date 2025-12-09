@@ -24,9 +24,8 @@ cmake --build build
 The project includes several CMake presets for different algorithm variants:
 
 - `default`: Standard algorithm with priority queue
-- `modified-algo`: Enables modified alpha traversability computation
+- `alternative-trav`: Enables modified alpha traversability computation
 - `stack-queue`: Uses stack instead of priority queue
-- `all-modifications`: Enables all modifications
 
 
 ## Usage
