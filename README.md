@@ -29,11 +29,20 @@ cmake --build build
 
 ### Build Configurations
 
-The project includes several CMake presets for different algorithm variants:
+The project includes several CMake presets for different algorithm variants. 
 
-- `default`: Standard algorithm with priority queue
-- `alternative-trav`: Enables modified alpha traversability computation
-- `stack-queue`: Uses stack instead of priority queue
+#### `default`: Standard algorithm with priority queue
+
+This is the default configuration of the algorithm. 
+
+#### `alternative-trav`: Enables modified alpha traversability computation
+
+This configuration was used for a small experiment, using a slightly modified traversability criteria. See the 'alternative traversability' section in the [report](doc/experiments.md). Please note that this is different from the *adaptive* traversability methods.
+
+
+#### `stack-queue`: Uses stack instead of priority queue
+
+In the paper, the alpha wrapping algorithm is described using a priority queue (sorted by minimum Delaunay ball radius of the gates). The implementation in [CGAL](https://github.com/CGAL/cgal/blob/cb6407e04270becf748a363a2062416f9e5e8513/Alpha_wrap_3/include/CGAL/Alpha_wrap_3/internal/Alpha_wrap_3.h#L147) also has an option to use a stack instead, which is claimed to be faster in practice. For all my experiments I used the priority queue, but I also added an option for using a stack instead.
 
 
 ## Usage
