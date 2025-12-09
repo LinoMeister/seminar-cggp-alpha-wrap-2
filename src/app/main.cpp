@@ -64,11 +64,19 @@ int main(int argc, char *argv[])
   {
     filename = input_arg;
   }
+  else {
+    std::cerr << "Error: No input file specified. Use --input <file> to specify the input point set." << std::endl;
+    return 1;
+  }
 
   std::string output_arg = get_cmd_option(argv, argv + argc, "--output");
   if (!output_arg.empty())
   {
     config.output_directory = output_arg;
+  }
+  else {
+    std::cerr << "Error: No output directory specified. Use --output <directory> to specify the output path." << std::endl;
+    return 1;
   }
 
   std::string output_use_subdir_arg = get_cmd_option(argv, argv + argc, "--output_use_subdir");
