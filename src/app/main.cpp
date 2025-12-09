@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
           config.traversability_params = aw2::DeviationBasedParams{
             0.5,  // alpha_max
             5,    // point_threshold
-            0.5  // deviation_factor
+            0.02  // deviation_factor
           };
       } else if (traversability_arg == "INTERSECTION_BASED") {
           traversability_method = aw2::INTERSECTION_BASED;
