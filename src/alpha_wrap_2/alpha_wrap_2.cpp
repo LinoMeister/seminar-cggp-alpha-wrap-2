@@ -99,6 +99,7 @@ namespace aw2 {
 
         statistics_.execution_stats.n_iterations = iteration_;
         statistics_.timings.total_time = total_timer_->elapsed_ms();
+        statistics_.timings.main_loop = main_loop_timer_->elapsed_ms();
         statistics_.timings.gate_processing = gate_processing_timer_->elapsed_ms();
         statistics_.timings.rule_1_processing = rule1_timer_->elapsed_ms();
         statistics_.timings.rule_2_processing = rule2_timer_->elapsed_ms();
@@ -308,10 +309,12 @@ namespace aw2 {
     }
 
     void alpha_wrap_2::update_queue(const Delaunay::Face_handle& fh){
+        gate_processing_timer_->start();
         for(int i = 0; i < 3; ++i) {
             Delaunay::Edge e(fh, i);
             add_gate_to_queue(e);
         }
+        gate_processing_timer_->pause();
     }
 
     Point_2 alpha_wrap_2::infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) const {

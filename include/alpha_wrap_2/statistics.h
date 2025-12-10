@@ -10,11 +10,12 @@ namespace aw2 {
 
 struct TimingStats {
     double total_time = 0.0;
+    double main_loop = 0.0;
     double gate_processing = 0.0;
     double rule_1_processing = 0.0;
     double rule_2_processing = 0.0;
     
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(TimingStats, total_time, gate_processing, rule_1_processing, rule_2_processing)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(TimingStats, total_time, main_loop, gate_processing, rule_1_processing, rule_2_processing)
 };
 
 struct ExecutionStats {
