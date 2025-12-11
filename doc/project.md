@@ -17,7 +17,7 @@ A *gate* is a facet of the triangulation where one adjacent cell is marked *insi
 
 The alpha wrapping algorithm described in the paper uses a global $\alpha$ parameter to control the granularity of the reconstructed surface. Using a large $\alpha$ results in some input details not being captured well, whereas choosing it small will often lead to the unnecessary insertion of vertices in flat regions. 
 
-IMAGE
+![Global Alpha Problem](images/global_alpha_problem.png)
 
 As part of the project I experimented with adaptive traversability criteria that determine the traversability of a gate based on the local input geometry. Two different approaches are implemented in this repository: 
 
