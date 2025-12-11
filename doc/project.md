@@ -1,8 +1,10 @@
+# Project
+
 ## Alpha Wrapping with an Offset
 
 Alpha wrapping with an offset is an algorithm presented in a [paper](https://inria.hal.science/hal-03688637) form 2022, authored by Portaneri et al. Alongside the paper, an implementation of the algorithm was made available through [CGAL](https://doc.cgal.org/latest/Alpha_wrap_3/index.html).
 
->[!NOTE] 
+>[!NOTE]
 >**Abstract**: Given an input 3D geometry such as a triangle soup or a point set, we address the problem of generating a watertight and orientable surface triangle mesh that strictly encloses the input. The output mesh is obtained by greedily refining and carving a 3D Delaunay triangulation on an offset surface of the input, while carving with empty balls of radius alpha. The proposed algorithm is controlled via two user-defined parameters: alpha and offset. Alpha controls the size of cavities or holes that cannot be traversed during carving, while offset controls the distance between the vertices of the output mesh and the input. Our algorithm is guaranteed to terminate and to yield a valid and strictly enclosing mesh, even for defect-laden inputs. Genericity is achieved using an abstract interface probing the input, enabling any geometry to be used, provided a few basic geometric queries can be answered. We benchmark the algorithm on large public datasets such as Thingi10k, and compare it to state-of-the-art approaches in terms of robustness, approximation, output complexity, speed, and peak memory consumption. Our implementation is available through the CGAL library.
 
 ## Project Overview
@@ -24,7 +26,6 @@ As part of the project I experimented with adaptive traversability criteria that
 
 >[!NOTE] 
 >Below is a brief textual description of these methods, also see p.31-34 in the slides of the supplementary material for a visual explanation.
-
 #### Deviation-Based Traversability
 
 To determine if a gate $f$ is traversable, the following procedure is followed:
@@ -37,12 +38,17 @@ $$
 $$
 
 From the measured deviation $\delta$ we then need to obtain a value for $\alpha$. In my implementation this was achieved by constructing a normalized deviation $\tilde{\delta}\in[0,1]$.
+$$
+\tilde{\delta}= \text{clamp}(\mu \cdot \lvert \delta - \epsilon^2 \rvert,0 ,1)
+$$
+- If the gate approximates the offset surface well, we expect the deviation to be close to $\epsilon^2$
+- We use a parameter $\mu$ (in code this is referred to as `deviation_factor`) to control the sensitivity of the deviation. Larger values mean a normalized deviation of $1$ is reached more quickly.
 
 From this normalized deviation value, $\alpha$ is obtained as:
 $$
 \alpha = (1-\tilde{\delta})\alpha_{\text{max}} + \tilde{\delta} \alpha_{\text{min}}
 $$
-where $\alpha_{\text{min}}$ is set equal to the value specified by the user through  `--alpha` and $\alpha_{\text{max}}$ is a fixed value specified in the traversabiliy parameters (In my experiments it was simply set to  `200`, but it could instead also be tied to some reference length (e..g, bounding box diagonal length) ). 
+where $\alpha_{\text{min}}$ is set equal to the value specified by the user through  `--alpha` and $\alpha_{\text{max}}$ is a fixed value specified in the traversability parameters (In my experiments it was simply set to  `200`, but it could instead also be tied to some reference length (e..g, bounding box diagonal length) ). 
 
 ##### Subsegment Improvement
 
