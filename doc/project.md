@@ -29,7 +29,7 @@ As part of the project I experimented with adaptive traversability criteria that
 #### Deviation-Based Traversability
 
 To determine if a gate $f$ is traversable, the following procedure is followed:
-- Construct an axis-aligned bounding box around the $f$
+- Construct an axis-aligned bounding box around $f$
 - Find all the input points $p_{i}$ that are located within this bounding box
 - Measure the mean-squared distance from these points to $f$
 
@@ -48,7 +48,7 @@ From this normalized deviation value, $\alpha$ is obtained as:
 $$
 \alpha = (1-\tilde{\delta})\alpha_{\text{max}} + \tilde{\delta} \alpha_{\text{min}}
 $$
-where $\alpha_{\text{min}}$ is set equal to the value specified by the user through  `--alpha` and $\alpha_{\text{max}}$ is a fixed value specified in the traversability parameters (In my experiments it was simply set to  `200`, but it could instead also be tied to some reference length (e..g, bounding box diagonal length) ). 
+where $\alpha_{\text{min}}$ is set equal to the value specified by the user through  `--alpha` and $\alpha_{\text{max}}$ is a fixed value specified in the traversability parameters.
 
 ##### Subsegment Improvement
 
@@ -58,7 +58,17 @@ $$
 $$
 In 'cave-like' areas we are thus more likely to end up with a subsegment whose bounding box only contains very few or no input points. For such segments we artificially assign a large deviation ($\tilde{\delta}=1$), which will consequently lead to a large deviation for $f$, making the gate more likely to be traversable.
 
+Even with this improvement several issues still persist:
+- The bounding boxes might still not always capture the local input geometry well.
+- An average squared deviation of $\epsilon^2$ does not necessarily mean that the offset surface is approximated well
+- Finding good parameters for mapping $\tilde{\delta}$ to $\alpha$ can be challenging
+
+There are certainly ways to further improve this method. However, to me it seemed more promising to consider a second appraoch that aims at avoiding many of the aforementioned problems.
+
 #### Intersection-Based Traversability
 
-To determine if a gate $f$ is traversable, it is sampled at points $q_{i}$. In my implementation the points are samples equidistantly such that the distance between the points is $\approx L_{\text{target}}$. Then we consider the line segments $(q_{i}, q_{i} + \lambda n)$ where $n$ is the normal vector of $f$ and $\lambda$ is a user-defined global parameter. For each such segment we check if it intersects with the offset surface. If at any point there is no intersection (i.e., the distance between the point and the offset surface is $>\lambda$), we mark the gate as traversable.
+To determine if a gate $f$ is traversable, it is sampled at points $q_{i}$. In my implementation the points are sampled equidistantly such that the distance between the points is $\approx L_{\text{target}}$. Then we consider the line segments $(q_{i}, q_{i} + \lambda n)$ where $n$ is the normal vector ([^1]) of $f$ and $\lambda$ is a user-defined global parameter. For each such segment we check if it intersects with the offset surface. If at any point there is no intersection (i.e., the distance between the point and the offset surface is $>\lambda$), we mark the gate as traversable.
 
+With this approach we skip the step of constructing a value for 
+
+[^1]: A point $q_{i}$ can be within or outside of the offset-surface. In the first case, the normal is chosen as pointing towards the outside-cell of the gate. In the second case it is chosen as pointing towards the inside-cell of the gate.
