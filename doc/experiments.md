@@ -10,9 +10,33 @@ In the vanilla algorithm a gate is traversable if the radius of its minimum Dela
 
 The minimum Delaunay circle corresponds to one of the following 3 cases:
 
-1. It is the smallest sphere through the gate vertices
-2. It is the circumcircle of the *inside* cell
-3. It is the circumcircle of the *outside* cell
+1. It is the smallest sphere through the gate vertices (left image)
+2. It is the circumcircle of the *inside* cell (middle image)
+3. It is the circumcircle of the *outside* cell (right image)
+
+<table>
+  <tr>
+    <td><img src="images/min-delaunay-ball/scenario_1.png"  height="400"></td>
+    <td><img src="images/min-delaunay-ball/scenario_2.png"  height="400"></td>
+    <td><img src="images/min-delaunay-ball/scenario_3.png"  height="400"></td>
+  </tr>
+</table>
+
+
+>[!NOTE]
+>Shown in the images is a *gate* (orange) with an adjacent *inside* cell (blue) and an adjacent *outside* cell (white). Displayed in gray are the circrumcircles of these cells. The red circle indicates the minimum Delaunay circle. (The red dot has no meaning, it was just used as a handle in geogebra...)
+
+Suppose we have a spherical spoon with radius $\alpha$, then we want to start from the outside cell and carve out the inside cell by passing through the gate. If the minimum Delaunay circle has radius larger than $\alpha$, for the first two cases, this task can be achieved. The third case is different though, as a gate might be marked traversable despite the spoon not being able fully carve out the inside cell starting from the outside. Such a situation is displayed below.
+
+<div align="center">
+  <img src="images/min-delaunay-ball/traversable.png" width="600">
+</div>
+
+Due to this observation, I decided to briefly explore a modified version of the algorithm, where in the third case, $\alpha$ is not compared to the radius of the minimum Delaunay circle, but just the minimum circle through the gate. Meaning that if case 3 occurs, the gate is only deemed traversable, if the entire $\alpha$-spoon can fit through the gate. This modified version is available through a different build configuration. There is a cmake preset `alternative-trav` available to build the algorithm with this modification.
+
+For example running the algorithm on 'example 6' with `--alpha 0.01` and `--offset 0.01` takes `1180` iterations with the original algorithm and takes only `1175` iterations when using the modified version. There is no easily recognizable change in the produced output. It is to be expected that the modified version takes fewer iterations as we strengthen the condition for traversability, i.e., consider fewer gates for processing. The cases where the modification has an influence on traversability seem to be rare enough for it not to make a noticeable difference.
+
+This topic could be explored further, e.g., using a wider range of inputs or implementing it into the 3D algorithm. Yet from this first look it seems to have a tiny impact on how the algorithm behaves.
 
 ## Adaptive Traversability
 
