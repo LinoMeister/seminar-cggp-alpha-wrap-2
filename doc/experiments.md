@@ -43,6 +43,18 @@ The 3 methods (global alpha, deviation-based and intersection-based) were compar
 #### $\alpha=0.05$ and $\epsilon=0.01$
 #### $\alpha=0.05$ and $\epsilon=0.05$
 
+### Runtime
+
+<table>
+  <tr>
+    <td><img src="images/comparison_a_0.01_o_0.01/runtime_breakdown_stacked.png" width="500"></td>
+    <td><img src="images/comparison_a_0.01_o_0.05/runtime_breakdown_stacked.png"  width="500"></td>
+  </tr>
+  <tr>
+    <td><img src="images/comparison_a_0.05_o_0.01/runtime_breakdown_stacked.png"  width="500"></td>
+    <td><img src="images/comparison_a_0.05_o_0.05/runtime_breakdown_stacked.png"  width="500"></td>
+  </tr>
+</table>
 
 ### Discussion
 
