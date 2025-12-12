@@ -39,20 +39,35 @@ The remaining parameters cannot be specified through the command line tool. Thes
 The 3 methods (global alpha, deviation-based and intersection-based) were compared on a small dataset of just 8 example inputs. The comparison below shows the obtained output using different parameters on just one of the example inputs. The full experimental data for all 8 examples is available in the supplementary material.
 
 #### $\alpha=0.01$ and $\epsilon=0.01$
+
+![](images/comparison_a_0.01_o_0.01/example_6.png)
+
 #### $\alpha=0.01$ and $\epsilon=0.05$
+
+![](images/comparison_a_0.01_o_0.05/example_6.png)
+
 #### $\alpha=0.05$ and $\epsilon=0.01$
+
+![](images/comparison_a_0.05_o_0.01/example_6.png)
+
 #### $\alpha=0.05$ and $\epsilon=0.05$
+
+![](images/comparison_a_0.05_o_0.05/example_6.png)
 
 ### Runtime
 
+Below is a runtime comparison of for the four different configurations. In these plots the runtime for all 8 examples are shown. For each example it is shown how time was distributed for each individual task of the algorithm, where:
+- 'Rule1' and 'Rule2' refer to the time spent on checking if one of the rules apply or not
+- 'Gate processing' refers to the time spent checking gates for traversability
+
 <table>
   <tr>
-    <td><img src="images/comparison_a_0.01_o_0.01/runtime_breakdown_stacked.png" width="500"></td>
-    <td><img src="images/comparison_a_0.01_o_0.05/runtime_breakdown_stacked.png"  width="500"></td>
+    <td><img src="images/comparison_a_0.01_o_0.01/runtime_breakdown_stacked.webp"  width="750"></td>
+    <td><img src="images/comparison_a_0.01_o_0.05/runtime_breakdown_stacked.webp"  width="750"></td>
   </tr>
   <tr>
-    <td><img src="images/comparison_a_0.05_o_0.01/runtime_breakdown_stacked.png"  width="500"></td>
-    <td><img src="images/comparison_a_0.05_o_0.05/runtime_breakdown_stacked.png"  width="500"></td>
+    <td><img src="images/comparison_a_0.05_o_0.01/runtime_breakdown_stacked.webp"  width="750"></td>
+    <td><img src="images/comparison_a_0.05_o_0.05/runtime_breakdown_stacked.webp"  width="750"></td>
   </tr>
 </table>
 
@@ -76,4 +91,10 @@ This comparison should however merely give a rough idea of what sort of results 
 
 #### Conclusion
 
-Intersection-based traversability appears to be a viable approach for adaptive traversability. From these experiments it cannot be concluded yet if it is able to produce satisfyable results in a 3D scenario and do so within reasonable runtime. This could however be tested in terms of future work, as it is fairly simple to extend this modification to the 3D algorithm. 
+Deviation-based traversability can under some circumstances produce decent results, however in many aspects it is inferior to intersection-based traversability which profits from the following advantages:
+- Easier to tune
+- More robust towards changes in the offset parameter
+- Often produces more desirable results and usually terminates faster
+- Easier to adjust to different input types and a 3D scenario
+
+Intersection-based traversability appears to be a viable approach for adaptive traversability. From these experiments it cannot be concluded yet if it is able to produce satisfyable results for 3D real-world inputs and do so within reasonable runtime. This could however be explored in terms of future work, as it is fairly simple to extend this modification to the 3D algorithm. 
