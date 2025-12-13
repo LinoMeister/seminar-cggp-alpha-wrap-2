@@ -93,11 +93,19 @@ int main(int argc, char *argv[])
   {
     config.alpha = std::stod(alpha_arg);
   }
+  else {
+    config.alpha = 0.01;
+    std::cout << "No alpha specified. Using default alpha = " << config.alpha << std::endl;
+  }
 
   std::string offset_arg = get_cmd_option(argv, argv + argc, "--offset");
   if (!offset_arg.empty())
   {
     config.offset = std::stod(offset_arg);
+  }
+  else {
+    config.offset = 0.01;
+    std::cout << "No offset specified. Using default offset = " << config.offset << std::endl;
   }
 
   std::string traversability_arg = get_cmd_option(argv, argv + argc, "--traversability");
