@@ -6,9 +6,8 @@
 #include <nlohmann/json.hpp>
 
 namespace aw2 {
-
     // Forward declarations
-    
+
     class point_set_oracle_2;
     using Oracle = point_set_oracle_2;
 
@@ -17,13 +16,14 @@ namespace aw2 {
         FT sq_min_delaunay_rad;
 
         std::pair<Point_2, Point_2> get_points() const;
+
         std::pair<Delaunay::Vertex_handle, Delaunay::Vertex_handle> get_vertices() const;
 
-        bool operator<(const Gate& other) const {
+        bool operator<(const Gate &other) const {
             return sq_min_delaunay_rad < other.sq_min_delaunay_rad;
         }
-        
-        bool operator>(const Gate& other) const {
+
+        bool operator>(const Gate &other) const {
             return sq_min_delaunay_rad > other.sq_min_delaunay_rad;
         }
     };
@@ -31,24 +31,22 @@ namespace aw2 {
     using TraversabilityParams = std::variant<
         struct ConstantAlphaParams,
         struct DeviationBasedParams,
-        struct IntersectionBasedParams
-    >;
+        struct IntersectionBasedParams>;
 
     // Method-specific parameter structs
     struct ConstantAlphaParams {
         // No additional parameters for constant alpha
     };
 
-    inline void to_json(nlohmann::json& j, const ConstantAlphaParams&) {
+    inline void to_json(nlohmann::json &j, const ConstantAlphaParams &) {
         j = nlohmann::json::object();
     }
 
-    inline void from_json(const nlohmann::json&, ConstantAlphaParams&) {
+    inline void from_json(const nlohmann::json &, ConstantAlphaParams &) {
         // No fields to populate
     }
 
     struct DeviationBasedParams {
-
         // The adaptive alpha is interpolated between alpha_ and alpha_max_ based on deviation
         FT alpha_max = 1.0;
 
@@ -65,24 +63,21 @@ namespace aw2 {
     };
 
     struct IntersectionBasedParams {
-        
         // Multiplied by bbox diagonal length to get tolerance
         // A smaller tolerance means stricter traversability checks and potentially fewer traversable gates
-        FT tolerance_factor = 0.005;  
+        FT tolerance_factor = 0.005;
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(IntersectionBasedParams, tolerance_factor)
     };
 
     // JSON serialization for TraversabilityParams variant
-    inline void to_json(nlohmann::json& j, const TraversabilityParams& params) {
-        std::visit([&j](const auto& p) {
+    inline void to_json(nlohmann::json &j, const TraversabilityParams &params) {
+        std::visit([&j](const auto &p) {
             j = p;
         }, params);
     }
 
-    inline void from_json(const nlohmann::json& j, TraversabilityParams& params) {
-        // Note: This requires knowing which type to deserialize to
-        // For now, we'll try each type and use the first one that works
+    inline void from_json(const nlohmann::json &j, TraversabilityParams &params) {
         try {
             params = j.get<DeviationBasedParams>();
         } catch (...) {
@@ -97,14 +92,16 @@ namespace aw2 {
     class Traversability {
     public:
         virtual ~Traversability() = default;
-        virtual bool operator()(Gate& g) = 0;
+
+        virtual bool operator()(Gate &g) = 0;
     };
 
     class ConstantAlphaTraversability : public Traversability {
     public:
-        ConstantAlphaTraversability(const FT alpha) : alpha_(alpha) {}
+        ConstantAlphaTraversability(const FT alpha) : alpha_(alpha) {
+        }
 
-        bool operator()(Gate& g) override {
+        bool operator()(Gate &g) override {
             return g.sq_min_delaunay_rad >= alpha_ * alpha_;
         }
 
@@ -114,19 +111,23 @@ namespace aw2 {
 
     class DeviationBasedTraversability : public Traversability {
     public:
-        DeviationBasedTraversability(const FT alpha, const FT offset, const FT bbox_diagonal_length, const Oracle& oracle, const DeviationBasedParams &params)
+        DeviationBasedTraversability(const FT alpha, const FT offset, const FT bbox_diagonal_length,
+                                     const Oracle &oracle, const DeviationBasedParams &params)
             : alpha_(alpha), offset_(offset), oracle_(oracle),
-              alpha_max_(params.alpha_max * bbox_diagonal_length), point_threshold_(params.point_threshold), 
-              deviation_factor_(params.deviation_factor) {}
+              alpha_max_(params.alpha_max * bbox_diagonal_length), point_threshold_(params.point_threshold),
+              deviation_factor_(params.deviation_factor) {
+        }
 
-        bool operator()(Gate& g) override;
+        bool operator()(Gate &g) override;
 
     private:
-        FT subsegment_deviation(const Segment_2& seg) const;
-        FT segment_deviation(const Segment_2& seg) const;
+        FT subsegment_deviation(const Segment_2 &seg) const;
+
+        FT segment_deviation(const Segment_2 &seg) const;
+
         FT alpha_;
         FT offset_;
-        const Oracle& oracle_;
+        const Oracle &oracle_;
         FT alpha_max_;
         int point_threshold_;
         FT deviation_factor_;
@@ -134,19 +135,20 @@ namespace aw2 {
 
     class IntersectionBasedTraversability : public Traversability {
     public:
-        IntersectionBasedTraversability(const FT alpha, const FT offset, const FT bbox_diagonal_length, const Oracle& oracle, const IntersectionBasedParams &params)
+        IntersectionBasedTraversability(const FT alpha, const FT offset, const FT bbox_diagonal_length,
+                                        const Oracle &oracle, const IntersectionBasedParams &params)
             : alpha_(alpha), offset_(offset), oracle_(oracle),
-              tolerance_(params.tolerance_factor * bbox_diagonal_length) {}
+              tolerance_(params.tolerance_factor * bbox_diagonal_length) {
+        }
 
-        bool operator()(Gate& g) override;
+        bool operator()(Gate &g) override;
 
     private:
         FT alpha_;
         FT offset_;
-        const Oracle& oracle_;
+        const Oracle &oracle_;
         FT tolerance_;
     };
-
 }
 
 #endif // AW2_TRAVERSABILITY_H

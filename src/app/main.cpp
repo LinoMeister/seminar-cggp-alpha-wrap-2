@@ -9,31 +9,27 @@
 #include <algorithm>
 
 struct bounding_box {
-  aw2::Point_2 min_min;
-  aw2::Point_2 min_max;
-  aw2::Point_2 max_min;
-  aw2::Point_2 max_max;
+    aw2::Point_2 min_min;
+    aw2::Point_2 min_max;
+    aw2::Point_2 max_min;
+    aw2::Point_2 max_max;
 };
 
 // Helper function to find command line argument value
-std::string get_cmd_option(char **begin, char **end, const std::string &option)
-{
-  if (char **itr = std::find(begin, end, option); itr != end && ++itr != end)
-  {
-    return std::string(*itr);
-  }
-  return "";
+std::string get_cmd_option(char **begin, char **end, const std::string &option) {
+    if (char **itr = std::find(begin, end, option); itr != end && ++itr != end) {
+        return std::string(*itr);
+    }
+    return "";
 }
 
 // Helper function to check if option exists
-bool cmd_option_exists(char **begin, char **end, const std::string &option)
-{
-  return std::find(begin, end, option) != end;
+bool cmd_option_exists(char **begin, char **end, const std::string &option) {
+    return std::find(begin, end, option) != end;
 }
 
-void print_usage(const char *program_name)
-{
-  std::cout << "Usage: " << program_name << " [OPTIONS]\n"
+void print_usage(const char *program_name) {
+    std::cout << "Usage: " << program_name << " [OPTIONS]\n"
             << "Options:\n"
             << "  --input <file>     Input file path \n"
             << "  --alpha <value>    Alpha value\n"
@@ -43,131 +39,121 @@ void print_usage(const char *program_name)
             << "  --help             Show this help message\n";
 }
 
-int main(int argc, char *argv[])
-{
-  // Show help if requested
-  if (cmd_option_exists(argv, argv + argc, "--help"))
-  {
-    print_usage(argv[0]);
-    return 0;
-  }
-
-  // Parse command line arguments with named parameters
-  std::string filename = "/mnt/storage/repos/HS25/seminar-cg-gp/visual-tools/points_dense.pts";
-
-  aw2::AlgorithmConfig config;
-
-
-  if (std::string input_arg = get_cmd_option(argv, argv + argc, "--input"); !input_arg.empty())
-  {
-    filename = input_arg;
-  }
-  else {
-    std::cerr << "Error: No input file specified. Use --input <file> to specify the input point set." << std::endl;
-    return 1;
-  }
-
-  if (std::string output_arg = get_cmd_option(argv, argv + argc, "--output"); !output_arg.empty())
-  {
-    config.output_directory = output_arg;
-  }
-  else {
-    std::cerr << "Error: No output directory specified. Use --output <directory> to specify the output path." << std::endl;
-    return 1;
-  }
-
-  if (std::string output_use_subdir_arg = get_cmd_option(argv, argv + argc, "--output_use_subdir"); !output_use_subdir_arg.empty())
-  {
-    if (output_use_subdir_arg == "true") {
-      fs::path base_export_path(config.output_directory);
-      config.output_directory = base_export_path / std::to_string(std::time(nullptr));
+int main(int argc, char *argv[]) {
+    // Show help if requested
+    if (cmd_option_exists(argv, argv + argc, "--help")) {
+        print_usage(argv[0]);
+        return 0;
     }
-  }
 
-  if (std::string alpha_arg = get_cmd_option(argv, argv + argc, "--alpha"); !alpha_arg.empty())
-  {
-    config.alpha = std::stod(alpha_arg);
-  }
-  else {
-    config.alpha = 0.01;
-    std::cout << "No alpha specified. Using default alpha = " << config.alpha << std::endl;
-  }
+    // Parse command line arguments with named parameters
+    std::string filename = "/mnt/storage/repos/HS25/seminar-cg-gp/visual-tools/points_dense.pts";
 
-  if (std::string offset_arg = get_cmd_option(argv, argv + argc, "--offset"); !offset_arg.empty())
-  {
-    config.offset = std::stod(offset_arg);
-  }
-  else {
-    config.offset = 0.01;
-    std::cout << "No offset specified. Using default offset = " << config.offset << std::endl;
-  }
-
-  std::string traversability_arg = get_cmd_option(argv, argv + argc, "--traversability");
-  aw2::TraversabilityMethod traversability_method = aw2::CONSTANT_ALPHA;
-  if (!traversability_arg.empty()) {
-      if (traversability_arg == "CONSTANT_ALPHA") {
-          traversability_method = aw2::CONSTANT_ALPHA;
-          config.traversability_params = aw2::ConstantAlphaParams{};
-      } else if (traversability_arg == "DEVIATION_BASED") {
-          traversability_method = aw2::DEVIATION_BASED;
-          config.traversability_params = aw2::DeviationBasedParams{
-            0.5,  // alpha_max
-            5,    // point_threshold
-            0.02  // deviation_factor
-          };
-      } else if (traversability_arg == "INTERSECTION_BASED") {
-          traversability_method = aw2::INTERSECTION_BASED;
-          config.traversability_params = aw2::IntersectionBasedParams{
-            0.005  // tolerance_factor
-          };
-      } else {
-          std::cerr << "Unknown traversability method: " << traversability_arg << std::endl;
-          return 1;
-      }
-      config.traversability_method = traversability_method;
-  }
+    aw2::AlgorithmConfig config;
 
 
-  config.intermediate_steps = 200;
-  config.export_step_limit = 2000;
-  config.max_iterations = 50000;
-
-  if (std::string intermediate_step_arg = get_cmd_option(argv, argv + argc, "--intermediate_steps"); !intermediate_step_arg.empty())
-  {
-    config.intermediate_steps = std::stoi(intermediate_step_arg);
-  }
-
-  if (std::string export_step_limit_arg = get_cmd_option(argv, argv + argc, "--export_step_limit"); !export_step_limit_arg.empty())
-  {
-    config.export_step_limit = std::stoi(export_step_limit_arg);
-  }
-
-  if (std::string max_iter_arg = get_cmd_option(argv, argv + argc, "--max_iterations"); !max_iter_arg.empty())
-  {
-    config.max_iterations = std::stoi(max_iter_arg);
-  }
-
-  if (std::string style_arg = get_cmd_option(argv, argv + argc, "--style"); !style_arg.empty())
-  {
-    if (style_arg == "default" || style_arg == "clean" || style_arg == "outside_filled") {
-      config.style = style_arg;
+    if (std::string input_arg = get_cmd_option(argv, argv + argc, "--input"); !input_arg.empty()) {
+        filename = input_arg;
     } else {
-      std::cerr << "Unknown style: " << style_arg << " (valid options: default, clean, outside_filled)" << std::endl;
-      return 1;
+        std::cerr << "Error: No input file specified. Use --input <file> to specify the input point set." << std::endl;
+        return 1;
     }
-  }
 
-  aw2::Oracle oracle;
-  oracle.load_points(filename);
+    if (std::string output_arg = get_cmd_option(argv, argv + argc, "--output"); !output_arg.empty()) {
+        config.output_directory = output_arg;
+    } else {
+        std::cerr << "Error: No output directory specified. Use --output <directory> to specify the output path." <<
+                std::endl;
+        return 1;
+    }
 
-  aw2::alpha_wrap_2 aw(oracle);
+    if (std::string output_use_subdir_arg = get_cmd_option(argv, argv + argc, "--output_use_subdir"); !
+        output_use_subdir_arg.empty()) {
+        if (output_use_subdir_arg == "true") {
+            fs::path base_export_path(config.output_directory);
+            config.output_directory = base_export_path / std::to_string(std::time(nullptr));
+        }
+    }
+
+    if (std::string alpha_arg = get_cmd_option(argv, argv + argc, "--alpha"); !alpha_arg.empty()) {
+        config.alpha = std::stod(alpha_arg);
+    } else {
+        config.alpha = 0.01;
+        std::cout << "No alpha specified. Using default alpha = " << config.alpha << std::endl;
+    }
+
+    if (std::string offset_arg = get_cmd_option(argv, argv + argc, "--offset"); !offset_arg.empty()) {
+        config.offset = std::stod(offset_arg);
+    } else {
+        config.offset = 0.01;
+        std::cout << "No offset specified. Using default offset = " << config.offset << std::endl;
+    }
+
+    std::string traversability_arg = get_cmd_option(argv, argv + argc, "--traversability");
+    aw2::TraversabilityMethod traversability_method = aw2::CONSTANT_ALPHA;
+    if (!traversability_arg.empty()) {
+        if (traversability_arg == "CONSTANT_ALPHA") {
+            traversability_method = aw2::CONSTANT_ALPHA;
+            config.traversability_params = aw2::ConstantAlphaParams{};
+        } else if (traversability_arg == "DEVIATION_BASED") {
+            traversability_method = aw2::DEVIATION_BASED;
+            config.traversability_params = aw2::DeviationBasedParams{
+                0.5, // alpha_max
+                5, // point_threshold
+                0.02 // deviation_factor
+            };
+        } else if (traversability_arg == "INTERSECTION_BASED") {
+            traversability_method = aw2::INTERSECTION_BASED;
+            config.traversability_params = aw2::IntersectionBasedParams{
+                0.005 // tolerance_factor
+            };
+        } else {
+            std::cerr << "Unknown traversability method: " << traversability_arg << std::endl;
+            return 1;
+        }
+        config.traversability_method = traversability_method;
+    }
 
 
-  // Set input filename in statistics
-  aw.statistics_.config.input_file = filename;
+    config.intermediate_steps = 200;
+    config.export_step_limit = 2000;
+    config.max_iterations = 50000;
 
-  aw.init(config);
-  aw.run();
+    if (std::string intermediate_step_arg = get_cmd_option(argv, argv + argc, "--intermediate_steps"); !
+        intermediate_step_arg.empty()) {
+        config.intermediate_steps = std::stoi(intermediate_step_arg);
+    }
 
-  return 0;
+    if (std::string export_step_limit_arg = get_cmd_option(argv, argv + argc, "--export_step_limit"); !
+        export_step_limit_arg.empty()) {
+        config.export_step_limit = std::stoi(export_step_limit_arg);
+    }
+
+    if (std::string max_iter_arg = get_cmd_option(argv, argv + argc, "--max_iterations"); !max_iter_arg.empty()) {
+        config.max_iterations = std::stoi(max_iter_arg);
+    }
+
+    if (std::string style_arg = get_cmd_option(argv, argv + argc, "--style"); !style_arg.empty()) {
+        if (style_arg == "default" || style_arg == "clean" || style_arg == "outside_filled") {
+            config.style = style_arg;
+        } else {
+            std::cerr << "Unknown style: " << style_arg << " (valid options: default, clean, outside_filled)" <<
+                    std::endl;
+            return 1;
+        }
+    }
+
+    aw2::Oracle oracle;
+    oracle.load_points(filename);
+
+    aw2::alpha_wrap_2 aw(oracle);
+
+
+    // Set input filename in statistics
+    aw.statistics_.config.input_file = filename;
+
+    aw.init(config);
+    aw.run();
+
+    return 0;
 }

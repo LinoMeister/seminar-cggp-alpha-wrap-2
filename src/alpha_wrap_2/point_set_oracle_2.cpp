@@ -1,29 +1,27 @@
 #include <alpha_wrap_2/point_set_oracle_2.h>
 
 namespace aw2 {
-
     // Forward declaration of segment_circle_intersection
-    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o, FT &lambda);
+    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o,
+                                     FT &lambda);
 
     bool point_set_oracle_2::empty() const { return tree_.empty(); }
     bool point_set_oracle_2::do_call() const { return (!empty()); }
     void point_set_oracle_2::clear() { tree_.clear(); }
 
-    bool point_set_oracle_2::do_intersect(const K::Triangle_2 &t) const
-    {
+    bool point_set_oracle_2::do_intersect(const K::Triangle_2 &t) const {
         if (tree_.empty()) return false;
         const auto bbox = t.bbox();
         const auto min = Point_2(bbox.xmin(), bbox.ymin());
         const auto max = Point_2(bbox.xmax(), bbox.ymax());
-        
+
         // Fuzzy box query to restrict candidates
-        const CGAL::Fuzzy_iso_box<CGAL::Search_traits_2<K>> box(min, max);
+        const CGAL::Fuzzy_iso_box<CGAL::Search_traits_2<K> > box(min, max);
 
         std::vector<Point_2> candidates;
         tree_.search(std::back_inserter(candidates), box);
 
-        for (const auto &pt : candidates)
-        {
+        for (const auto &pt: candidates) {
             if (t.has_on_bounded_side(pt)) {
                 return true;
             }
@@ -31,16 +29,14 @@ namespace aw2 {
         return false;
     }
 
-    FT point_set_oracle_2::squared_distance(const Point_2 &p) const
-    {
+    FT point_set_oracle_2::squared_distance(const Point_2 &p) const {
         if (tree_.empty()) return 0.0;
 
         const Neighbor_search search(tree_, p, 1);
         return search.begin()->second; // squared distance to nearest neighbor
     }
 
-    Point_2 point_set_oracle_2::closest_point(const Point_2 &p) const
-    {
+    Point_2 point_set_oracle_2::closest_point(const Point_2 &p) const {
         if (tree_.empty()) return Point_2(0, 0);
 
         const Neighbor_search search(tree_, p, 1);
@@ -48,10 +44,9 @@ namespace aw2 {
     }
 
     bool point_set_oracle_2::first_intersection(const Point_2 &p, const Point_2 &q,
-                            Point_2 &o,
-                            const FT offset_size,
-                            FT &lambda) const
-    {
+                                                Point_2 &o,
+                                                const FT offset_size,
+                                                FT &lambda) const {
         if (tree_.empty()) return false;
         const Segment_2 seg(p, q);
 
@@ -81,12 +76,11 @@ namespace aw2 {
         Point_2 best_intersection;
 
         // Iterate through candidates by proximity to p
-        for (auto it = inc_search.begin(); it != inc_search.end(); ++it)
-        {       
+        for (auto it = inc_search.begin(); it != inc_search.end(); ++it) {
             if (found && it->second > max_sq_dist) {
                 break; // No need to check further candidates (it->second is squared distance)
             }
-            
+
             Point_2 intersection;
             FT t;
 
@@ -98,10 +92,11 @@ namespace aw2 {
 
             if (!found) {
                 found = true;
-                max_sq_dist = std::pow(min_t * seg_length + offset_size, 2); // only update when we find the first intersection
+                max_sq_dist = std::pow(min_t * seg_length + offset_size, 2);
+                // only update when we find the first intersection
             }
         }
-        
+
         if (found) {
             o = best_intersection;
             lambda = min_t;
@@ -110,18 +105,17 @@ namespace aw2 {
     }
 
     bool point_set_oracle_2::first_intersection(const Point_2 &p, const Point_2 &q,
-                            Point_2 &o,
-                            const FT offset_size) const
-    {
+                                                Point_2 &o,
+                                                const FT offset_size) const {
         FT dump;
         return first_intersection(p, q, o, offset_size, dump);
     }
 
-    void point_set_oracle_2::add_point_set(const Points& points) {
+    void point_set_oracle_2::add_point_set(const Points &points) {
         tree_.insert(points.cbegin(), points.cend());
     }
 
-    void point_set_oracle_2::load_points(const std::string& filename) {
+    void point_set_oracle_2::load_points(const std::string &filename) {
         auto points = std::vector<Point_2>();
         std::ifstream input(filename);
         double x, y;
@@ -155,25 +149,26 @@ namespace aw2 {
         return local_pts;
     }
 
-    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o, FT &lambda) {
+    bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o,
+                                     FT &lambda) {
         const auto dx = q.x() - p.x();
         const auto dy = q.y() - p.y();
 
-        const FT a = dx*dx + dy*dy;
+        const FT a = dx * dx + dy * dy;
         if (a == 0) return false; // degenerate segment
 
         const FT ox = p.x() - center.x();
         const FT oy = p.y() - center.y();
 
-        const FT b = 2 * (dx*ox + dy*oy);
-        const FT c = ox*ox + oy*oy - radius*radius;
+        const FT b = 2 * (dx * ox + dy * oy);
+        const FT c = ox * ox + oy * oy - radius * radius;
 
-        const FT disc = b*b - 4*a*c;
+        const FT disc = b * b - 4 * a * c;
         if (disc < 0) return false; // no real intersection
 
         FT sqrt_disc = std::sqrt(disc);
-        FT t1 = (-b - sqrt_disc) / (2*a);
-        FT t2 = (-b + sqrt_disc) / (2*a);
+        FT t1 = (-b - sqrt_disc) / (2 * a);
+        FT t2 = (-b + sqrt_disc) / (2 * a);
 
         FT t_candidate = std::numeric_limits<FT>::max();
         if (t1 > 0.0 && t1 <= 1.0) t_candidate = std::min(t_candidate, t1);
@@ -183,9 +178,8 @@ namespace aw2 {
             return false;
 
         // compute intersection point
-        o = Point_2(p.x() + t_candidate*dx, p.y() + t_candidate*dy);
+        o = Point_2(p.x() + t_candidate * dx, p.y() + t_candidate * dy);
         lambda = t_candidate;
         return true;
     }
-
 }

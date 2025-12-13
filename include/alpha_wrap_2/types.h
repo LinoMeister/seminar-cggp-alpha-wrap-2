@@ -11,9 +11,7 @@
 #include <CGAL/Triangulation_face_base_with_info_2.h>
 #include <CGAL/Triangulation_data_structure_2.h>
 
-namespace aw2
-{
-
+namespace aw2 {
     enum FaceLabel { INSIDE, OUTSIDE };
 
     typedef double FT;

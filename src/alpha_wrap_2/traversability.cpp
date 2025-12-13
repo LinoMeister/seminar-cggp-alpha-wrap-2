@@ -1,20 +1,19 @@
 #include "alpha_wrap_2/traversability.h"
 
 namespace aw2 {
-
     std::pair<Delaunay::Vertex_handle, Delaunay::Vertex_handle> Gate::get_vertices() const {
         auto v_target = edge.first->vertex(edge.first->cw(edge.second));
         auto v_source = edge.first->vertex(edge.first->ccw(edge.second));
         return std::make_pair(v_source, v_target);
     }
-    
+
     std::pair<Point_2, Point_2> Gate::get_points() const {
         auto p_target = edge.first->vertex(edge.first->cw(edge.second))->point();
         auto p_source = edge.first->vertex(edge.first->ccw(edge.second))->point();
         return std::make_pair(p_source, p_target);
     }
 
-    bool DeviationBasedTraversability::operator()(Gate& g) {
+    bool DeviationBasedTraversability::operator()(Gate &g) {
         auto [fst, snd] = g.get_points();
         const Segment_2 seg(fst, snd);
         const auto dev = segment_deviation(seg);
@@ -22,8 +21,8 @@ namespace aw2 {
         return g.sq_min_delaunay_rad >= std::pow(adaptive_alpha, 2);
     }
 
-    FT DeviationBasedTraversability::subsegment_deviation(const Segment_2& seg) const {
-        auto local_pts = oracle_.local_points(seg, 1.1*offset_);
+    FT DeviationBasedTraversability::subsegment_deviation(const Segment_2 &seg) const {
+        auto local_pts = oracle_.local_points(seg, 1.1 * offset_);
         int n = local_pts.size();
 
         // not enough points to compute a meaningful adaptive alpha
@@ -33,7 +32,7 @@ namespace aw2 {
 
         // compute average squared deviation from the segment
         auto avg_sq_deviation = 0.0;
-        for (const auto& pt : local_pts) {
+        for (const auto &pt: local_pts) {
             avg_sq_deviation += CGAL::squared_distance(seg, pt);
         }
 
@@ -44,8 +43,7 @@ namespace aw2 {
         return dev;
     }
 
-    FT DeviationBasedTraversability::segment_deviation(const Segment_2& seg) const {
-        //auto segment_length = bbox_diagonal_length_ / 100.0;
+    FT DeviationBasedTraversability::segment_deviation(const Segment_2 &seg) const {
         auto segment_length = alpha_;
         int m = std::ceil(std::sqrt(seg.squared_length()) / segment_length);
         auto s = seg.source();
@@ -66,11 +64,11 @@ namespace aw2 {
         return max_dev;
     }
 
-    bool IntersectionBasedTraversability::operator()(Gate& g) {
+    bool IntersectionBasedTraversability::operator()(Gate &g) {
         auto [fst, snd] = g.get_points();
         Point_2 s = fst;
         Point_2 t = snd;
-        const CGAL::Line_2<K> line(s,t);
+        const CGAL::Line_2<K> line(s, t);
 
         // determine the number of samples based on alpha
         auto segment_length = alpha_;
@@ -107,5 +105,4 @@ namespace aw2 {
         }
         return false;
     }
-
 }

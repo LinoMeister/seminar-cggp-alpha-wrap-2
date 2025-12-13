@@ -17,18 +17,17 @@
 #include <filesystem>
 
 namespace aw2 {
-
     // Forward declaration
     class Timer;
 
     // type definitions
     using Oracle = point_set_oracle_2;
 
-    #ifdef USE_STACK_QUEUE
+#ifdef USE_STACK_QUEUE
         using Queue = std::stack<Gate>;
-    #else
-        using Queue = std::priority_queue<Gate, std::vector<Gate>, std::less<>>;
-    #endif
+#else
+    using Queue = std::priority_queue<Gate, std::vector<Gate>, std::less<> >;
+#endif
 
     enum TraversabilityMethod {
         CONSTANT_ALPHA,
@@ -53,14 +52,13 @@ namespace aw2 {
 
         // after this iteration we stop exporting intermediate results
         // this is useful when we only want to export the first few steps
-        int export_step_limit = 1000; 
+        int export_step_limit = 1000;
 
         std::string output_directory;
 
         // visualization style (default, clean, outside_filled)
         std::string style = "default";
     };
-
 
 
     struct EdgeAdjacencyInfo {
@@ -76,9 +74,8 @@ namespace aw2 {
 
     class alpha_wrap_2 {
     public:
-
         // algorithm state
-        const Oracle& oracle_;
+        const Oracle &oracle_;
         Delaunay dt_;
 
         Queue queue_;
@@ -89,7 +86,7 @@ namespace aw2 {
         FT offset_;
         AlgorithmConfig config_;
 
-        Traversability* traversability_;
+        Traversability *traversability_;
 
         FT bbox_diagonal_length_;
         Point_2 dt_bbox_min_;
@@ -98,49 +95,57 @@ namespace aw2 {
         std::vector<Segment_2> wrap_edges_;
 
         // exporter
-        alpha_wrap_2_exporter* exporter_;
+        alpha_wrap_2_exporter *exporter_;
 
         // statistics tracking
         AlgorithmStatistics statistics_;
 
         // timers for performance tracking
-        TimerRegistry& registry_ = TimerRegistry::instance();
-        Timer* total_timer_ = nullptr;
-        Timer* init_timer_ = nullptr;
-        Timer* main_loop_timer_ = nullptr;
-        Timer* rule1_timer_ = nullptr;
-        Timer* rule2_timer_ = nullptr;
-        Timer* gate_processing_timer_ = nullptr;
-        Timer* extraction_timer_ = nullptr;
+        TimerRegistry &registry_ = TimerRegistry::instance();
+        Timer *total_timer_ = nullptr;
+        Timer *init_timer_ = nullptr;
+        Timer *main_loop_timer_ = nullptr;
+        Timer *rule1_timer_ = nullptr;
+        Timer *rule2_timer_ = nullptr;
+        Timer *gate_processing_timer_ = nullptr;
+        Timer *extraction_timer_ = nullptr;
 
         // initialization and running
-        alpha_wrap_2(const Oracle& oracle);
-        ~alpha_wrap_2();
-        void init(const AlgorithmConfig& config);
-        void run();
-        
-        // utility functions
-        const AlgorithmStatistics& get_statistics() const { return statistics_; }
-        EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
+        alpha_wrap_2(const Oracle &oracle);
 
+        ~alpha_wrap_2();
+
+        void init(const AlgorithmConfig &config);
+
+        void run();
+
+        // utility functions
+        const AlgorithmStatistics &get_statistics() const { return statistics_; }
+
+        EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge &edge) const;
 
     private:
-
         // gate and traversability processing methods
-        static bool is_gate(const Delaunay::Edge& e) ;
-        FT sq_minimal_delaunay_ball_radius(const Gate& gate) const;
+        static bool is_gate(const Delaunay::Edge &e);
+
+        FT sq_minimal_delaunay_ball_radius(const Gate &gate) const;
 
         // rule processing
-        bool process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc);
-        bool process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc);
+        bool process_rule_1(const Point_2 &c_in_cc, const Point_2 &c_out_cc);
+
+        bool process_rule_2(const Delaunay::Face_handle &c_in, const Point_2 &c_in_cc);
 
         // update
-        void insert_steiner_point(const Point_2& steiner_point);
-        void add_gate_to_queue(const Delaunay::Edge& edge);
-        void update_queue(const Delaunay::Face_handle& fh);
+        void insert_steiner_point(const Point_2 &steiner_point);
+
+        void add_gate_to_queue(const Delaunay::Edge &edge);
+
+        void update_queue(const Delaunay::Face_handle &fh);
 
         // utils
-        Point_2 infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) const;
+        Point_2 infinite_face_cc(const Delaunay::Face_handle &c_in, const Delaunay::Face_handle &c_out,
+                                 int edge_index) const;
+
         void extract_wrap_surface();
 
         int max_iterations_ = 0;

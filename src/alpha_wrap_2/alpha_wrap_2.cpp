@@ -1,16 +1,14 @@
 #include <alpha_wrap_2/alpha_wrap_2.h>
-#include <chrono>
 #include <ctime>
 #include <sstream>
-#include <iomanip>
 
 
 namespace aw2 {
-
-    alpha_wrap_2::alpha_wrap_2(const Oracle& oracle) 
-        : oracle_(oracle), 
+    alpha_wrap_2::alpha_wrap_2(const Oracle &oracle)
+        : oracle_(oracle),
           traversability_(nullptr),
-          exporter_(nullptr) {}
+          exporter_(nullptr) {
+    }
 
     alpha_wrap_2::~alpha_wrap_2() {
         delete traversability_;
@@ -18,18 +16,16 @@ namespace aw2 {
     }
 
     void alpha_wrap_2::run() {
-
         namespace fs = std::filesystem;
 
         if (!exporter_) {
             throw std::runtime_error("Exporter not initialized. Call init() before run().");
         }
-        
+
         total_timer_->start();
         main_loop_timer_->start();
 
         while (!queue_.empty()) {
-            
             if (++iteration_ > max_iterations_) {
                 std::cout << "Reached maximum number of iterations (" << max_iterations_ << "). Stopping." << std::endl;
                 break;
@@ -38,7 +34,7 @@ namespace aw2 {
             // ** Get candidate gate **
             candidate_gate_ = queue_.top();
             queue_.pop();
-            
+
             export_step_ = ((iteration_ % config_.intermediate_steps) == 0 && (iteration_ < config_.export_step_limit));
             if (export_step_) {
                 exporter_->candidate_edge_ = Segment_2(
@@ -88,7 +84,7 @@ namespace aw2 {
         extraction_timer_->pause();
 
         total_timer_->pause();
-        
+
         // Export result and collect statistics
         exporter_->style_.draw_candidate_edge = false;
         exporter_->export_svg("final_result");
@@ -99,12 +95,12 @@ namespace aw2 {
         statistics_.timings.gate_processing = gate_processing_timer_->elapsed_ms();
         statistics_.timings.rule_1_processing = rule1_timer_->elapsed_ms();
         statistics_.timings.rule_2_processing = rule2_timer_->elapsed_ms();
-        
+
         statistics_.output_stats.n_vertices = dt_.number_of_vertices();
         statistics_.output_stats.n_edges = wrap_edges_.size();
-        
+
         statistics_.execution_stats.n_input_points = oracle_.tree_.size();
-        
+
         // Export statistics to JSON
         std::string stats_filepath = exporter_->export_dir_.string() + "/statistics.json";
         statistics_.export_to_json(stats_filepath);
@@ -115,8 +111,7 @@ namespace aw2 {
     }
 
 
-    void alpha_wrap_2::init(const AlgorithmConfig& config) {
-
+    void alpha_wrap_2::init(const AlgorithmConfig &config) {
         // Create hierarchical timer structure
         total_timer_ = registry_.create_root_timer("Alpha Wrap Algorithm");
         init_timer_ = total_timer_->create_child("Initialization");
@@ -198,19 +193,17 @@ namespace aw2 {
         for (auto eit = dt_.finite_edges_begin(); eit != dt_.finite_edges_end(); ++eit) {
             auto c_1 = eit->first;
             auto c_2 = c_1->neighbor(eit->second);
-            
+
             if (dt_.is_infinite(c_1) && !dt_.is_infinite(c_2)) {
                 c_1->info() = OUTSIDE;
                 c_2->info() = INSIDE;
-            }
-            else if (dt_.is_infinite(c_2) && !dt_.is_infinite(c_1)) {
+            } else if (dt_.is_infinite(c_2) && !dt_.is_infinite(c_1)) {
                 c_2->info() = OUTSIDE;
                 c_1->info() = INSIDE;
-            }
-            else {
+            } else {
                 continue;
             }
-            
+
             // add gate to queue
             add_gate_to_queue(*eit);
         }
@@ -223,13 +216,13 @@ namespace aw2 {
         total_timer_->pause();
     }
 
-    bool alpha_wrap_2::is_gate(const Delaunay::Edge& e) {
+    bool alpha_wrap_2::is_gate(const Delaunay::Edge &e) {
         const auto c_in = e.first;
         const auto c_out = c_in->neighbor(e.second);
         return c_in->info() != c_out->info();
     }
 
-    EdgeAdjacencyInfo alpha_wrap_2::gate_adjacency_info(const Delaunay::Edge& edge) const {
+    EdgeAdjacencyInfo alpha_wrap_2::gate_adjacency_info(const Delaunay::Edge &edge) const {
         EdgeAdjacencyInfo info;
         info.edge = edge;
         const auto c_in = edge.first;
@@ -245,8 +238,7 @@ namespace aw2 {
         if (dt_.is_infinite(c_out)) {
             info.outside_infinite = true;
             info.cc_outside = infinite_face_cc(c_in, c_out, i);
-        }
-        else {
+        } else {
             info.outside_infinite = false;
             info.cc_outside = dt_.circumcenter(c_out);
         }
@@ -256,8 +248,7 @@ namespace aw2 {
 
 
     // Return the squared radius of the minimal Delaunay ball through the edge
-    FT alpha_wrap_2::sq_minimal_delaunay_ball_radius(const Gate& gate) const {
-
+    FT alpha_wrap_2::sq_minimal_delaunay_ball_radius(const Gate &gate) const {
         auto [edge, cc_inside, cc_outside, outside_infinite] = gate_adjacency_info(gate.edge);
         const auto p1 = gate.get_points().first;
         const auto p2 = gate.get_points().second;
@@ -297,16 +288,17 @@ namespace aw2 {
 #endif
     }
 
-    void alpha_wrap_2::update_queue(const Delaunay::Face_handle& fh){
+    void alpha_wrap_2::update_queue(const Delaunay::Face_handle &fh) {
         gate_processing_timer_->start();
-        for(int i = 0; i < 3; ++i) {
+        for (int i = 0; i < 3; ++i) {
             Delaunay::Edge e(fh, i);
             add_gate_to_queue(e);
         }
         gate_processing_timer_->pause();
     }
 
-    Point_2 alpha_wrap_2::infinite_face_cc(const Delaunay::Face_handle& c_in, const Delaunay::Face_handle& c_out, int edge_index) const {
+    Point_2 alpha_wrap_2::infinite_face_cc(const Delaunay::Face_handle &c_in, const Delaunay::Face_handle &c_out,
+                                           int edge_index) const {
         const int inf_index = c_out->index(dt_.infinite_vertex());
 
         // construct a circumcenter for the infinite triangle
@@ -317,7 +309,7 @@ namespace aw2 {
         const K::Line_2 line(p1, p2);
 
         // check on which side of the line the non-adjacent vertex of c_in lies
-        Point_2 c_in_nonadjc = c_in->vertex(c_in->cw((edge_index+1)%3))->point();
+        Point_2 c_in_nonadjc = c_in->vertex(c_in->cw((edge_index + 1) % 3))->point();
         const auto side = line.oriented_side(c_in_nonadjc);
 
         const int sign = (side == CGAL::ON_POSITIVE_SIDE) ? -1 : 1;
@@ -328,7 +320,7 @@ namespace aw2 {
         return CGAL::circumcenter(p1, p2, far_point);
     }
 
-    bool alpha_wrap_2::process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc) {
+    bool alpha_wrap_2::process_rule_1(const Point_2 &c_in_cc, const Point_2 &c_out_cc) {
         rule1_timer_->start();
         Point_2 steiner_point;
         const bool insert = oracle_.first_intersection(
@@ -351,7 +343,7 @@ namespace aw2 {
         return false;
     }
 
-    bool alpha_wrap_2::process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc) {
+    bool alpha_wrap_2::process_rule_2(const Delaunay::Face_handle &c_in, const Point_2 &c_in_cc) {
         rule2_timer_->start();
 
         if (const auto c_in_triangle = dt_.triangle(c_in); oracle_.do_intersect(c_in_triangle)) {
@@ -382,8 +374,7 @@ namespace aw2 {
         return false;
     }
 
-    void alpha_wrap_2::insert_steiner_point(const Point_2& steiner_point) {
-
+    void alpha_wrap_2::insert_steiner_point(const Point_2 &steiner_point) {
         // insert Steiner point
         const auto vh = dt_.insert(steiner_point);
 
@@ -420,7 +411,7 @@ namespace aw2 {
         }
     }
 
-    void alpha_wrap_2::add_gate_to_queue(const Delaunay::Edge& edge) {
+    void alpha_wrap_2::add_gate_to_queue(const Delaunay::Edge &edge) {
         if (!is_gate(edge)) return;
 
         Gate g;
