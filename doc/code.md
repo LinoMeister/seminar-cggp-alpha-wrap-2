@@ -1,5 +1,3 @@
-
-
 # Code
 
 This is just a brief explanation of all the code components. The headers for these components are defined in `include/alpha_wrap_2` with the implementation located in `src/alpha_wrap_2`.
@@ -46,6 +44,7 @@ aw.init(config);
 aw.run();
 ```
 
+After running the algorithm, the extracted surface is stored as a list of line segments in the variable `aw.wrap_edges_`.
 
 ### `traversability`
 
