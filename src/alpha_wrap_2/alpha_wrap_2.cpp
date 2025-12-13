@@ -324,7 +324,7 @@ namespace aw2 {
 
         const auto dir = line.perpendicular(mid).direction().to_vector();
 
-        const Point_2 far_point = mid + sign * 10000 * dir;
+        const Point_2 far_point = mid + sign * bbox_diagonal_length_ * dir;
         return CGAL::circumcenter(p1, p2, far_point);
     }
 
