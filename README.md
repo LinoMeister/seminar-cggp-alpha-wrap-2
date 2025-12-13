@@ -16,7 +16,7 @@ A more detailed documentation about this project is available in `/doc`
 
 - **C++17** compatible compiler
 - **CMake** 3.16 or higher
-- **CGAL** (I only tested it with version 5.6)
+- [**CGAL**](https://www.cgal.org/download.html) (Tested with version 5.6)
 - **nlohmann/json** (automatically fetched via CMake FetchContent)
 
 ### Quick Start
@@ -37,7 +37,7 @@ This is the default configuration of the algorithm.
 
 #### `alternative-trav`: Enables modified alpha traversability computation
 
-This configuration was used for a small experiment, using a slightly modified traversability criteria. See the 'alternative traversability' section in the [report](doc/experiments.md). Please note that this is different from the *adaptive* traversability methods.
+This configuration was used for a small experiment, using a slightly modified traversability criteria. See the 'alternative traversability' section in the [report](doc/experiments.md). Please note that this is different from the *adaptive* traversability methods. The adaptive methods can be used with the default configuration.
 
 
 #### `stack-queue`: Uses stack instead of priority queue
@@ -77,14 +77,13 @@ In the paper, the alpha wrapping algorithm is described using a priority queue (
 
 - `--alpha <value>`
   - Alpha parameter controlling gate traversability
-  - Determines the maximum circumradius of triangles that can be "traversed"
-  - Larger values allow larger triangles, resulting in coarser wraps
-  - Default: 0.01
+  - Small values result in a more exact representation of the offset surface
+  - Default: `0.01`
 
 - `--offset <value>`
   - Offset distance from input points defining the offset surface
   - Must be positive
-  - Default: 0.01
+  - Default: `0.01`
 
 - `--traversability <method>`
   - Traversability computation method
