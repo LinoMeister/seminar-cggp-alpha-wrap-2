@@ -4,17 +4,14 @@
 
 #include "alpha_wrap_2/types.h"
 
-#include <CGAL/Default.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Kd_tree.h>
-#include <CGAL/Kd_tree_rectangle.h>
 #include <CGAL/Search_traits_2.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Orthogonal_incremental_neighbor_search.h>
 #include <CGAL/Fuzzy_iso_box.h>
 #include <CGAL/Polygon_2_algorithms.h>
 #include <CGAL/Exact_circular_kernel_2.h>
-#include <CGAL/Circular_kernel_intersections.h>
 
 namespace aw2 {
 
@@ -51,19 +48,19 @@ public:
     bool first_intersection(const Point_2 &p, 
                             const Point_2 &q,
                             Point_2 &o,
-                            const FT offset_size,
+                            FT offset_size,
                             FT &lambda) const;
     
 
     bool first_intersection(const Point_2 &p, const Point_2 &q,
                             Point_2 &o,
-                            const FT offset_size) const;
+                            FT offset_size) const;
 
     void add_point_set(const Points& points);
 
     void load_points(const std::string& filename);
 
-    Points local_points(const Segment_2 &seg, const FT margin) const;
+    Points local_points(const Segment_2 &seg, FT margin) const;
 
     Tree tree_;
     BBox bbox_;

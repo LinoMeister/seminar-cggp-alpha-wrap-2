@@ -9,17 +9,17 @@ namespace aw2 {
 
     alpha_wrap_2_exporter::alpha_wrap_2_exporter(
         const alpha_wrap_2& wrapper, 
-        const AlgorithmConfig& config)
-        : wrapper_(wrapper), oracle_(wrapper.oracle_), dt_(wrapper.dt_), 
-          candidate_gate_(wrapper.candidate_gate_), 
-          style_(config.style == "clean" ? StyleConfig::clean_style() :
-                 config.style == "outside_filled" ? StyleConfig::outside_filled_style() :
-                 StyleConfig::default_style()),
-          margin_(style_.margin), 
-          stroke_width_(style_.stroke_width), 
-          vertex_radius_(style_.vertex_radius),
-          inside_rng_(style_.inside_faces.random_seed),
-          outside_rng_(style_.outside_faces.random_seed)
+        const AlgorithmConfig& config):
+            style_(config.style == "clean" ? StyleConfig::clean_style() :
+            config.style == "outside_filled" ? StyleConfig::outside_filled_style() :
+            StyleConfig::default_style()), wrapper_(wrapper), oracle_(wrapper.oracle_),
+            dt_(wrapper.dt_),
+            candidate_gate_(wrapper.candidate_gate_),
+            margin_(style_.margin),
+            stroke_width_(style_.stroke_width),
+            vertex_radius_(style_.vertex_radius),
+            inside_rng_(style_.inside_faces.random_seed),
+            outside_rng_(style_.outside_faces.random_seed)
     {
         // First, compute bounding box of finite vertices
         xmin_ = wrapper_.dt_bbox_min_.x();
@@ -30,12 +30,12 @@ namespace aw2 {
 
     alpha_wrap_2_exporter::alpha_wrap_2_exporter(
         const alpha_wrap_2& wrapper, 
-        const StyleConfig& style)
-        : wrapper_(wrapper), oracle_(wrapper.oracle_), dt_(wrapper.dt_), 
-          candidate_gate_(wrapper.candidate_gate_), margin_(style.margin), 
-          stroke_width_(style.stroke_width), vertex_radius_(style.vertex_radius), style_(style),
-          inside_rng_(style.inside_faces.random_seed),
-          outside_rng_(style.outside_faces.random_seed)
+        const StyleConfig& style):
+            style_(style), wrapper_(wrapper), oracle_(wrapper.oracle_),
+             dt_(wrapper.dt_), candidate_gate_(wrapper.candidate_gate_),
+             margin_(style.margin), stroke_width_(style.stroke_width), vertex_radius_(style.vertex_radius),
+             inside_rng_(style.inside_faces.random_seed),
+             outside_rng_(style.outside_faces.random_seed)
     {
         // First, compute bounding box of finite vertices
         xmin_ = wrapper_.dt_bbox_min_.x();
@@ -45,13 +45,12 @@ namespace aw2 {
     }
 
     void alpha_wrap_2_exporter::setup_export_dir(const std::string& base_path) {
-
-        fs::path base_export_path(base_path);
+        const fs::path base_export_path(base_path);
         export_dir_ = base_export_path;
 
-        if (!fs::exists(base_export_path)) {
+        if (!exists(base_export_path)) {
             try {
-                fs::create_directories(base_export_path);
+                create_directories(base_export_path);
             } catch (const fs::filesystem_error& e) {
                 throw std::runtime_error("Failed to create directory: " + std::string(e.what()));
             }
@@ -76,18 +75,16 @@ namespace aw2 {
             export_svg_internal(filename + "_2.svg", flags);
         }
         else if (context == ITERATION_CARVE) {
-            export_flags flags;
+            constexpr export_flags flags;
             export_svg_internal(filename + ".svg", flags);
         }
     }
 
     void alpha_wrap_2_exporter::export_svg_internal(const std::string& filename, const export_flags& flags)
     {
-
         if (xmin_ > xmax_ || ymin_ > ymax_) {
             return;
         }
-
 
         double width = xmax_ - xmin_;
         double height = ymax_ - ymin_;
@@ -210,8 +207,8 @@ namespace aw2 {
     void alpha_wrap_2_exporter::draw_input_points(std::ofstream& os) {
         os << "  <g fill=\"" << style_.input_points.color 
            << "\" opacity=\"" << style_.input_points.opacity << "\">\n";
-        for (auto vit = oracle_.tree_.begin(); vit != oracle_.tree_.end(); ++vit) {
-            auto sp = to_svg(*vit);
+        for (auto vit : oracle_.tree_) {
+            auto sp = to_svg(vit);
             draw_circle(os, sp, style_.input_points.relative_stroke_width);
         }
         os << "  </g>\n";
@@ -346,8 +343,8 @@ namespace aw2 {
     }
 
     // ColorMap implementation
-    ColorMap::ColorMap(const RGBColor& min_color, const RGBColor& max_color, 
-                       double min_value, double max_value)
+    ColorMap::ColorMap(const RGBColor& min_color, const RGBColor& max_color,
+                       const double min_value, const double max_value)
         : min_color_(min_color), max_color_(max_color), 
           min_value_(min_value), max_value_(max_value) {
         if (max_value <= min_value) {

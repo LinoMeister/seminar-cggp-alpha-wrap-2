@@ -120,7 +120,7 @@ namespace aw2 {
     }
 
 
-    void alpha_wrap_2::init(AlgorithmConfig& config) {
+    void alpha_wrap_2::init(const AlgorithmConfig& config) {
 
         // Create hierarchical timer structure
         total_timer_ = registry_.create_root_timer("Alpha Wrap Algorithm");
@@ -135,10 +135,10 @@ namespace aw2 {
         init_timer_->start();
 
         // Compute bounding box diagonal length
-        auto bbox = oracle_.bbox_;
+        auto [x_min, x_max, y_min, y_max] = oracle_.bbox_;
         bbox_diagonal_length_ = std::sqrt(CGAL::squared_distance(
-            Point_2(bbox.x_min, bbox.y_min),
-            Point_2(bbox.x_max, bbox.y_max)
+            Point_2(x_min, y_min),
+            Point_2(x_max, y_max)
         ));
 
         // apply configuration
@@ -153,7 +153,7 @@ namespace aw2 {
         statistics_.config.alpha = config.alpha;
         statistics_.config.offset = config.offset;
         statistics_.config.traversability_params = config.traversability_params;
-        
+
         // Set traversability object
         switch (config.traversability_method) {
             case CONSTANT_ALPHA:
@@ -162,40 +162,40 @@ namespace aw2 {
                 break;
             case DEVIATION_BASED:
                 traversability_ = new DeviationBasedTraversability(
-                    alpha_, 
-                    offset_, 
+                    alpha_,
+                    offset_,
                     bbox_diagonal_length_,
                     oracle_,
                     std::get<DeviationBasedParams>(config.traversability_params)
                 );
                 statistics_.config.traversability_function = "DEVIATION_BASED";
-                
+
                 break;
             case INTERSECTION_BASED:
                 traversability_ = new IntersectionBasedTraversability(
-                    alpha_, 
-                    offset_, 
+                    alpha_,
+                    offset_,
                     bbox_diagonal_length_,
                     oracle_,
                     std::get<IntersectionBasedParams>(config.traversability_params)
                 );
                 statistics_.config.traversability_function = "INTERSECTION_BASED";
-                
+
                 break;
             default:
                 throw std::invalid_argument("Unknown traversability method.");
         }
 
         // Insert bounding box points
-        FT margin = offset_ + bbox_diagonal_length_ / 10.0;
-        dt_bbox_min_ = Point_2(bbox.x_min - margin, bbox.y_min - margin);
-        dt_bbox_max_ = Point_2(bbox.x_max + margin, bbox.y_max + margin);
-        
+        const FT margin = offset_ + bbox_diagonal_length_ / 10.0;
+        dt_bbox_min_ = Point_2(x_min - margin, y_min - margin);
+        dt_bbox_max_ = Point_2(x_max + margin, y_max + margin);
+
         std::vector<Point_2> pts_bbox = {
-            {bbox.x_min - margin, bbox.y_min - margin}, 
-            {bbox.x_min - margin, bbox.y_max + margin}, 
-            {bbox.x_max + margin, bbox.y_min - margin}, 
-            {bbox.x_max + margin, bbox.y_max + margin}
+            {x_min - margin, y_min - margin},
+            {x_min - margin, y_max + margin},
+            {x_max + margin, y_min - margin},
+            {x_max + margin, y_max + margin}
         };
         dt_.insert(pts_bbox.begin(), pts_bbox.end());
 
@@ -228,18 +228,18 @@ namespace aw2 {
         total_timer_->pause();
     }
 
-    bool alpha_wrap_2::is_gate(const Delaunay::Edge& e) const {
-        auto c_in = e.first;
-        auto c_out = c_in->neighbor(e.second);
-        return (c_in->info() != c_out->info());
+    bool alpha_wrap_2::is_gate(const Delaunay::Edge& e) {
+        const auto c_in = e.first;
+        const auto c_out = c_in->neighbor(e.second);
+        return c_in->info() != c_out->info();
     }
 
     EdgeAdjacencyInfo alpha_wrap_2::gate_adjacency_info(const Delaunay::Edge& edge) const {
         EdgeAdjacencyInfo info;
         info.edge = edge;
-        auto c_in = edge.first;
-        int i = edge.second;            
-        auto c_out = c_in->neighbor(i);
+        const auto c_in = edge.first;
+        const int i = edge.second;
+        const auto c_out = c_in->neighbor(i);
 
         if (dt_.is_infinite(c_in)) {
             throw std::runtime_error("Error: c_in is infinite face.");
@@ -263,18 +263,17 @@ namespace aw2 {
     // Return the squared radius of the minimal Delaunay ball through the edge
     FT alpha_wrap_2::sq_minimal_delaunay_ball_radius(const Gate& gate) const {
 
-        auto adj = gate_adjacency_info(gate.edge);
-        auto p1 = gate.get_points().first;
-        auto p2 = gate.get_points().second;
-        auto min_ball_center = CGAL::midpoint(p1, p2);
+        auto [edge, cc_inside, cc_outside, outside_infinite] = gate_adjacency_info(gate.edge);
+        const auto p1 = gate.get_points().first;
+        const auto p2 = gate.get_points().second;
+        const auto min_ball_center = CGAL::midpoint(p1, p2);
         auto sq_min_ball_radius = CGAL::squared_distance(p1, p2) / 4;
 
-        auto sq_inside_ball_radius = CGAL::squared_distance(adj.cc_inside, p1);
+        auto sq_inside_ball_radius = CGAL::squared_distance(cc_inside, p1);
 
         // INFINITE outer cell
-
-        if (adj.outside_infinite) {
-            if (CGAL::squared_distance(adj.cc_inside, min_ball_center) < sq_min_ball_radius) {
+        if (outside_infinite) {
+            if (CGAL::squared_distance(cc_inside, min_ball_center) < sq_min_ball_radius) {
                 return sq_inside_ball_radius;
             }
             return sq_min_ball_radius;
@@ -283,21 +282,16 @@ namespace aw2 {
         // FINITE outer cell
 
         // Case 1: minimum ball is Delaunay:
-
-        if (CGAL::orientation(p1, p2, adj.cc_inside) != CGAL::orientation(p1, p2, adj.cc_outside)) {
+        if (CGAL::orientation(p1, p2, cc_inside) != CGAL::orientation(p1, p2, cc_outside)) {
             return sq_min_ball_radius;
         }
 
-        
         // Case 2: minimum ball is not Delaunay
-
-        auto sq_outside_ball_radius = CGAL::squared_distance(adj.cc_outside, p1);
+        auto sq_outside_ball_radius = CGAL::squared_distance(cc_outside, p1);
 
 #ifdef MODIFIED_ALPHA_TRAVERSABILITY
-        
         // Case 2.1: r_in > r_out
         if (sq_outside_ball_radius < sq_inside_ball_radius) {
-            std::cout << "!!! Modified alpha traversability case: " << sq_outside_ball_radius << " " << sq_inside_ball_radius << " " << sq_min_ball_radius << std::endl;
             return sq_min_ball_radius;
         }
 
@@ -321,28 +315,28 @@ namespace aw2 {
         const int inf_index = c_out->index(dt_.infinite_vertex());
 
         // construct a circumcenter for the infinite triangle
-        Point_2 p1 = c_out->vertex((inf_index + 1) % 3)->point();
-        Point_2 p2 = c_out->vertex((inf_index + 2) % 3)->point();
-        Point_2 mid = CGAL::midpoint(p1, p2);
-        
-        K::Line_2 line(p1, p2);
+        const Point_2 p1 = c_out->vertex((inf_index + 1) % 3)->point();
+        const Point_2 p2 = c_out->vertex((inf_index + 2) % 3)->point();
+        const Point_2 mid = CGAL::midpoint(p1, p2);
+
+        const K::Line_2 line(p1, p2);
 
         // check on which side of the line the non-adjacent vertex of c_in lies
         Point_2 c_in_nonadjc = c_in->vertex(c_in->cw((edge_index+1)%3))->point();
-        auto side = line.oriented_side(c_in_nonadjc);
+        const auto side = line.oriented_side(c_in_nonadjc);
 
-        int sign = (side == CGAL::ON_POSITIVE_SIDE) ? -1 : 1;
+        const int sign = (side == CGAL::ON_POSITIVE_SIDE) ? -1 : 1;
 
-        auto dir = line.perpendicular(mid).direction().to_vector();
+        const auto dir = line.perpendicular(mid).direction().to_vector();
 
-        Point_2 far_point = mid + sign * 10000 * dir;
+        const Point_2 far_point = mid + sign * 10000 * dir;
         return CGAL::circumcenter(p1, p2, far_point);
     }
 
     bool alpha_wrap_2::process_rule_1(const Point_2& c_in_cc, const Point_2& c_out_cc) {
         rule1_timer_->start();
         Point_2 steiner_point;
-        bool insert = oracle_.first_intersection(
+        const bool insert = oracle_.first_intersection(
             c_out_cc,
             c_in_cc,
             steiner_point,
@@ -364,15 +358,14 @@ namespace aw2 {
 
     bool alpha_wrap_2::process_rule_2(const Delaunay::Face_handle& c_in, const Point_2& c_in_cc) {
         rule2_timer_->start();
-        Point_2 steiner_point;
-        auto c_in_triangle = dt_.triangle(c_in);
 
-        if (oracle_.do_intersect(c_in_triangle)) {
+        if (const auto c_in_triangle = dt_.triangle(c_in); oracle_.do_intersect(c_in_triangle)) {
+            Point_2 steiner_point;
             // project circumcenter onto point set
-            auto p_input = oracle_.closest_point(c_in_cc);
+            const auto p_input = oracle_.closest_point(c_in_cc);
 
             // insert intersection with offset surface as steiner point
-            bool insert = oracle_.first_intersection(
+            const bool insert = oracle_.first_intersection(
                 c_in_cc,
                 p_input,
                 steiner_point,
@@ -388,9 +381,7 @@ namespace aw2 {
                 insert_steiner_point(steiner_point);
                 return true;
             }
-            else {
-                throw std::runtime_error("Error: R2 failed to compute intersection point.");
-            }
+            throw std::runtime_error("Error: R2 failed to compute intersection point.");
         }
         rule2_timer_->pause();
         return false;
@@ -400,7 +391,7 @@ namespace aw2 {
         std::cout << "Inserting Steiner point at " << steiner_point << std::endl;
  
         // insert Steiner point
-        auto vh = dt_.insert(steiner_point);
+        const auto vh = dt_.insert(steiner_point);
 
         // Update face labels
         for (auto fit = dt_.incident_faces(vh); ;) {
@@ -439,7 +430,7 @@ namespace aw2 {
         if (!is_gate(edge)) return;
 
         Gate g;
-        auto f = edge.first;
+        const auto f = edge.first;
 
         // orient such that INSIDE face is first
         g.edge = f->info() == INSIDE ? edge : dt_.mirror_edge(edge);
@@ -450,7 +441,6 @@ namespace aw2 {
             queue_.push(g);
         }
     }
-
 }
 
 

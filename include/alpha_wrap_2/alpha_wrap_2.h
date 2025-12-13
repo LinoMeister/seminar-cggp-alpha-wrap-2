@@ -10,11 +10,8 @@
 #include "alpha_wrap_2/timer.h"
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Exact_circular_kernel_2.h>
-#include <CGAL/Surface_mesh.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
-#include <iostream>
 #include <queue>
 #include <stack>
 #include <filesystem>
@@ -30,7 +27,7 @@ namespace aw2 {
     #ifdef USE_STACK_QUEUE
         using Queue = std::stack<Gate>;
     #else
-        using Queue = std::priority_queue<Gate, std::vector<Gate>, std::less<Gate>>;
+        using Queue = std::priority_queue<Gate, std::vector<Gate>, std::less<>>;
     #endif
 
     enum TraversabilityMethod {
@@ -58,7 +55,7 @@ namespace aw2 {
         // this is useful when we only want to export the first few steps
         int export_step_limit = 1000; 
 
-        std::string output_directory = "/mnt/storage/repos/HS25/seminar-cg-gp/alpha-wrap-2/data/results/";
+        std::string output_directory;
 
         // visualization style (default, clean, outside_filled)
         std::string style = "default";
@@ -119,10 +116,10 @@ namespace aw2 {
         // initialization and running
         alpha_wrap_2(const Oracle& oracle);
         ~alpha_wrap_2();
-        void init(AlgorithmConfig& config);
+        void init(const AlgorithmConfig& config);
         void run();
         
-        // Get statistics (can be called after compute_wrap)
+        // utility functions
         const AlgorithmStatistics& get_statistics() const { return statistics_; }
         EdgeAdjacencyInfo gate_adjacency_info(const Delaunay::Edge& edge) const;
 
@@ -130,7 +127,7 @@ namespace aw2 {
     private:
 
         // gate and traversability processing methods
-        bool is_gate(const Delaunay::Edge& e) const;
+        static bool is_gate(const Delaunay::Edge& e) ;
         FT sq_minimal_delaunay_ball_radius(const Gate& gate) const;
 
         // rule processing

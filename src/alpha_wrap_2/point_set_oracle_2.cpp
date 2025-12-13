@@ -12,12 +12,12 @@ namespace aw2 {
     bool point_set_oracle_2::do_intersect(const K::Triangle_2 &t) const
     {
         if (tree_.empty()) return false;
-        auto bbox = t.bbox();
-        auto min = Point_2(bbox.xmin(), bbox.ymin());
-        auto max = Point_2(bbox.xmax(), bbox.ymax());
+        const auto bbox = t.bbox();
+        const auto min = Point_2(bbox.xmin(), bbox.ymin());
+        const auto max = Point_2(bbox.xmax(), bbox.ymax());
         
         // Fuzzy box query to restrict candidates
-        CGAL::Fuzzy_iso_box<CGAL::Search_traits_2<K>> box(min, max);
+        const CGAL::Fuzzy_iso_box<CGAL::Search_traits_2<K>> box(min, max);
 
         std::vector<Point_2> candidates;
         tree_.search(std::back_inserter(candidates), box);
@@ -35,7 +35,7 @@ namespace aw2 {
     {
         if (tree_.empty()) return 0.0;
 
-        Neighbor_search search(tree_, p, 1);
+        const Neighbor_search search(tree_, p, 1);
         return search.begin()->second; // squared distance to nearest neighbor
     }
 
@@ -43,7 +43,7 @@ namespace aw2 {
     {
         if (tree_.empty()) return Point_2(0, 0);
 
-        Neighbor_search search(tree_, p, 1);
+        const Neighbor_search search(tree_, p, 1);
         return search.begin()->first; // nearest point
     }
 
@@ -53,13 +53,13 @@ namespace aw2 {
                             FT &lambda) const
     {
         if (tree_.empty()) return false;
-        Segment_2 seg(p, q);
+        const Segment_2 seg(p, q);
 
         // get a bounding box with margins so we narrow down the search
-        CGAL::Bbox_2 bbox = seg.bbox();
-        Point_2 min(bbox.xmin() - offset_size, bbox.ymin() - offset_size);
-        Point_2 max(bbox.xmax() + offset_size, bbox.ymax() + offset_size);
-        CGAL::Fuzzy_iso_box<Traits> box(min, max);
+        const CGAL::Bbox_2 bbox = seg.bbox();
+        const Point_2 min(bbox.xmin() - offset_size, bbox.ymin() - offset_size);
+        const Point_2 max(bbox.xmax() + offset_size, bbox.ymax() + offset_size);
+        const CGAL::Fuzzy_iso_box<Traits> box(min, max);
 
         std::vector<Point_2> candidates;
         tree_.search(std::back_inserter(candidates), box);
@@ -69,8 +69,8 @@ namespace aw2 {
         }
 
         // Create a temporary kd-tree from candidates for efficient proximity search
-        Tree candidates_tree(candidates.begin(), candidates.end());
-        Incremental_neighbor_search inc_search(candidates_tree, p);
+        const Tree candidates_tree(candidates.begin(), candidates.end());
+        const Incremental_neighbor_search inc_search(candidates_tree, p);
 
         // Precompute segment length for distance pruning
         FT seg_length = std::sqrt(CGAL::squared_distance(p, q));
@@ -145,10 +145,10 @@ namespace aw2 {
         Points local_pts;
         if (tree_.empty()) return local_pts;
 
-        auto bbox = seg.bbox();
-        Point_2 min(bbox.xmin() - margin, bbox.ymin() - margin);
-        Point_2 max(bbox.xmax() + margin, bbox.ymax() + margin);
-        CGAL::Fuzzy_iso_box<Traits> box(min, max);
+        const auto bbox = seg.bbox();
+        const Point_2 min(bbox.xmin() - margin, bbox.ymin() - margin);
+        const Point_2 max(bbox.xmax() + margin, bbox.ymax() + margin);
+        const CGAL::Fuzzy_iso_box<Traits> box(min, max);
 
         // Search for points within the bounding box
         tree_.search(std::back_inserter(local_pts), box);
@@ -156,19 +156,19 @@ namespace aw2 {
     }
 
     bool segment_circle_intersection(const Point_2 &p, const Point_2 &q, const Point_2 &center, FT radius, Point_2 &o, FT &lambda) {
-        auto dx = q.x() - p.x();
-        auto dy = q.y() - p.y();
+        const auto dx = q.x() - p.x();
+        const auto dy = q.y() - p.y();
 
-        FT a = dx*dx + dy*dy;
+        const FT a = dx*dx + dy*dy;
         if (a == 0) return false; // degenerate segment
 
-        FT ox = p.x() - center.x();
-        FT oy = p.y() - center.y();
+        const FT ox = p.x() - center.x();
+        const FT oy = p.y() - center.y();
 
-        FT b = 2 * (dx*ox + dy*oy);
-        FT c = ox*ox + oy*oy - radius*radius;
+        const FT b = 2 * (dx*ox + dy*oy);
+        const FT c = ox*ox + oy*oy - radius*radius;
 
-        FT disc = b*b - 4*a*c;
+        const FT disc = b*b - 4*a*c;
         if (disc < 0) return false; // no real intersection
 
         FT sqrt_disc = std::sqrt(disc);

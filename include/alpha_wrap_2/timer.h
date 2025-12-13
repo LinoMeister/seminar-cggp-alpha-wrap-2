@@ -66,8 +66,8 @@ public:
 
     // Print hierarchical timing report
     void print_hierarchy(int indent = 0) const {
-        std::string prefix(indent * 2, ' ');
-        double total_time = elapsed_ms();
+        const std::string prefix(indent * 2, ' ');
+        const double total_time = elapsed_ms();
         
         if (indent == 0) {
             std::cout << prefix << name_ << ": " << total_time << " ms (100.0%)" << std::endl;
@@ -82,9 +82,9 @@ public:
         
         // Print self time if there are children
         if (!children_.empty()) {
-            std::string self_prefix(indent * 2 + 2, ' ');
-            double self_time = self_time_ms();
-            double self_percentage = (self_time / total_time) * 100.0;
+            const std::string self_prefix(indent * 2 + 2, ' ');
+            const double self_time = self_time_ms();
+            const double self_percentage = (self_time / total_time) * 100.0;
             std::cout << self_prefix << "└─ [self]: " << self_time << " ms (" 
                       << std::fixed << std::setprecision(1) << self_percentage << "%)" << std::endl;
         }

@@ -18,8 +18,7 @@ struct bounding_box {
 // Helper function to find command line argument value
 std::string get_cmd_option(char **begin, char **end, const std::string &option)
 {
-  char **itr = std::find(begin, end, option);
-  if (itr != end && ++itr != end)
+  if (char **itr = std::find(begin, end, option); itr != end && ++itr != end)
   {
     return std::string(*itr);
   }
@@ -58,9 +57,8 @@ int main(int argc, char *argv[])
 
   aw2::AlgorithmConfig config;
 
-  
-  std::string input_arg = get_cmd_option(argv, argv + argc, "--input");
-  if (!input_arg.empty())
+
+  if (std::string input_arg = get_cmd_option(argv, argv + argc, "--input"); !input_arg.empty())
   {
     filename = input_arg;
   }
@@ -69,8 +67,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  std::string output_arg = get_cmd_option(argv, argv + argc, "--output");
-  if (!output_arg.empty())
+  if (std::string output_arg = get_cmd_option(argv, argv + argc, "--output"); !output_arg.empty())
   {
     config.output_directory = output_arg;
   }
@@ -79,8 +76,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  std::string output_use_subdir_arg = get_cmd_option(argv, argv + argc, "--output_use_subdir");
-  if (!output_use_subdir_arg.empty())
+  if (std::string output_use_subdir_arg = get_cmd_option(argv, argv + argc, "--output_use_subdir"); !output_use_subdir_arg.empty())
   {
     if (output_use_subdir_arg == "true") {
       fs::path base_export_path(config.output_directory);
@@ -88,8 +84,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  std::string alpha_arg = get_cmd_option(argv, argv + argc, "--alpha");
-  if (!alpha_arg.empty())
+  if (std::string alpha_arg = get_cmd_option(argv, argv + argc, "--alpha"); !alpha_arg.empty())
   {
     config.alpha = std::stod(alpha_arg);
   }
@@ -98,8 +93,7 @@ int main(int argc, char *argv[])
     std::cout << "No alpha specified. Using default alpha = " << config.alpha << std::endl;
   }
 
-  std::string offset_arg = get_cmd_option(argv, argv + argc, "--offset");
-  if (!offset_arg.empty())
+  if (std::string offset_arg = get_cmd_option(argv, argv + argc, "--offset"); !offset_arg.empty())
   {
     config.offset = std::stod(offset_arg);
   }
@@ -138,26 +132,22 @@ int main(int argc, char *argv[])
   config.export_step_limit = 2000;
   config.max_iterations = 50000;
 
-  std::string intermediate_step_arg = get_cmd_option(argv, argv + argc, "--intermediate_steps");
-  if (!intermediate_step_arg.empty())
+  if (std::string intermediate_step_arg = get_cmd_option(argv, argv + argc, "--intermediate_steps"); !intermediate_step_arg.empty())
   {
     config.intermediate_steps = std::stoi(intermediate_step_arg);
   }
 
-  std::string export_step_limit_arg = get_cmd_option(argv, argv + argc, "--export_step_limit");
-  if (!export_step_limit_arg.empty())
+  if (std::string export_step_limit_arg = get_cmd_option(argv, argv + argc, "--export_step_limit"); !export_step_limit_arg.empty())
   {
     config.export_step_limit = std::stoi(export_step_limit_arg);
   }
 
-  std::string max_iter_arg = get_cmd_option(argv, argv + argc, "--max_iterations");
-  if (!max_iter_arg.empty())
+  if (std::string max_iter_arg = get_cmd_option(argv, argv + argc, "--max_iterations"); !max_iter_arg.empty())
   {
     config.max_iterations = std::stoi(max_iter_arg);
   }
 
-  std::string style_arg = get_cmd_option(argv, argv + argc, "--style");
-  if (!style_arg.empty())
+  if (std::string style_arg = get_cmd_option(argv, argv + argc, "--style"); !style_arg.empty())
   {
     if (style_arg == "default" || style_arg == "clean" || style_arg == "outside_filled") {
       config.style = style_arg;

@@ -102,9 +102,9 @@ namespace aw2 {
 
     class ConstantAlphaTraversability : public Traversability {
     public:
-        ConstantAlphaTraversability(FT alpha) : alpha_(alpha) {}
+        ConstantAlphaTraversability(const FT alpha) : alpha_(alpha) {}
 
-        virtual bool operator()(Gate& g) override {
+        bool operator()(Gate& g) override {
             return g.sq_min_delaunay_rad >= alpha_ * alpha_;
         }
 
@@ -114,12 +114,12 @@ namespace aw2 {
 
     class DeviationBasedTraversability : public Traversability {
     public:
-        DeviationBasedTraversability(FT alpha, FT offset, FT bbox_diagonal_length, const Oracle& oracle, DeviationBasedParams params) 
+        DeviationBasedTraversability(const FT alpha, const FT offset, const FT bbox_diagonal_length, const Oracle& oracle, const DeviationBasedParams &params)
             : alpha_(alpha), offset_(offset), oracle_(oracle),
               alpha_max_(params.alpha_max * bbox_diagonal_length), point_threshold_(params.point_threshold), 
               deviation_factor_(params.deviation_factor) {}
 
-        virtual bool operator()(Gate& g) override;
+        bool operator()(Gate& g) override;
 
     private:
         FT subsegment_deviation(const Segment_2& seg) const;
@@ -134,11 +134,11 @@ namespace aw2 {
 
     class IntersectionBasedTraversability : public Traversability {
     public:
-        IntersectionBasedTraversability(FT alpha, FT offset, FT bbox_diagonal_length, const Oracle& oracle, IntersectionBasedParams params) 
+        IntersectionBasedTraversability(const FT alpha, const FT offset, const FT bbox_diagonal_length, const Oracle& oracle, const IntersectionBasedParams &params)
             : alpha_(alpha), offset_(offset), oracle_(oracle),
               tolerance_(params.tolerance_factor * bbox_diagonal_length) {}
 
-        virtual bool operator()(Gate& g) override;
+        bool operator()(Gate& g) override;
 
     private:
         FT alpha_;

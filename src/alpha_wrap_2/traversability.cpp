@@ -15,10 +15,10 @@ namespace aw2 {
     }
 
     bool DeviationBasedTraversability::operator()(Gate& g) {
-        auto points = g.get_points();
-        Segment_2 seg(points.first, points.second);
-        auto dev = segment_deviation(seg);
-        auto adaptive_alpha = alpha_max_ * (1 - dev) + alpha_ * dev;
+        auto [fst, snd] = g.get_points();
+        const Segment_2 seg(fst, snd);
+        const auto dev = segment_deviation(seg);
+        const auto adaptive_alpha = alpha_max_ * (1 - dev) + alpha_ * dev;
         return g.sq_min_delaunay_rad >= std::pow(adaptive_alpha, 2);
     }
 
@@ -58,8 +58,7 @@ namespace aw2 {
             auto p0 = s + t0 * (t - s);
             auto p1 = s + t1 * (t - s);
             Segment_2 sub_seg(p0, p1);
-            auto dev = subsegment_deviation(sub_seg);
-            if (dev > max_dev) {
+            if (const auto dev = subsegment_deviation(sub_seg); dev > max_dev) {
                 max_dev = dev;
             }
         }
@@ -68,10 +67,10 @@ namespace aw2 {
     }
 
     bool IntersectionBasedTraversability::operator()(Gate& g) {
-        auto points = g.get_points();
-        Point_2 s = points.first;
-        Point_2 t = points.second;
-        CGAL::Line_2<K> line(s,t);
+        auto [fst, snd] = g.get_points();
+        Point_2 s = fst;
+        Point_2 t = snd;
+        const CGAL::Line_2<K> line(s,t);
 
         // determine the number of samples based on alpha
         auto segment_length = alpha_;

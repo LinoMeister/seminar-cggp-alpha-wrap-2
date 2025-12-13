@@ -2,7 +2,6 @@
 #define AW2_STATISTICS_H
 
 #include <string>
-#include <fstream>
 #include <nlohmann/json.hpp>
 #include "alpha_wrap_2/traversability.h"
 

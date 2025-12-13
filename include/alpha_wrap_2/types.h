@@ -23,7 +23,7 @@ namespace aw2
     typedef K::Segment_2 Segment_2;
 
     typedef CGAL::Triangulation_vertex_base_2<K> Vb;
-    typedef CGAL::Triangulation_face_base_with_info_2<FaceLabel, K, CGAL::Triangulation_face_base_2<K>> Fb;
+    typedef CGAL::Triangulation_face_base_with_info_2<FaceLabel, K> Fb;
     typedef CGAL::Triangulation_data_structure_2<Vb, Fb> Tds;
 
     typedef CGAL::Delaunay_triangulation_2<K, Tds> Delaunay;
