@@ -34,7 +34,6 @@ namespace aw2 {
                 std::cout << "Reached maximum number of iterations (" << max_iterations_ << "). Stopping." << std::endl;
                 break;
             }
-            std::cout << "\nIteration: " << iteration_ << " Queue size: " << queue_.size() << std::endl;
 
             // ** Get candidate gate **
             candidate_gate_ = queue_.top();
@@ -61,19 +60,16 @@ namespace aw2 {
             // ** Process rule 1 **
             if (process_rule_1(c_in_cc, c_out_cc)) {
                 statistics_.execution_stats.n_rule_1++;
-                std::cout << "Steiner point inserted by R1." << std::endl;
                 continue;
             }
 
             // ** Process rule 2 **
             if (process_rule_2(c_in, c_in_cc)) {
                 statistics_.execution_stats.n_rule_2++;
-                std::cout << "Steiner point inserted by R2." << std::endl;
                 continue;
             }
 
             // ** Carve face **
-            std::cout << "No Steiner point inserted. Marking c_in as OUTSIDE." << std::endl;
             if (export_step_) {
                 exporter_->export_svg("iteration_" + std::to_string(iteration_) + "_0", ITERATION_CARVE);
             }
@@ -112,8 +108,7 @@ namespace aw2 {
         // Export statistics to JSON
         std::string stats_filepath = exporter_->export_dir_.string() + "/statistics.json";
         statistics_.export_to_json(stats_filepath);
-        std::cout << "\nStatistics exported to: " << stats_filepath << std::endl;
-        
+
         // Print hierarchical timing report
         registry_.print_all_hierarchies();
         std::cout << "Total iterations: " << iteration_ << std::endl;
@@ -388,8 +383,7 @@ namespace aw2 {
     }
 
     void alpha_wrap_2::insert_steiner_point(const Point_2& steiner_point) {
-        std::cout << "Inserting Steiner point at " << steiner_point << std::endl;
- 
+
         // insert Steiner point
         const auto vh = dt_.insert(steiner_point);
 
