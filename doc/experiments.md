@@ -49,7 +49,7 @@ A small experiment was run with `--alpha 0.01` and `--offset 0.01` on 8 example 
 
 The following observations were made:
 - The modified versions takes fewer iterations to terminate.
-- There is no strong change of runtime.
+- There is no significant change in runtime.
 - There is no easily recognizable visual change in the produced output. 
 
 It is to be expected that the modified version takes fewer iterations as we strengthen the condition for traversability, i.e., consider fewer gates for processing. The cases where the modification has an influence on traversability seem to be rare enough for it not to make a noticeable difference.This topic could be explored further, e.g., by testing with different parameters, using a wider range of inputs, or implementing it into the 3D algorithm. Yet from this first look it seems to have a tiny impact on how the algorithm behaves.
