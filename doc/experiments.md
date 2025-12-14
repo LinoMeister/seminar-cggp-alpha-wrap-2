@@ -34,9 +34,25 @@ Suppose we have a spherical spoon with radius $\alpha$, then we want to start fr
 
 Due to this observation, I decided to briefly explore a modified version of the algorithm, where in the third case, $\alpha$ is not compared to the radius of the minimum Delaunay circle, but just the minimum circle through the gate. Meaning that if case 3 occurs, the gate is only deemed traversable, if the entire $\alpha$ -spoon can fit through the gate. This modified version is available through a different build configuration. There is a cmake preset `alternative-trav` available to build the algorithm with this modification.
 
-For example running the algorithm on 'example 6' with `--alpha 0.01` and `--offset 0.01` takes `1180` iterations with the original algorithm and takes only `1175` iterations when using the modified version. There is no easily recognizable change in the produced output. It is to be expected that the modified version takes fewer iterations as we strengthen the condition for traversability, i.e., consider fewer gates for processing. The cases where the modification has an influence on traversability seem to be rare enough for it not to make a noticeable difference.
+A small experiment was run with `--alpha 0.01` and `--offset 0.01` on 8 example inputs. A table showing parts of the output statistics is shown below. The data and svg exports of the experiment are available in the supplementary material (`experiments/alternative_traversability`).
 
-This topic could be explored further, e.g., using a wider range of inputs or implementing it into the 3D algorithm. Yet from this first look it seems to have a tiny impact on how the algorithm behaves.
+| Example  | Iterations (Default) | Iterations (Modified) | Iterations Δ | Runtime \[ms\] (Default) | Runtime \[ms\] (Modified) | Runtime Δ |
+| -------- | -------------------- | --------------------- | ------------ | ------------------------ | ------------------------- | --------- |
+| example1 | 686                  | 680                   | -6           | 104.80                   | 98.25                     | -6.55     |
+| example2 | 710                  | 701                   | -9           | 94.54                    | 93.99                     | -0.55     |
+| example3 | 542                  | 540                   | -2           | 51.93                    | 56.22                     | 4.29      |
+| example4 | 744                  | 743                   | -1           | 44.45                    | 44.03                     | -0.42     |
+| example5 | 724                  | 714                   | -10          | 56.96                    | 55.78                     | -1.18     |
+| example6 | 1166                 | 1163                  | -3           | 128.82                   | 129.13                    | 0.31      |
+| example7 | 900                  | 886                   | -14          | 74.07                    | 76.07                     | 2.00      |
+| example8 | 710                  | 708                   | -2           | 69.23                    | 68.90                     | -0.33     |
+
+The following observations were made:
+- The modified versions takes fewer iterations to terminate.
+- There is no strong change of runtime.
+- There is no easily recognizable visual change in the produced output. 
+
+It is to be expected that the modified version takes fewer iterations as we strengthen the condition for traversability, i.e., consider fewer gates for processing. The cases where the modification has an influence on traversability seem to be rare enough for it not to make a noticeable difference.This topic could be explored further, e.g., by testing with different parameters, using a wider range of inputs, or implementing it into the 3D algorithm. Yet from this first look it seems to have a tiny impact on how the algorithm behaves.
 
 ## Adaptive Traversability
 
