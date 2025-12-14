@@ -75,7 +75,7 @@ $$
 
 From the measured deviation $\delta$ we then obtain a value for $\alpha$. In this implementation, this is achieved by constructing a normalized deviation $\tilde{\delta}\in[0,1]$.
 $$
-	ilde{\delta}= \text{clamp}(\mu \cdot \lvert \delta - \epsilon^2 \rvert, 0, 1)
+	\tilde{\delta}= \text{clamp}(\mu \cdot \lvert \delta - \epsilon^2 \rvert, 0, 1)
 $$
 - If the gate approximates the offset surface well, we expect the deviation to be close to $\epsilon^2$.
 - We use a parameter $\mu$ (in code referred to as `deviation_factor`) to control sensitivity. Larger values mean a normalized deviation of $1$ is reached more quickly.
