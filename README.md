@@ -9,8 +9,9 @@ This project contains an implementation of **alpha wrapping with an offset** for
 
 A more detailed documentation about this project is available in `/doc`
 - [Project Overview](doc/project.md): Provides an overview of the project.
-- [Code](doc/code.md): Describes the involved code components.
 - [Experiments](doc/experiments.md): Documents the experiments that were conducted as part of the project.
+- [Code](doc/code.md): Describes the involved code components.
+- [Supplementary Material](doc/supplementary.md): Overview of supplementary material.
 
 
 ## Building
@@ -50,12 +51,14 @@ In the paper, the alpha wrapping algorithm is described using a priority queue (
 
 ## Usage
 
+Some example inputs are available in the [supplementary material](doc/supplementary.md). These examples can for example be put into a folder `data/input`.
+
 ### Basic Example
 
 ```bash
 ./build/src/app/alpha_wrap2_app \
-  --input path/to/points.pts \
-  --output ./data/results \
+  --input data/input/example1_dense.pts \
+  --output data/results \
   --output_use_subdir true \
   --alpha 0.01 \
   --offset 0.01 \
