@@ -137,3 +137,8 @@ Each run produces:
 - `final_result.svg`: Final wrap boundary visualization
 - `in_progress_iter_N.svg`: Intermediate visualizations (if enabled)
 - `statistics.json`: Complete run metadata including configuration, timings, and iteration counts
+
+## Disclaimer
+
+>[!NOTE]
+>AI-tools were heavily involved in writing code for utilities (SVG exporting, JSON serialization and timer). Furthermore, AI-tools assisted with project configuration, debugging, review and improvement of the project documentation.
