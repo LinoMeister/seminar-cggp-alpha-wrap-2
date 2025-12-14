@@ -1,6 +1,9 @@
 # Alpha Wrapping with an Offset in 2D
 
-An implementation of 2D Alpha Wrapping with an offset for point cloud data.
+**Student**: Lino Meister
+**Supervisor**: Ningfeng Zhou 
+
+This project contains an implementation of **alpha wrapping with an offset** for a 2D scenario, limited to processing 2D point clouds as input data. This implementation was then used to conduct experiments with different traversability criteria.
 
 ## Documentation
 

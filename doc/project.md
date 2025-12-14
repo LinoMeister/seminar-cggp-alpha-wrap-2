@@ -7,6 +7,42 @@ Alpha wrapping with an offset is an algorithm presented in a [paper](https://inr
 >[!NOTE]
 >**Abstract**: Given an input 3D geometry such as a triangle soup or a point set, we address the problem of generating a watertight and orientable surface triangle mesh that strictly encloses the input. The output mesh is obtained by greedily refining and carving a 3D Delaunay triangulation on an offset surface of the input, while carving with empty balls of radius alpha. The proposed algorithm is controlled via two user-defined parameters: alpha and offset. Alpha controls the size of cavities or holes that cannot be traversed during carving, while offset controls the distance between the vertices of the output mesh and the input. Our algorithm is guaranteed to terminate and to yield a valid and strictly enclosing mesh, even for defect-laden inputs. Genericity is achieved using an abstract interface probing the input, enabling any geometry to be used, provided a few basic geometric queries can be answered. We benchmark the algorithm on large public datasets such as Thingi10k, and compare it to state-of-the-art approaches in terms of robustness, approximation, output complexity, speed, and peak memory consumption. Our implementation is available through the CGAL library.
 
+### Simplified Description of the Algorithm
+
+At initialization a bounding box of the input geometry is constructed and its vertices are inserted into a Delaunay triangulation. Each cell of the triangulation is labeled either *inside* or *outside*. Initially, all finite cells are labeled *inside* and all infinite cells are labeled *outside*. 
+
+A *gate* is a facet where one adjacent cell is labeled *inside* and the other *outside*. The algorithm maintains a queue of *traversable* gates, these are gates that satisfy a traversability criterion. In each iteration one such gate is considered and one of two possible operations is performed on the gate:
+
+- **Refinement**: Construct a point on the offset surface and insert it into the triangulation.
+- **Carving**: Mark the inside cell as outside
+
+There are two rules (called R1 and R2) that are checked to determine if a refinement is needed at a gate. These rules ensure that the input geometry is not exposed to the outside and if applicable, they yield a point to insert into the triangulation. If none of the rules applies, the inside cell can be carved safely (i.e., it can be marked as *outside*).
+
+The algorithm iterates as long as there are traversable gates present in the triangulation. Once the queue of traversable gates is empty, the offset surface can be extracted as the set of facets separating inside from outside.
+
+Below is a simplified pseudo-code description of the algorithm where `D` denotes a Delaunay triangulation and `Q` denotes the queue where the traversable gates are stored. 
+
+```
+insert bounding box vertices into D
+insert traversable gates into Q
+
+while Q not empty:
+	f <- Q.pop()
+	
+	if R1(f):
+		inset point into D
+	else if R2(f):
+		inset point into D
+	else:
+		c_in <- get_inside_cell(f)
+		mark c_in as OUTSIDE
+		
+	update Q
+	
+extract offset surface
+```
+
+
 ## Project Overview
 
 As part of this project I implemented a version of this algorithm that works on 2D scenarios and is limited to point cloud inputs. This implementation is *not* based on the CGAL alpha wrapping implementation, however it does use structures and algorithms from the CGAL library (e.g., Delaunay triangulation or KD-tree).
