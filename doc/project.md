@@ -61,7 +61,7 @@ In 'cave-like' areas we are thus more likely to end up with a subsegment whose b
 Even with this improvement several issues still persist:
 - The bounding boxes might still not always capture the local input geometry well.
 - An average squared deviation of $\epsilon^2$ does not necessarily mean that the offset surface is approximated well
-- Finding good parameters for mapping $\tilde{\delta}$ to $\alpha$ can be challenging
+- Finding good parameters for obtaining the normalized deviation $\tilde{\delta}$ and mapping it to $\alpha$ can be challenging
 
 There are certainly ways to further improve this method. However, to me it seemed more promising to consider a second appraoch that aims at avoiding many of the aforementioned problems.
 

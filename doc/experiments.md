@@ -26,13 +26,13 @@ The minimum Delaunay circle corresponds to one of the following 3 cases:
 >[!NOTE]
 >Shown in the images is a *gate* (orange) with an adjacent *inside* cell (blue) and an adjacent *outside* cell (white). Displayed in gray are the circrumcircles of these cells. The red circle indicates the minimum Delaunay circle. (The red dot has no meaning, it was just used as a handle in geogebra...)
 
-Suppose we have a spherical spoon with radius $\alpha$, then we want to start from the outside cell and carve out the inside cell by passing through the gate. If the minimum Delaunay circle has radius larger than $\alpha$, for the first two cases, this task can be achieved. The third case is different though, as a gate might be marked traversable despite the spoon not being able fully carve out the inside cell starting from the outside. Such a situation is displayed below.
+Suppose we have a spherical spoon with radius $\alpha$, then we want to start from the outside cell and carve out the inside cell by passing through the gate. If the minimum Delaunay circle has radius larger than $\alpha$, for the first two cases, this task can be achieved. The third case is different though, as a gate might be marked traversable despite the spoon not being able to fully carve out the inside cell, starting from the outside region. Such a situation is displayed below.
 
 <div align="center">
   <img src="images/min-delaunay-ball/traversable.png" width="600">
 </div>
 
-Due to this observation, I decided to briefly explore a modified version of the algorithm, where in the third case, $\alpha$ is not compared to the radius of the minimum Delaunay circle, but just the minimum circle through the gate. Meaning that if case 3 occurs, the gate is only deemed traversable, if the entire $\alpha$-spoon can fit through the gate. This modified version is available through a different build configuration. There is a cmake preset `alternative-trav` available to build the algorithm with this modification.
+Due to this observation, I decided to briefly explore a modified version of the algorithm, where in the third case, $\alpha$ is not compared to the radius of the minimum Delaunay circle, but just the minimum circle through the gate. Meaning that if case 3 occurs, the gate is only deemed traversable, if the entire $\alpha$ -spoon can fit through the gate. This modified version is available through a different build configuration. There is a cmake preset `alternative-trav` available to build the algorithm with this modification.
 
 For example running the algorithm on 'example 6' with `--alpha 0.01` and `--offset 0.01` takes `1180` iterations with the original algorithm and takes only `1175` iterations when using the modified version. There is no easily recognizable change in the produced output. It is to be expected that the modified version takes fewer iterations as we strengthen the condition for traversability, i.e., consider fewer gates for processing. The cases where the modification has an influence on traversability seem to be rare enough for it not to make a noticeable difference.
 
@@ -44,14 +44,14 @@ This topic could be explored further, e.g., using a wider range of inputs or imp
 
 #### Target Length
 
-There are a couple of parameters to tune the adaptive traversability methods. Most importantly is the **target length** parameter, which determines has the following roles:
+There are a couple of parameters to tune the adaptive traversability methods. Most important is the **target length** parameter, which takes the following roles:
 
 - Deviation based: Target length of the subsegments used in the deviation computation
 - Intersection based: Target length for the spacing between the sample points
 
-For both methods this parameter allows us to control how large a hole need to be for it to be considered traversable. A large target length results in a less detailed evaluation of a gate, where small features are less likely to make a difference on traversability. A small target length allows us to carve smaller holes, but makes checking traversability more expensive.
+For both methods this parameter allows us to control how large a hole need to be for it to be considered traversable. A large target length results in a less detailed evaluation of a gate where small features are less likely to make a difference on traversability. A small target length allows small input features to have a bigger influence on the traversability of the gate.
 
-The target length parameter is set equal to the specified $\alpha$ parameter. When comparing the adaptive methods to using a constant alpha, all the methods use the same $\alpha$ (i.e., target length).
+The target length parameter is set equal to the specified $\alpha$ parameter. When comparing the adaptive methods to using a constant alpha, all the methods use the same value for $\alpha$ and the target length.
 
 #### Other Parameters
 
@@ -111,14 +111,15 @@ This comparison should however merely give a rough idea of what sort of results 
 
 - To make the result in some way comparable, all methods used the same value for  $\alpha$ or target length. However, better results might be achieved by choosing  the remaining traversability parameters  of the adaptive methods differently. 
 - The implementation of the procedure for updating the queue can be made more efficient. Currently the queue is cleared and rebuilt by checking every facet in the triangulation. The adaptive methods would especially benefit from a more efficient implementation, as checking gates for traversability is what currently takes up most of their runtime.
-- The methods were compared on a small dataset of rather simple example inputs which were all described by a  *dense* point cloud. Behavior on "messy" real-world data might be different. A general concern of the alpha wrapping method is to ensure that we don't traverse through hole in the offset surface and start carving out the entire inside volume of the input geometry. 
+- The methods were compared on a small dataset of rather simple example inputs which were all described by a  *dense* point cloud. Behavior on "messy" real-world data might be different.
 
 #### Conclusion
 
 Deviation-based traversability can under some circumstances produce decent results, however in many aspects it is inferior to intersection-based traversability which profits from the following advantages:
-- Easier to tune
-- More robust towards changes in the offset parameter
+
 - Often produces more desirable results and usually terminates faster
+- More robust towards changes in the offset parameter
+- Fewer and more meaningful traversability parameters 
 - Easier to adjust to different input types and a 3D scenario
 
 Intersection-based traversability appears to be a viable approach for adaptive traversability. From these experiments it cannot be concluded yet if it is able to produce satisfyable results for 3D real-world inputs and do so within reasonable runtime. This could however be explored in terms of future work, as it is fairly simple to extend this modification to the 3D algorithm. 
