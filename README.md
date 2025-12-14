@@ -1,13 +1,13 @@
-# Alpha Wrapping with an Offset in 2D
+# Alpha Wrapping with Offset in 2D
 
 - **Student**: Lino Meister
 - **Supervisor**: Ningfeng Zhou 
 
-This project contains an implementation of **alpha wrapping with an offset** for a 2D scenario, limited to processing 2D point clouds as input data. This implementation was further used to conduct experiments with different traversability criteria.
+This project contains an implementation of **alpha wrapping with an offset** for a 2D scenario, focused on 2D point clouds as input. This implementation was further used to conduct experiments with different traversability criteria.
 
 ## Documentation
 
-A more detailed documentation about this project is available in `/doc`
+A more detailed documentation is available in `/doc`.
 - [Project Overview](doc/project.md): Provides an overview of the project.
 - [Experiments](doc/experiments.md): Documents the experiments that were conducted as part of the project.
 - [Code](doc/code.md): Describes the involved code components.
@@ -37,21 +37,21 @@ The project includes several CMake presets for different algorithm variants.
 
 #### `default`: Standard algorithm with priority queue
 
-This is the default configuration of the algorithm. 
+This is the default configuration of the algorithm.
 
 #### `alternative-trav`: Enables modified alpha traversability computation
 
-This configuration was used for a small experiment, using a slightly modified traversability criteria. See the 'alternative traversability' section in the [report](doc/experiments.md). Please note that this is different from the *adaptive* traversability methods. The adaptive methods can be used with the default configuration.
+This configuration was used for a small experiment, using a slightly modified traversability criterion. See the “alternative traversability” section in the [report](doc/experiments.md). Please note that this is different from the adaptive traversability methods. The adaptive methods can be used with the default configuration.
 
 
 #### `stack-queue`: Uses stack instead of priority queue
 
-In the paper, the alpha wrapping algorithm is described using a priority queue (sorted by minimum Delaunay ball radius of the gates). The implementation in [CGAL](https://github.com/CGAL/cgal/blob/cb6407e04270becf748a363a2062416f9e5e8513/Alpha_wrap_3/include/CGAL/Alpha_wrap_3/internal/Alpha_wrap_3.h#L147) also has an option to use a stack instead, which is claimed to be faster in practice. For all my experiments I used the priority queue, but I also added an option for using a stack instead.
+The paper describes using a priority queue (sorted by each gate’s minimum Delaunay ball radius). The [CGAL implementation](https://github.com/CGAL/cgal/blob/cb6407e04270becf748a363a2062416f9e5e8513/Alpha_wrap_3/include/CGAL/Alpha_wrap_3/internal/Alpha_wrap_3.h#L147) also offers a stack, which can be faster in practice. I used the priority queue for all experiments but included a stack option.
 
 
 ## Usage
 
-Some example inputs are available in the [supplementary material](doc/supplementary.md). These examples can for example be put into a folder `data/input`.
+Some example inputs are available in the [supplementary material](doc/supplementary.md). You can place these examples in `data/input`.
 
 ### Basic Example
 
@@ -79,7 +79,7 @@ Some example inputs are available in the [supplementary material](doc/supplement
 #### Core Algorithm Parameters
 
 >[!IMPORTANT] 
->The alpha and offset parameters are specified relative to a reference length (diagonal length of input bounding box). Hence the actual values used in the algorithm are `alpha*bbox_diagonal_length` and `offset*bbox_diagonal_length`.
+>Alpha and offset are specified relative to a reference length (the diagonal of the input bounding box). The algorithm uses `alpha * bbox_diagonal_length` and `offset * bbox_diagonal_length`.
 
 - `--alpha <value>`
   - Alpha parameter controlling gate traversability
@@ -93,7 +93,7 @@ Some example inputs are available in the [supplementary material](doc/supplement
 
 - `--traversability <method>`
   - Traversability computation method
-  - Available methods: `CONSTANT_ALPHA`, `DEVIATION_BASED` and `INTERSECTION_BASED`: 
+  - Available methods: `CONSTANT_ALPHA`, `DEVIATION_BASED`, `INTERSECTION_BASED`
   - Default: `CONSTANT_ALPHA`
 
 - `--max_iterations <count>`
@@ -108,7 +108,7 @@ Some example inputs are available in the [supplementary material](doc/supplement
   - Default: `false`
 
 - `--style <style>`
-	- style preset for svg export
+  - Style preset for SVG export
   - Available styles:
     - `default`: Shows all faces with different colors for INSIDE/OUTSIDE
     - `clean`: Minimal visualization with cleaner appearance
