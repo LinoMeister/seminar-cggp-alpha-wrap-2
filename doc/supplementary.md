@@ -1,6 +1,6 @@
 # Supplementary Material
 
-There is some supplementary material available in the form of a zip file.
+There is some supplementary material available in the form of a [zip file](https://unibe365-my.sharepoint.com/:u:/g/personal/lino_meister_students_unibe_ch/IQA7cU6543MkRpsKNQwzsAZDASdzHEDGpX-h5mT0mq4Du4A?e=4fPFpt)
 
 - `slides.pdf` Slides from the presentation
 - `images`: some of the images used in this report
