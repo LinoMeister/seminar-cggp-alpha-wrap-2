@@ -103,7 +103,7 @@ There are certainly ways to further improve this method. However, it seems more 
 
 #### Intersection-Based Traversability
 
-To determine if a gate $f$ is traversable, it is sampled at points $q_{i}$. In this implementation the points are sampled equidistantly such that the spacing is $\approx L_{\text{target}}$. Then we consider the line segments $(q_{i}, q_{i} + \lambda n)$ where $n$ is the normal vector (see footnote) of $f$ and $\lambda$ is a user-defined global parameter. For each such segment we check if it intersects the offset surface. If at any point there is no intersection (i.e., the distance between the point and the offset surface is $>\lambda$), we mark the gate as traversable.
+To determine if a gate $f$ is traversable, it is sampled at points $q_{i}$. In this implementation the points are sampled equidistantly such that the spacing is $\approx L_{\text{target}}$. Then we consider the line segments $(q_{i}, q_{i} + \lambda n)$ where $n$ is the normal vector ([^1]) of $f$ and $\lambda$ is a user-defined global parameter. For each such segment we check if it intersects the offset surface. If at any point there is no intersection (i.e., the distance between the point and the offset surface is $>\lambda$), we mark the gate as traversable.
 
 With this approach we skip the step of constructing a value for $\alpha$; instead, we directly test proximity to the offset surface.
 

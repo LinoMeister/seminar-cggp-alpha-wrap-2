@@ -32,7 +32,7 @@ Suppose we have a spherical spoon with radius $\alpha$, then we want to start fr
   <img src="images/min-delaunay-ball/traversable.png" width="600">
 </div>
 
-Due to this observation, I briefly explored a modified version of the algorithm, where in the third case $\alpha$ is not compared to the radius of the minimum Delaunay circle but to the minimum circle through the gate. Meaning that if case 3 occurs, the gate is only deemed traversable if the entire $\alpha$-spoon can fit through the gate. This modified version is available through a different build configuration. There is a CMake preset `alternative-trav` to build the algorithm with this modification.
+Due to this observation, I briefly explored a modified version of the algorithm, where in the third case $\alpha$ is not compared to the radius of the minimum Delaunay circle but to the minimum circle through the gate. Meaning that if case 3 occurs, the gate is only deemed traversable if the entire $\alpha$ -spoon can fit through the gate. This modified version is available through a different build configuration. There is a CMake preset `alternative-trav` to build the algorithm with this modification.
 
 A small experiment was run with `--alpha 0.01` and `--offset 0.01` on 8 example inputs. A table showing parts of the output statistics is shown below. The data and SVG exports of the experiment are available in the supplementary material (`experiments/alternative_traversability`).
 
