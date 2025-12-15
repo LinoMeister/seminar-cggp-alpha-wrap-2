@@ -73,7 +73,7 @@ $$
 \delta=\frac{1}{N}\sum_{i=1}^N d(f,p_{i})^2
 $$
 
-From the measured deviation $\delta$ we then obtain a value for $\alpha$. In this implementation, this is achieved by constructing a normalized deviation $\tilde{\delta}\in[0,1]$.
+From the measured deviation $\delta$ we then obtain a value for $\alpha$. In this implementation, this is achieved by constructing a normalized deviation $\tilde{\delta} \in [0,1]$.
 
 $$
 	\tilde{\delta}= \text{clamp}(\mu \cdot \lvert \delta - \epsilon^2 \rvert, 0, 1)
@@ -98,7 +98,7 @@ $$
 	\tilde{\delta} = \max_{j} \{ \tilde{\delta}_{j} \}
 $$
 
-In 'cave-like' areas we are thus more likely to end up with a subsegment whose bounding box only contains very few or no input points. For such segments we artificially assign a large deviation ($\tilde{\delta}=1$), which will consequently lead to a large deviation for $f$, making the gate more likely to be traversable.
+In 'cave-like' areas we are thus more likely to end up with a subsegment whose bounding box only contains very few or no input points. For such segments we artificially assign a large deviation ($\tilde{\delta} =1 $), which will consequently lead to a large deviation for $f$, making the gate more likely to be traversable.
 
 Even with this improvement several issues still persist:
 - The bounding boxes might still not always capture the local input geometry well.
