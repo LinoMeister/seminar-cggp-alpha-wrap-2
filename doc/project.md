@@ -74,24 +74,30 @@ $$
 $$
 
 From the measured deviation $\delta$ we then obtain a value for $\alpha$. In this implementation, this is achieved by constructing a normalized deviation $\tilde{\delta}\in[0,1]$.
+
 $$
 	\tilde{\delta}= \text{clamp}(\mu \cdot \lvert \delta - \epsilon^2 \rvert, 0, 1)
 $$
+
 - If the gate approximates the offset surface well, we expect the deviation to be close to $\epsilon^2$.
 - We use a parameter $\mu$ (in code referred to as `deviation_factor`) to control sensitivity. Larger values mean a normalized deviation of $1$ is reached more quickly.
 
 From this normalized deviation value, $\alpha$ is obtained as:
+
 $$
 \alpha = (1-\tilde{\delta})\alpha_{\text{max}} + \tilde{\delta} \alpha_{\text{min}}
 $$
+
 where $\alpha_{\text{min}}$ equals the value specified by the user through `--alpha` and $\alpha_{\text{max}}$ is a fixed value specified in the traversability parameters.
 
 ##### Subsegment Improvement
 
 The approach outlined above often finds a small deviation in cave-like areas because many relevant input features are not captured by the gate’s bounding box. To address this, the gate is split into smaller segments $f_{j}$ for which the deviation $\delta_{j}$ is computed. These segments are constructed to have a length of $\approx L_{\text{target}}$, where the target length is specified as a global parameter. The deviations are then aggregated to a single value for the gate.
+
 $$
 	\tilde{\delta} = \max_{j} \{ \tilde{\delta}_{j} \}
 $$
+
 In 'cave-like' areas we are thus more likely to end up with a subsegment whose bounding box only contains very few or no input points. For such segments we artificially assign a large deviation ($\tilde{\delta}=1$), which will consequently lead to a large deviation for $f$, making the gate more likely to be traversable.
 
 Even with this improvement several issues still persist:
